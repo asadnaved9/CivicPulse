@@ -27,6 +27,7 @@ export default function IssueDetailPage() {
   const [chatHistory, setChatHistory] = useState<any[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);
+  const [wplLightbox, setWplLightbox] = useState<string | null>(null);
 
   // Action states
   const [generatingLetter, setGeneratingLetter] = useState(false);
@@ -779,6 +780,104 @@ export default function IssueDetailPage() {
                 )}
               </p>
             </div>
+
+            {/* ── Work Progress Log (populated from admin Progress Timeline) ── */}
+            {issue.progressStages && issue.progressStages.length > 0 && (
+              <>
+                {/* Lightbox for citizen progress log */}
+                {wplLightbox && (
+                  <div
+                    className="timeline-lightbox"
+                    onClick={() => setWplLightbox(null)}
+                  >
+                    <button className="timeline-lightbox-close" onClick={() => setWplLightbox(null)}>✕</button>
+                    <img src={wplLightbox} alt="Stage full view" onClick={e => e.stopPropagation()} />
+                  </div>
+                )}
+
+                <div style={{ marginTop: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <Camera size={15} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+                    <div>
+                      <h4 style={{ fontSize: '14px', fontWeight: 600, margin: 0, color: 'var(--text-1)' }}>
+                        Work Progress Log
+                      </h4>
+                      <span style={{ fontSize: '11px', color: 'var(--text-3)' }}>
+                        Documented by the ward administration team
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="progress-log-strip">
+                    {(issue.progressStages as Array<{
+                      id: string; imageUrl: string; description: string;
+                      capturedAt: string; location: string;
+                      verificationStatus?: string; confidenceScore?: number; aiSummary?: string;
+                    }>).map((stage, idx) => (
+                      <div key={stage.id} className="progress-log-item">
+                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                          <img
+                            src={stage.imageUrl}
+                            alt={`Progress stage ${idx + 1}`}
+                            className="progress-log-thumb"
+                            onClick={() => setWplLightbox(stage.imageUrl)}
+                          />
+                          <span style={{
+                            position: 'absolute', top: 4, left: 4,
+                            background: 'rgba(0,0,0,0.65)', color: '#fff',
+                            borderRadius: 3, fontSize: 8, fontWeight: 700,
+                            fontFamily: 'var(--font-mono)', padding: '1px 5px'
+                          }}>
+                            {idx + 1}
+                          </span>
+                        </div>
+                        <div className="progress-log-meta">
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span className="progress-log-stage-label">Stage {idx + 1}</span>
+                            {stage.verificationStatus && (
+                              <span style={{ 
+                                fontSize: '10px', 
+                                fontWeight: 700, 
+                                color: stage.verificationStatus === 'Rejected' ? 'var(--error)' : 'var(--primary)',
+                                background: 'var(--surface-2)',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                border: '1px solid var(--border)'
+                              }}>
+                                AI: {stage.verificationStatus} {stage.confidenceScore ? `(${Math.round(stage.confidenceScore * 100)}%)` : ''}
+                              </span>
+                            )}
+                          </div>
+                          <p className="progress-log-desc">
+                            {stage.description || 'No description provided.'}
+                          </p>
+                          {stage.aiSummary && (
+                            <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'var(--text-2)', fontStyle: 'italic' }}>
+                              🤖 {stage.aiSummary}
+                            </p>
+                          )}
+                          {stage.capturedAt && (
+                            <span className="progress-log-date" style={{ marginTop: '4px', display: 'inline-block' }}>
+                              📅 {(() => {
+                                try {
+                                  return new Date(stage.capturedAt).toLocaleString(undefined, {
+                                    month: 'short', day: 'numeric', year: 'numeric',
+                                    hour: '2-digit', minute: '2-digit',
+                                  });
+                                } catch { return stage.capturedAt; }
+                              })()}
+                            </span>
+                          )}
+                          {stage.location && (
+                            <span className="progress-log-loc" style={{ marginTop: '2px', display: 'inline-block' }}>📍 {stage.location}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
 
           </div>
 

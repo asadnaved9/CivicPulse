@@ -1,0 +1,135 @@
+# 🏛️ CivicPulse
+> Collaborative civic hazard logging ledger with real-time tracking, AI agent processing, and resolution verification.
+
+🔗 **Live Application**: [civicpulse-656142327646.asia-south1.run.app](https://civicpulse-656142327646.asia-south1.run.app)
+
+CivicPulse is a full-stack civic platform that empowers Bangalore citizens and ward inspectors to log public safety hazards (potholes, garbage piles, streetlight failures, broken pipes) and verify resolutions in real time. Backed by Express, React, and Google Gemini AI models, the application automates priority scoring, SLA predictions, voice cleaning, and verification workflows.
+
+---
+
+## 📸 Visual Showcase
+
+Explore the primary views of the CivicPulse interface:
+
+| View | Screenshot | Description |
+|------|------------|-------------|
+| **Landing Portal** | ![CivicPulse Homepage](./assets/screenshots/home.png) | Landing portal containing dynamic statistics, recent logs, and the warden leaderboard. |
+| **Interactive Map** | ![Interactive Map Page](./assets/screenshots/map.png) | Geographic ward ledger showing reported concerns mapped dynamically over Bangalore districts. |
+| **Report Hazard** | ![Report Page](./assets/screenshots/report.png) | Interactive filing form with live camera simulation, speech cleaning, and checkpoint options. |
+| **Inspector Dashboard** | ![Dashboard Page](./assets/screenshots/dashboard.png) | Ward queue page displaying active resolutions, before/after visual verification, and BBMP escalations. |
+
+---
+
+## 🚀 Features
+
+*   **Geographic Ward Integration**: Mapped neighborhood ledger focused on key Bangalore wards (Koramangala, Indiranagar, Whitefield, HSR Layout), supporting manual map plotting, auto-address resolution, and custom landmark aligners.
+*   **AI-Powered Vision Triage**: Automatically scans submitted photos, filters out invalid uploads, determines category tags, grades severity (1-5), and computes target completion SLAs.
+*   **Speech-to-Text Voice Cleanup**: A voice processing pipeline that takes raw speech transcript inputs and cleans them into concise, grammatically structured titles and descriptions.
+*   **Dual-Image Resolution Verification**: Allows inspectors to submit "after" photos, which are compared side-by-side with original "before" photos using Gemini Vision models to programmatically verify and close tickets.
+*   **Automated BBMP Escalation**: Automatically drafts formal letters addressed to the Bruhat Bengaluru Mahanagara Palike (BBMP) Municipal Commissioner if issues remain unresolved past their predicted SLA windows.
+*   **Gamified Warden System**: Citizens earn leveling points (+50 for reporting, +120 for verifying resolution) to unlock civic badges and climb the municipal leaderboard.
+*   **Real-Time Data Sync**: Firebase Firestore integration synchronizes complaints, comments, leaderboards, and map pins instantly across all open sessions.
+
+---
+
+## 🛠️ Technologies Used
+
+| Layer | Technologies |
+|-------|--------------|
+| **Frontend** | React 18, Vite, Tailwind CSS, Framer Motion, Lucide Icons, MapLibre GL |
+| **Backend** | Node.js, Express.js, TypeScript Executable (`tsx`) |
+| **Database** | Firebase Firestore (Persistent NoSQL Data Store), Firebase Storage |
+| **Authentication** | Firebase Auth (Anonymous Access, Email/Password Credentials) |
+| **AI Models** | `@google/genai` (utilizing `gemini-3.5-flash` model templates) |
+| **Build & Bundling** | `esbuild` (bundling server TS scripts to CJS format) |
+
+---
+
+## 🏁 Quick Start
+
+### 1. Installation
+Install all backend and frontend dependencies:
+```bash
+npm install
+```
+
+### 2. Configuration
+Create a `.env` file in the root directory:
+```bash
+cp .env.example .env
+```
+Fill out the variables as described in the [Configuration](#configuration) section below.
+
+### 3. Run Development Server
+Launches the Express server and mounts the Vite frontend middleware on Port `3000`:
+```bash
+npm run dev
+```
+
+### 4. Build and Launch Production Server
+```bash
+npm run build
+npm start
+```
+
+### 5. Testing
+The project uses `vitest` and `@testing-library/react` for unit and integration testing.
+```bash
+# Run tests
+npm test
+
+# Run typechecking
+npm run typecheck
+```
+A GitHub Actions CI workflow is configured to run tests and typechecking automatically on pushes and pull requests to `main`.
+
+---
+
+## ⚙️ Configuration
+
+The following environment variables configure the application:
+
+| Variable | Description | Required | Default / Note |
+|----------|-------------|----------|----------------|
+| `GEMINI_API_KEY` | Server Gemini AI Studio Key | Yes | Required for AI vision, voice cleanup, and letter draft. |
+| `VITE_FIREBASE_API_KEY` | Firebase Web Client API Key | Yes | Required for database & auth connection. |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase Web Auth Domain | Yes | Configures Firebase authorization domain. |
+| `VITE_FIREBASE_PROJECT_ID` | Firebase Project ID | Yes | Identifies target Firebase DB/Storage. |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase Storage Bucket | Yes | Bucket name for storing reports and images. |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID`| Firebase Messaging Sender ID | Yes | Used for push notifications. |
+| `VITE_FIREBASE_APP_ID` | Firebase Web App ID | Yes | Client application ID. |
+| `VITE_GOOGLE_MAPS_API_KEY` | Google Maps Platform API Key | No | Optional key to query Maps API for address names. |
+| `DISABLE_ORCHESTRATOR` | Disables Local Background Agent orchestrator | No | Set to `true` locally to run without ADC credentials. |
+
+---
+
+## 🔒 Security Specifications & Data Invariance
+
+CivicPulse is built with a zero-trust model to safeguard data integrity:
+*   **Leaderboard Point Integrity**: Hardened Firebase Security Rules restrict write operations to `/users/{userId}` to the authenticated owner only, preventing point spoofing.
+*   **Filing Validation**: Write rules for `/issues/{issueId}` require `request.auth.uid` to match the submitter's ID, and cap text inputs to prevent database overhead attacks.
+*   **Protected Keys**: All AI calls (Gemini SDK) and geocoding operations run exclusively on the Express backend server, shielding sensitive credentials from browser bundles.
+
+---
+
+## 📋 Directory Structure
+
+```text
+├── server.ts                  # Express server & API routes
+├── firestore.rules            # Security rules for Firestore database
+├── firebase-applet-config.json # Applet metadata configuration file
+├── src/
+│   ├── main.tsx               # App mount script
+│   ├── App.tsx                # Main router & layout configuration
+│   ├── pages/                 # Core page views (Map, Report, Dashboard, Insights)
+│   ├── components/            # Shared UI components (Navbar, Error boundary, skeletons)
+│   ├── contexts/              # Authentication & user state context providers
+│   ├── agents/                # Server-side Gemini AI Agent templates & orchestrator
+│   └── utils/                 # Points/reward scoring engine and formatting helpers
+```
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.

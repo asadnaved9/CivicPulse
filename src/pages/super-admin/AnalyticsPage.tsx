@@ -11,8 +11,8 @@ interface IssueData {
   severity: number;
   category: string;
   municipalityId?: string;
-  createdAt?: any;
-  resolvedAt?: any;
+  createdAt?: string | Date | unknown;
+  resolvedAt?: string | Date | unknown;
 }
 
 // Category labels
@@ -131,13 +131,13 @@ const AnalyticsPage: React.FC = () => {
           <div key={k.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '16px 18px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <span style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase' }}>{k.label}</span>
-              <span style={{ color: (k as any).color || 'var(--primary)' }}>{k.icon}</span>
+              <span style={{ color: (k as Record<string, unknown>).color as string || 'var(--primary)' }}>{k.icon}</span>
             </div>
-            <div style={{ fontSize: 24, fontWeight: 700, fontFamily: 'var(--font-mono)', color: (k as any).color || 'var(--text-1)' }}>{loading ? '—' : k.value}</div>
-            {(k as any).trend && (
+            <div style={{ fontSize: 24, fontWeight: 700, fontFamily: 'var(--font-mono)', color: (k as Record<string, unknown>).color as string || 'var(--text-1)' }}>{loading ? '—' : k.value}</div>
+            {(k as Record<string, unknown>).trend && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginTop: 4 }}>
-                {(k as any).up ? <TrendingUp size={11} color="#10B981" /> : <TrendingDown size={11} color="#EF4444" />}
-                <span style={{ fontSize: 11, color: (k as any).up ? '#10B981' : '#EF4444' }}>{(k as any).trend} this month</span>
+                {(k as Record<string, unknown>).up ? <TrendingUp size={11} color="#10B981" /> : <TrendingDown size={11} color="#EF4444" />}
+                <span style={{ fontSize: 11, color: (k as Record<string, unknown>).up ? '#10B981' : '#EF4444' }}>{(k as Record<string, unknown>).trend as string} this month</span>
               </div>
             )}
           </div>

@@ -639,3 +639,283 @@ h3 {
 }
 
 
+/* ═══════════════════════════════════════════════════════════
+   PROGRESS TIMELINE — Admin & Citizen Components
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes stageFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes stageUploading {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+/* Vertical connector line running behind all stage badges */
+.progress-timeline-connector {
+  position: absolute;
+  left: 15px;
+  top: 28px;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+  transition: background 0.3s ease;
+}
+.progress-timeline-connector.filled {
+  background: linear-gradient(to bottom, #10B981, var(--border));
+}
+
+/* Circular step badge */
+.stage-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-3);
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+  position: relative;
+  z-index: 2;
+}
+.stage-badge.saved {
+  background: #10B981;
+  border-color: #10B981;
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+.stage-badge.uploading {
+  border-color: var(--primary);
+  animation: stageUploading 1s ease-in-out infinite;
+}
+
+/* Individual stage card */
+.stage-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: stageFadeIn 0.25s ease both;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.stage-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+.stage-card.locked {
+  pointer-events: none;
+  opacity: 0.92;
+}
+.stage-card.locked:hover {
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+/* Thumbnail inside a stage card */
+.stage-thumbnail {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  cursor: zoom-in;
+  transition: transform 0.2s ease;
+}
+.stage-thumbnail:hover {
+  transform: scale(1.015);
+}
+
+/* Editable meta fields row inside stage card */
+.stage-meta-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.stage-meta-label {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  color: var(--text-3);
+  letter-spacing: 0.06em;
+  margin-bottom: 2px;
+  display: block;
+}
+.stage-meta-input {
+  width: 100%;
+  padding: 5px 7px;
+  font-size: 11px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-1);
+  font-family: var(--font-sans);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.stage-meta-input:focus {
+  border-color: var(--primary);
+}
+.stage-meta-input[readonly] {
+  background: var(--surface-2);
+  color: var(--text-3);
+  cursor: default;
+}
+
+/* Description textarea inside stage card */
+.stage-desc-textarea {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 11px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-1);
+  font-family: var(--font-sans);
+  resize: none;
+  outline: none;
+  transition: border-color 0.15s;
+  line-height: 1.5;
+}
+.stage-desc-textarea:focus {
+  border-color: var(--primary);
+}
+
+/* Stage action buttons row */
+.stage-actions-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Full-image lightbox overlay */
+.timeline-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: stageFadeIn 0.15s ease;
+  cursor: zoom-out;
+}
+.timeline-lightbox img {
+  max-width: 90vw;
+  max-height: 88vh;
+  border-radius: 6px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  object-fit: contain;
+}
+.timeline-lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background 0.15s;
+}
+.timeline-lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ── Citizen read-only Work Progress Log strip ── */
+.progress-log-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+.progress-log-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  align-items: flex-start;
+}
+.progress-log-thumb {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+  cursor: zoom-in;
+  transition: transform 0.2s ease;
+}
+.progress-log-thumb:hover {
+  transform: scale(1.04);
+}
+.progress-log-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.progress-log-stage-label {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  color: var(--text-3);
+  letter-spacing: 0.06em;
+}
+.progress-log-desc {
+  font-size: 12px;
+  color: var(--text-1);
+  line-height: 1.4;
+  word-break: break-word;
+}
+.progress-log-date {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-3);
+}
+.progress-log-loc {
+  font-size: 10px;
+  color: var(--text-3);
+}
+
+/* Confirmation panel inside ProgressTimeline */
+.timeline-confirm-panel {
+  border-top: 1px dashed var(--border);
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* "Timeline locked" badge */
+.timeline-locked-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #10B981;
+}

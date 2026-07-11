@@ -236,7 +236,7 @@ const NationalMapPage: React.FC = () => {
               ].map(([label, val]) => (
                 <div key={label as string} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0', borderBottom: '1px solid var(--border)' }}>
                   <span style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>{label}</span>
-                  <span style={{ fontSize: 12, color: 'var(--text-1)', fontWeight: 500 }}>{val as any}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-1)', fontWeight: 500 }}>{val as React.ReactNode}</span>
                 </div>
               ))}
             </div>

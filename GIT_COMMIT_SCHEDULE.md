@@ -231,9 +231,7 @@ feat: inspector dashboard with local weather and geohash alerts
 
 ---
 
-### 👥 Commit 10 (Teammate) — `feat: live location module`
-
-> **Collaborative Note**: Stage your enhanced versions of `src/pages/HomePage.tsx` (landing page), `src/pages/DashboardPage.tsx` (citizen interface dashboard), and `src/pages/ReportPage.tsx` (improved live location integration), along with the new geolocation files. This commit applies your live location button, landing page optimizations, and citizen dashboard modifications on top of the baseline pages created in Commit 5 and Commit 9.
+### ✅ Commit 10 — `feat: live location module`
 
 **Files to Stage**:
 ```
@@ -479,7 +477,7 @@ feat: multilingual context and localized translations
 | 7 | `feat: issue reporting page with AI triage and voice input` | `ReportPage.tsx` | **You** |
 | 8 | `feat: issue detail page with dual-image AI resolution validator` | `IssueDetailPage.tsx` | **You** |
 | 9 | `feat: inspector dashboard with local weather and geohash alerts` | `DashboardPage.tsx`, `InsightsPage.tsx` | **You** |
-| 10 | `feat: live location module` | `GpsButton.tsx`, `LocalitySelect.tsx`, `geohash.ts`, `localities.ts`, `HomePage.tsx`, `DashboardPage.tsx`, `ReportPage.tsx` | **Teammate** |
+| 10 | `feat: live location module` | `GpsButton.tsx`, `LocalitySelect.tsx`, `geohash.ts`, `localities.ts`, `HomePage.tsx`, `DashboardPage.tsx`, `ReportPage.tsx` | **You** |
 | 11 | `feat: admin and super-admin portals with role-based governance` | `AdminDashboardPage.tsx`, `SuperAdminDashboardPage.tsx`, super-admin pages, `App.tsx`, `firebase.ts` | **You** |
 | 12 | `feat: community discussion board` | `CommunityPage.tsx` | **You** |
 | 13 | `feat: citizen profile page, points engine, and leaderboard` | `ProfilePage.tsx`, `pointsEngine.ts`, `pointsEngineAdmin.ts` | **You** |
@@ -493,7 +491,7 @@ feat: multilingual context and localized translations
 
 ## 🤖 Agent Execution Instructions
 
-When an agent reads this file and begins execution, run the following for each commit in order (1 → 18, skipping Commit 10 which is pushed by your teammate):
+When an agent reads this file and begins execution, run the following for each remaining commit in order (13 → 18):
 
 ```bash
 git add <files listed in "Files to Stage">

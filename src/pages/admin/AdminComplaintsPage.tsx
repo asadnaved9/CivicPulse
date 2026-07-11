@@ -11,6 +11,7 @@ import {
   Search, Check, Clock, Shield, Filter, Eye, AlertOctagon, X, Camera
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import ProgressTimeline, { ProgressStage } from './ProgressTimeline';
 
 interface Issue {
   id: string;
@@ -32,6 +33,7 @@ interface Issue {
   verificationReason?: string;
   assignedDepartment?: string;
   routingReason?: string;
+  progressStages?: ProgressStage[];
 }
 
 const AdminComplaintsPage: React.FC = () => {
@@ -121,6 +123,34 @@ const AdminComplaintsPage: React.FC = () => {
     } catch (err) {
       console.error(err);
       toast.error('Failed to manually update routing');
+    }
+  };
+
+  // ── Confirm resolution via Progress Timeline ──────────────────────────────
+  const handleConfirmResolution = async (stages: ProgressStage[], closingNotes: string) => {
+    if (!selectedIssue) return;
+    setUpdatingStatus(true);
+    try {
+      const updates: any = {
+        status: 'resolved',
+        progressStages: stages,
+        resolvedImageUrl: stages[stages.length - 1]?.imageUrl || null,
+        verificationReason: closingNotes,
+        resolvedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+      if (isFirebaseConfigured && auth.currentUser) {
+        await updateDoc(doc(db, 'issues', selectedIssue.id), updates);
+      } else {
+        setIssues(prev => prev.map(i => i.id === selectedIssue.id ? { ...i, ...updates } : i));
+      }
+      setSelectedIssue(prev => prev ? { ...prev, ...updates } : null);
+      toast.success('Issue resolved and timeline confirmed!');
+    } catch (err) {
+      console.error('[AdminComplaints] handleConfirmResolution error:', err);
+      toast.error('Failed to confirm resolution.');
+    } finally {
+      setUpdatingStatus(false);
     }
   };
 
@@ -640,9 +670,8 @@ const AdminComplaintsPage: React.FC = () => {
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
               <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-2)', display: 'block', marginBottom: 12 }}>{t('admin.complaints.updateStatus')}</span>
 
-              {selectedIssue.status !== 'resolved' ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
                   {/* Worker Complaint & Auto-escalation (Only for blocked issues) */}
                   {selectedIssue.status === 'blocked' && (
                     <div style={{ border: '1px solid #f59e0b', borderRadius: 6, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, background: 'rgba(245, 158, 11, 0.05)' }}>
@@ -652,11 +681,10 @@ const AdminComplaintsPage: React.FC = () => {
                       <p style={{ fontSize: '11px', color: 'var(--text-1)', margin: 0, fontStyle: 'italic', background: 'var(--surface)', padding: 8, borderRadius: 4, borderLeft: '2px solid #f59e0b' }}>
                         "Heavy live wires scattered. Can't proceed safely without power cut and traffic diversion." — Rahul Kumar (On Site)
                       </p>
-                      
                       <div style={{ marginTop: 4, paddingTop: 8, borderTop: '1px dashed rgba(245, 158, 11, 0.3)' }}>
                         <span style={{ fontSize: '10px', color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Auto-Escalation Suggestion</span>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
-                          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-1)' }}>Alert: Electricity & Traffic Dept</span>
+                          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-1)' }}>Alert: Electricity &amp; Traffic Dept</span>
                           <button style={{ background: '#f59e0b', color: '#fff', border: 'none', borderRadius: 4, padding: '4px 10px', fontSize: '10px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 4px rgba(245, 158, 11, 0.2)' }}>
                             ESCALATE NOW
                           </button>
@@ -710,101 +738,6 @@ const AdminComplaintsPage: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Mark Resolved controls */}
-                  {(selectedIssue.status === 'in_progress' || selectedIssue.status === 'blocked') && (
-                    <div style={{ border: '1px solid var(--border)', borderRadius: 6, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <label style={{ fontSize: '11px', color: 'var(--text-2)', fontWeight: 500 }}>
-                        {t('admin.complaints.closingNotes')}
-                      </label>
-                      <textarea
-                        rows={3}
-                        placeholder={t('detail.resolve.placeholder')}
-                        value={closingNotes}
-                        onChange={e => setClosingNotes(e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          borderRadius: 4,
-                          border: '1px solid var(--border)',
-                          background: 'var(--surface)',
-                          color: 'var(--text-1)',
-                          fontSize: '11px',
-                          resize: 'none',
-                          outline: 'none'
-                        }}
-                      />
-
-                      <label style={{ fontSize: '11px', color: 'var(--text-2)', fontWeight: 500, marginTop: 4 }}>
-                        {t('admin.complaints.proofImage')}
-                      </label>
-                      <input 
-                        type="file"
-                        accept="image/*"
-                        onChange={handleResolvedImageChange}
-                        style={{ display: 'none' }}
-                        id="resolution-proof-file"
-                      />
-                      
-                      {resolvedImage ? (
-                        <div style={{ position: 'relative', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
-                          <img src={resolvedImage} alt="Resolved proof preview" style={{ width: '100%', height: 120, objectFit: 'cover' }} />
-                          <button 
-                            type="button" 
-                            onClick={() => setResolvedImage(null)}
-                            style={{
-                              position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.6)', color: '#FFF', 
-                              border: 'none', borderRadius: '50%', cursor: 'pointer', width: 20, height: 20,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10
-                            }}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ) : (
-                        <label 
-                          htmlFor="resolution-proof-file"
-                          style={{
-                            border: '2px dashed var(--border)',
-                            borderRadius: 6,
-                            padding: '16px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            background: 'var(--surface-2)',
-                            color: 'var(--text-3)',
-                            fontSize: '11px',
-                            textAlign: 'center',
-                            gap: 4
-                          }}
-                        >
-                          <Camera size={16} />
-                          <span>{t('admin.complaints.selectFile')}</span>
-                        </label>
-                      )}
-
-                      <button
-                        onClick={() => handleUpdateStatus(selectedIssue.id, 'resolved')}
-                        disabled={updatingStatus || !closingNotes.trim() || !resolvedImage}
-                        style={{
-                          background: '#10B981',
-                          color: '#FFFFFF',
-                          border: 'none',
-                          borderRadius: 4,
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          cursor: (closingNotes.trim() && resolvedImage) ? 'pointer' : 'not-allowed',
-                          padding: '8px 12px',
-                          opacity: (closingNotes.trim() && resolvedImage) ? 1 : 0.6,
-                          marginTop: 8
-                        }}
-                      >
-                        {updatingStatus ? t('app.loading') : t('admin.complaints.submitResolution')}
-                      </button>
-                    </div>
-                  )}
-
                   {/* Manual verified toggle */}
                   {selectedIssue.status === 'reported' && (
                     <button
@@ -825,44 +758,23 @@ const AdminComplaintsPage: React.FC = () => {
                       {t('home.stats.verified')}
                     </button>
                   )}
-                </div>
-              ) : (
-                <div style={{ 
-                  background: 'rgba(16, 185, 129, 0.05)', 
-                  border: '1px solid rgba(16, 185, 129, 0.2)', 
-                  borderRadius: 6, 
-                  padding: 12,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 4
-                }}>
-                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#10B981', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Check size={14} /> Completed & Closed
-                  </span>
-                  <span style={{ fontSize: '11px', color: 'var(--text-3)', marginTop: 4 }}>
-                    <strong>Closing Note:</strong> {selectedIssue.verificationReason || 'No notes left.'}
-                  </span>
-                  {selectedIssue.resolvedAt && (
-                    <span style={{ fontSize: '10px', color: 'var(--text-3)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>
-                      Closed on {new Date(selectedIssue.resolvedAt.seconds * 1000).toLocaleDateString()}
-                    </span>
-                  )}
-                  {selectedIssue.resolvedImageUrl && (
-                    <img 
-                      src={selectedIssue.resolvedImageUrl} 
-                      alt="Resolution proof" 
-                      style={{ 
-                        width: '100%', 
-                        height: '140px', 
-                        objectFit: 'cover', 
-                        borderRadius: 6, 
-                        border: '1px solid rgba(16, 185, 129, 0.2)', 
-                        marginTop: 8 
-                      }}
+
+                  {/* ── Progress Timeline ── available for in_progress or resolved */}
+                  {(selectedIssue.status === 'in_progress' ||
+                    selectedIssue.status === 'blocked' ||
+                    selectedIssue.status === 'resolved') && (
+                    <ProgressTimeline
+                      issueId={selectedIssue.id}
+                      issueAddress={selectedIssue.address}
+                      issueCategory={selectedIssue.category}
+                      originalImageUrl={selectedIssue.imageUrl}
+                      existingStages={selectedIssue.progressStages || []}
+                      isLocked={selectedIssue.status === 'resolved'}
+                      onConfirmResolution={handleConfirmResolution}
                     />
                   )}
-                </div>
-              )}
+
+              </div>
             </div>
           </div>
         </div>

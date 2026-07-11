@@ -8,3 +8,19 @@ coverage/
 !.env.example
 firebase-applet-config.json
 firebase-blueprint.json
+GIT_COMMIT_SCHEDULE.md
+
+# Testing
+coverage/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# TypeScript
+*.tsbuildinfo

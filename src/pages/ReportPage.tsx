@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useLanguage } from '../contexts/LanguageContext';
+import { logger } from '../utils/logger';
 
 export default function ReportPage() {
   const navigate = useNavigate();
@@ -24,8 +25,8 @@ export default function ReportPage() {
 
   // Map and Marker Refs for OpenFreeMap
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<any>(null);
-  const markerRef = useRef<any>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const markerRef = useRef<maplibregl.Marker | null>(null);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -168,7 +169,7 @@ export default function ReportPage() {
 
   // Speech Recognition Handler
   const startVoiceRecording = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = (window as unknown as { SpeechRecognition?: any, webkitSpeechRecognition?: any }).SpeechRecognition || (window as unknown as { SpeechRecognition?: any, webkitSpeechRecognition?: any }).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       toast.error("Speech Recognition is restricted or unsupported. Opening Voice Simulator.");
       setShowVoiceSimulation(true);
@@ -186,8 +187,8 @@ export default function ReportPage() {
       toast('Voice input active. Speak now...', { icon: '🎙️' });
     };
 
-    recognition.onerror = (e: any) => {
-      console.error("Speech recognition error:", e);
+    recognition.onerror = (e: unknown) => {
+      logger.error("Speech recognition error", e);
       setVoiceActive(false);
       toast.error("Microphone blocked or not permitted in iframe. Opening Voice Simulator.");
       setShowVoiceSimulation(true);
@@ -197,7 +198,7 @@ export default function ReportPage() {
       setVoiceActive(false);
     };
 
-    recognition.onresult = async (event: any) => {
+    recognition.onresult = async (event: { results: { transcript: string }[][] }) => {
       const resultText = event.results[0][0].transcript;
       setVoiceTranscript(resultText);
       processCleanVoice(resultText);
