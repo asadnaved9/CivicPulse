@@ -1,0 +1,119 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Default deny ─────────────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ── Auth helpers ─────────────────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Reads the caller's role from their Firestore profile.
+     * Admin OR Super Admin — used to gate issue resolution and user management.
+     */
+    function isAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        in ['admin', 'super_admin'];
+    }
+
+    /**
+     * Super Admin only — full platform write access.
+     */
+    function isSuperAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super_admin';
+    }
+
+    // ── Collection: Users ────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if true;
+
+      // Citizens can create their own profile, but may NOT set a 'role' field unless they are the specific dummy seed accounts.
+      // Admins/Super Admins can create profiles with any fields.
+      // Seed leaderboard accounts (starting with 'leader') are permitted.
+      allow create: if (isSignedIn() && (
+        (request.auth.uid == userId && (
+          !request.resource.data.keys().hasAny(['role']) ||
+          request.resource.data.role == 'citizen' ||
+          request.resource.data.email in ['admin@civicpulse.gov.in', 'superadmin@civicpulse.gov.in']
+        )) ||
+        isAdmin()
+      )) || userId.startsWith('leader');
+
+      // Citizens can update their own profile, but may NOT change the 'role' field unless they are the specific dummy seed accounts.
+      // Admins/Super Admins can update any profile field.
+      allow update: if isSignedIn() && (
+        (request.auth.uid == userId && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) ||
+          request.resource.data.email in ['admin@civicpulse.gov.in', 'superadmin@civicpulse.gov.in']
+        )) || isAdmin()
+      );
+
+      allow delete: if isSuperAdmin();
+    }
+
+    // ── Collection: Issues ───────────────────────────────────────────────────
+    match /issues/{issueId} {
+      allow read, list: if true;
+
+      // Allow create if signed in and reportedBy matches current user UID, or if it is a seed document
+      allow create: if (isSignedIn() && request.resource.data.reportedBy == request.auth.uid) ||
+                     issueId.startsWith('seed_');
+
+      allow update: if isSignedIn() && (
+        // Case A: Reporter can update their own issue (must not change reportedBy)
+        (resource.data.reportedBy == request.auth.uid &&
+          request.resource.data.reportedBy == resource.data.reportedBy) ||
+        // Case B: Any signed-in user can upvote (only 'upvotes' and 'updatedAt')
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['upvotes', 'updatedAt']) ||
+        // Case C: Admin/officer resolution — role-gated to prevent citizen manipulation
+        (isAdmin() && (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'verificationReason', 'resolvedImageUrl', 'resolvedAt', 'updatedAt']) ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+        ))
+      );
+
+      allow delete: if false;
+    }
+
+    // ── Collection: Zone Predictions ─────────────────────────────────────────
+    match /zonePredictions/{predictionId} {
+      allow read, list: if true;
+      allow write: if isSignedIn();
+    }
+
+    // ── Collection: Notifications ────────────────────────────────────────────
+    match /notifications/{notifId} {
+      allow read:   if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() || notifId.startsWith('seed_');
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // ── Collection: Activities ───────────────────────────────────────────────
+    match /activities/{activityId} {
+      allow read: if true;
+      allow create: if isSignedIn() || activityId.startsWith('seed_');
+      allow update, delete: if false;
+    }
+
+    // ── Collection: Analytics ────────────────────────────────────────────────
+    match /analytics/{docId} {
+      allow read: if true;
+      // Server-only writes via Admin SDK
+      allow write: if false;
+    }
+
+  }
+}
+
