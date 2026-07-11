@@ -24,3 +24,13 @@ coverage/
 
 # TypeScript
 *.tsbuildinfo
+
+push.bat
+undo.bat
+GIT_COMMIT_SCHEDULE.md
+
+# Unnecessary files
+temp_user_input.txt
+*.zip
+ChatGPT Image*.svg
+assets/project_description.md
