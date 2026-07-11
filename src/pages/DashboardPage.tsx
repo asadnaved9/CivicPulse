@@ -221,11 +221,11 @@ export default function DashboardPage() {
     // Alert
     alertBox: (sev: string) => ({ display: 'flex', gap: 16, alignItems: 'flex-start', padding: 16, marginBottom: 24, borderRadius: 10, border: `1px solid ${sev === 'critical' || sev === 'high' ? 'var(--danger)' : 'var(--warning)'}`, backgroundColor: 'var(--surface-2)' }),
     alertIcon: (sev: string) => ({ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: '50%', backgroundColor: sev === 'critical' || sev === 'high' ? 'var(--danger)' : 'var(--warning)', flexShrink: 0, color: '#fff' }),
-    // Grid
-    grid: { display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 24 },
-    span8: { gridColumn: 'span 8' } as React.CSSProperties,
-    span4: { gridColumn: 'span 4' } as React.CSSProperties,
-    span12: { gridColumn: 'span 12' } as React.CSSProperties,
+    // Grid (moved to CSS classes)
+    grid: {},
+    span8: {},
+    span4: {},
+    span12: {},
     // Impact card
     impactCard: { borderRadius: 14, padding: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' as const, gap: 24, position: 'relative' as const, overflow: 'hidden', backgroundColor: 'var(--primary)' },
     impactLeft: { flex: 1, minWidth: 200 },
@@ -246,7 +246,7 @@ export default function DashboardPage() {
     voiceRow: { textAlign: 'center' as const },
     voiceBtn: { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer' },
     // Nav grid
-    navGrid: { gridColumn: 'span 12', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 },
+    navGrid: {},
     navCard: { borderRadius: 14, padding: 16, display: 'flex', alignItems: 'center', gap: 12, border: '1px solid var(--border)', backgroundColor: 'var(--surface)', cursor: 'pointer', transition: 'transform 0.15s', textAlign: 'left' as const },
     navIcon: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: 42, height: 42, borderRadius: 10, backgroundColor: 'var(--primary)', flexShrink: 0 },
     navLabel: { fontWeight: 600, fontSize: 14, color: 'var(--text-1)' },
@@ -254,7 +254,7 @@ export default function DashboardPage() {
     sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
     sectionTitle: { fontSize: 20, fontWeight: 700, color: 'var(--text-1)', margin: 0 },
     viewAll: { fontSize: 12, fontWeight: 600, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer' },
-    reportsGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 },
+    reportsGrid: {},
     issueCard: { borderRadius: 14, padding: 20, border: '1px solid var(--border)', backgroundColor: 'var(--surface)', cursor: 'pointer', transition: 'transform 0.15s' },
     issueTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
     statusBadge: { fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.06em', padding: '4px 10px', borderRadius: 999, backgroundColor: 'var(--primary)', color: '#fff' },
@@ -275,7 +275,7 @@ export default function DashboardPage() {
     achTitle: { fontSize: 12, fontWeight: 700, color: 'var(--text-1)' },
     likeBtn: (liked: boolean) => ({ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 12px', borderRadius: 999, fontSize: 12, fontWeight: 600, border: '1px solid var(--primary)', backgroundColor: liked ? 'var(--primary)' : 'transparent', color: liked ? 'var(--bg)' : 'var(--primary)', cursor: 'pointer', transition: 'all 0.15s' }),
     // Success stories
-    storiesGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 },
+    storiesGrid: {},
     storyCard: { borderRadius: 14, overflow: 'hidden', border: '1px solid var(--border)', backgroundColor: 'var(--surface)' },
     storyImgRow: { display: 'flex', height: 192 },
     storyHalf: { flex: 1, position: 'relative' as const, overflow: 'hidden' },
@@ -307,6 +307,32 @@ export default function DashboardPage() {
 
   return (
     <div style={css.page}>
+      <style>{`
+        .dash-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; }
+        .dash-span8 { grid-column: span 8; }
+        .dash-span4 { grid-column: span 4; }
+        .dash-span12 { grid-column: span 12; }
+        .dash-nav-grid { grid-column: span 12; display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+        .dash-reports-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .dash-stories-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        
+        @media (max-width: 900px) {
+          .dash-grid { display: flex; flex-direction: column; gap: 24px; }
+          .dash-span8, .dash-span4, .dash-span12 { grid-column: span 12; width: 100%; box-sizing: border-box; }
+          .dash-nav-grid { grid-template-columns: repeat(2, 1fr); }
+          .dash-reports-grid { grid-template-columns: 1fr; }
+          .dash-stories-grid { grid-template-columns: 1fr; }
+          .dash-impact-card { flex-direction: column !important; align-items: stretch !important; }
+          .dash-impact-ring { margin-top: 24px; align-self: center; }
+          .dash-stat-divider { display: none !important; }
+          .dash-stats-row { gap: 16px !important; }
+        }
+        @media (max-width: 480px) {
+          .dash-nav-grid { grid-template-columns: 1fr; }
+          .dash-header-left { flex-direction: column; align-items: flex-start; }
+          .dash-header-right { margin-top: 16px; width: 100%; justify-content: flex-start; }
+        }
+      `}</style>
       {/* Locality Select Modal */}
       {showLocalityModal && (
         <LocalitySelect
@@ -317,7 +343,7 @@ export default function DashboardPage() {
 
       {/* ── Header ─────────────────────────────────────────────────── */}
       <header style={css.header}>
-        <div>
+        <div className="dash-header-left">
           <h1 style={css.h1}>
             {t(getGreetingKey())}, {profile?.displayName || user?.displayName || 'Citizen'}
           </h1>
@@ -332,7 +358,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div style={css.headerRight}>
+        <div className="dash-header-right" style={css.headerRight}>
           {weatherData && (
             <div style={css.weatherPill}>
               <CloudSun size={14} style={{ color: 'var(--primary)' }} />
@@ -367,21 +393,21 @@ export default function DashboardPage() {
       )}
 
       {/* ── Bento Grid ─────────────────────────────────────────────── */}
-      <div style={css.grid}>
+      <div className="dash-grid" style={css.grid}>
 
         {/* Hero: Impact Card (8 cols) */}
-        <section style={{ ...css.span8, ...css.impactCard }}>
+        <section className="dash-span8 dash-impact-card" style={{ ...css.span8, ...css.impactCard }}>
           <div style={css.impactLeft}>
             <h2 style={css.impactH2}>{t('dashboard.impact.title')}</h2>
             <p style={css.impactP}>
               {t('dashboard.impact.desc')}
             </p>
-            <div style={css.statsRow}>
+            <div className="dash-stats-row" style={css.statsRow}>
               <div>
                 <p style={css.statNum}>{reportsCount}</p>
                 <p style={css.statLabel}>{t('dashboard.impact.reports')}</p>
               </div>
-              <div style={css.statDivider} />
+              <div className="dash-stat-divider" style={css.statDivider} />
               <div>
                 <p style={css.statNum}>{resolvedCount}</p>
                 <p style={css.statLabel}>{t('dashboard.impact.resolved')}</p>
@@ -389,7 +415,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div style={css.ringWrap}>
+          <div className="dash-impact-ring" style={css.ringWrap}>
             <div style={{ position: 'relative', width: 128, height: 128 }}>
               <svg width="128" height="128" style={{ transform: 'rotate(-90deg)' }}>
                 <circle cx="64" cy="64" r={R} fill="transparent" stroke="rgba(255,255,255,0.12)" strokeWidth="8" />
@@ -413,7 +439,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Report Panel (4 cols) */}
-        <section style={{ ...css.span4, ...css.reportPanel }}>
+        <section className="dash-span4" style={{ ...css.span4, ...css.reportPanel }}>
           <button style={css.reportBtn} onClick={() => navigate('/report')}
             onMouseEnter={e => (e.currentTarget.style.opacity = '0.88')}
             onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
@@ -429,7 +455,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Quick Nav (all 12 cols, inner 4-col grid) */}
-        <nav style={css.navGrid}>
+        <nav className="dash-nav-grid" style={css.navGrid}>
           {[
             { label: t('dashboard.nav.map'),   Icon: MapIcon,   path: '/map' },
             { label: t('dashboard.nav.reports'), Icon: FileText,   path: '/profile' },
@@ -448,13 +474,13 @@ export default function DashboardPage() {
         </nav>
 
         {/* Active Reports (8 cols) */}
-        <section style={css.span8}>
+        <section className="dash-span8" style={css.span8}>
           <div style={css.sectionHeader}>
             <h2 style={css.sectionTitle}>{t('dashboard.reports.activeTitle')}</h2>
             <button style={css.viewAll} onClick={() => navigate('/profile')}>{t('dashboard.reports.viewAll')}</button>
           </div>
 
-          <div style={css.reportsGrid}>
+          <div className="dash-reports-grid" style={css.reportsGrid}>
             {activeIssues.length > 0 ? activeIssues.map(issue => {
               const daysAgo = issue.createdAt?.seconds
                 ? Math.max(0, Math.floor((Date.now() / 1000 - issue.createdAt.seconds) / 86400))
@@ -487,7 +513,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Ward / Local News (4 cols) */}
-        <section style={css.span4}>
+        <section className="dash-span4" style={css.span4}>
           <div style={css.wardCard}>
             <h2 style={css.wardTitle}>{locality?.name.split(',')[0] || 'Bistupur'} {t('dashboard.news.title')}</h2>
             <div style={css.wardImg}>
@@ -518,9 +544,9 @@ export default function DashboardPage() {
         </section>
 
         {/* Success Stories (8 cols) */}
-        <section style={css.span8}>
+        <section className="dash-span8" style={css.span8}>
           <h2 style={{ ...css.sectionTitle, marginBottom: 16 }}>{t('dashboard.stories.title')}</h2>
-          <div style={css.storiesGrid}>
+          <div className="dash-stories-grid" style={css.storiesGrid}>
             {[
               {
                 title: t('dashboard.story1.title'),
@@ -556,7 +582,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Citizen Leaderboard (4 cols) */}
-        <section style={css.span4}>
+        <section className="dash-span4" style={css.span4}>
           <div style={css.lbCard}>
             <div style={css.lbHeader}>
               <Award size={18} style={{ color: 'var(--primary)' }} />

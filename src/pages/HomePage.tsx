@@ -8,6 +8,7 @@ import {
   TrendingUp, ShieldCheck, Code2,
   CheckCircle, ArrowRight, Terminal, Globe, BarChart3,
 } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // ─── WebGL Shader Sources ────────────────────────────────────────────────────
 const VERT = `attribute vec2 a_position;varying vec2 v_uv;void main(){v_uv=a_position*.5+.5;gl_Position=vec4(a_position,0.,1.);}`;
@@ -52,6 +53,7 @@ export default function HomePage() {
   const [issues,  setIssues]  = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ reported: 0, resolved: 0, verified: 0, activeThisWeek: 0 });
+  const { t } = useLanguage();
 
   // Seeding
   useEffect(() => {
@@ -142,23 +144,54 @@ export default function HomePage() {
 
   // ─── Pipeline Steps ──────────────────────────────────────────────────────
   const pipelineSteps = [
-    { Icon: Camera,     num: '01', title: 'Capture', desc: 'Citizens report issues with cryptographically signed high-res images.', route: '/report' },
-    { Icon: Cpu,        num: '02', title: 'AI Triage', desc: 'Computer vision validates depth, severity, and location accuracy.', route: '/insights' },
-    { Icon: GitBranch,  num: '03', title: 'Dispatch', desc: 'Automated allocation to pre-vetted contractors based on priority logic.', route: '/map' },
-    { Icon: CheckSquare,num: '04', title: 'Audit', desc: 'Final repair verification with before/after visual hashing.', route: '/community' },
+    { Icon: Camera,     num: '01', title: t('home.pipeline.step1.title'), desc: t('home.pipeline.step1.desc'), route: '/report' },
+    { Icon: Cpu,        num: '02', title: t('home.pipeline.step2.title'), desc: t('home.pipeline.step2.desc'), route: '/insights' },
+    { Icon: GitBranch,  num: '03', title: t('home.pipeline.step3.title'), desc: t('home.pipeline.step3.desc'), route: '/map' },
+    { Icon: CheckSquare,num: '04', title: t('home.pipeline.step4.title'), desc: t('home.pipeline.step4.desc'), route: '/community' },
   ];
 
   // ─── Bento Cards ─────────────────────────────────────────────────────────
   const bentoCards = [
-    { title: 'Predictive Maintenance', desc: 'Advanced algorithms analyze historical decay patterns to forecast infrastructure failure points before they occur.', Icon: TrendingUp, tag: 'System Active', wide: true },
-    { title: 'Tamper Proof', desc: 'Every report is hashed onto a distributed ledger for permanent public record.', Icon: ShieldCheck, tag: null, wide: false },
-    { title: 'API Economy', desc: 'Expose granular data to third-party developers for smart city ecosystems.', Icon: Code2, tag: null, wide: false },
+    { title: t('home.bento.predictive.title'), desc: t('home.bento.predictive.desc'), Icon: TrendingUp, tag: 'System Active', wide: true },
+    { title: t('home.bento.tamper.title'), desc: t('home.bento.tamper.desc'), Icon: ShieldCheck, tag: null, wide: false },
+    { title: t('home.bento.api.title'), desc: t('home.bento.api.desc'), Icon: Code2, tag: null, wide: false },
   ];
 
   const fmtNum = (n: number) => n >= 1000 ? `${(n/1000).toFixed(1)}k` : String(n);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', overflowX: 'hidden', backgroundColor: '#fcf9f8' }}>
+      <style>{`
+        .responsive-grid { display: grid; gap: 56px; }
+        .responsive-grid-2 { grid-template-columns: 1fr 1fr; }
+        .responsive-grid-4 { grid-template-columns: repeat(4, 1fr); }
+        .responsive-grid-6 { grid-template-columns: repeat(6, 1fr); }
+        
+        .bento-wide { grid-column: span 4; }
+        .bento-tall { grid-column: span 2; grid-row: span 2; }
+        .bento-small { grid-column: span 2; }
+        
+        .stats-bar { grid-template-columns: repeat(4, 1fr); }
+        .stats-item { border-left: 1px solid #cfc4c5; }
+        .stats-item:first-child { border-left: none; }
+        
+        .pipeline-step { border-right: 1px solid #000; }
+        .pipeline-step:last-child { border-right: none; }
+        
+        @media (max-width: 900px) {
+          .responsive-grid-2 { grid-template-columns: 1fr; gap: 32px; padding-top: 40px !important; padding-bottom: 40px !important; }
+          .responsive-grid-6 { grid-template-columns: 1fr; }
+          .bento-wide, .bento-tall, .bento-small { grid-column: span 1 !important; grid-row: auto !important; }
+          .stats-bar { grid-template-columns: repeat(2, 1fr); }
+          .stats-item:nth-child(3) { border-left: none; }
+          .stats-item { border-bottom: 1px solid #cfc4c5; }
+          .stats-item:nth-child(3), .stats-item:nth-child(4) { border-bottom: none; }
+          .responsive-grid-4 { grid-template-columns: 1fr; }
+          .pipeline-step { border-right: none !important; border-bottom: 1px solid #000; }
+          .pipeline-step:last-child { border-bottom: none; }
+          .mockup-container { justify-content: center !important; margin-top: 32px; }
+        }
+      `}</style>
 
       {/* ═══ 1. HERO ════════════════════════════════════════════════════════ */}
       <section style={{ position: 'relative', minHeight: 'calc(100vh - 56px)', backgroundColor: '#1b1b1b', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
@@ -166,16 +199,16 @@ export default function HomePage() {
         <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.65 }} />
 
         {/* Content */}
-        <div ref={heroRef as any} style={{ ...s.container, position: 'relative', zIndex: 10, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 56, alignItems: 'center', padding: '72px 32px' }}>
+        <div ref={heroRef as any} className="responsive-grid responsive-grid-2" style={{ ...s.container, position: 'relative', zIndex: 10, alignItems: 'center', padding: '72px 32px' }}>
           <div>
             <span style={{ ...s.labelMd, color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 16 }}>
-              Structural Transparency in Governance
+              {t('home.hero.eyebrow')}
             </span>
             <h1 style={{ ...s.displayLg, color: '#FFFFFF', marginBottom: 20 }}>
-              Every Pothole Reported.<br />Every Repair Verified.
+              {t('home.hero.h1')}
             </h1>
             <p style={{ ...s.bodyLg, color: 'rgba(255,255,255,0.72)', maxWidth: 520, marginBottom: 40 }}>
-              AI-driven accountability for the modern city. Transparent, verifiable, and tamper-proof infrastructure monitoring.
+              {t('home.hero.subtitle')}
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
               <button
@@ -186,7 +219,7 @@ export default function HomePage() {
                 onMouseDown={e => (e.currentTarget.style.transform = 'scale(0.96)')}
                 onMouseUp={e => (e.currentTarget.style.transform = 'scale(1)')}
               >
-                <BarChart3 size={16} /> Explore Map
+                <BarChart3 size={16} /> {t('home.hero.exploreMap')}
               </button>
               <button
                 style={s.btnOutlineWhite}
@@ -196,13 +229,13 @@ export default function HomePage() {
                 onMouseDown={e => (e.currentTarget.style.transform = 'scale(0.96)')}
                 onMouseUp={e => (e.currentTarget.style.transform = 'scale(1)')}
               >
-                Report an Issue
+                {t('home.hero.reportIssue')}
               </button>
             </div>
           </div>
 
           {/* 3D Phone Mockup — CivicPulse App UI, right-aligned */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', position: 'relative' }}>
+          <div className="mockup-container" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', position: 'relative' }}>
             <div
               style={{
                 transform: 'perspective(1000px) rotateY(-12deg) rotateX(4deg)',
@@ -337,15 +370,15 @@ export default function HomePage() {
       <section ref={problemRef as any} style={{ backgroundColor: '#ffffff', borderTop: '2px solid #000', borderBottom: '2px solid #000', padding: '80px 32px' }}>
         <div style={{ ...s.container, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 64, alignItems: 'center' }}>
           <div>
-            <h2 style={{ ...s.headlineLg, color: '#000000', textTransform: 'uppercase', marginBottom: 12 }}>The Integrity Gap</h2>
+            <h2 style={{ ...s.headlineLg, color: '#000000', textTransform: 'uppercase', marginBottom: 12 }}>{t('home.integrity.h2')}</h2>
             <p style={{ ...s.bodyMd, color: '#5d5f5f', maxWidth: 380, margin: 0 }}>
-              Traditional reporting systems lack the structural transparency needed to ensure public funds translate into physical results.
+              {t('home.integrity.body')}
             </p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {[
-              { num: loading ? '—' : `${Math.round((stats.resolved / Math.max(stats.reported, 1)) * 100) || 70}%`, label: 'Closed Without Proof' },
-              { num: '12B', label: 'Annual Loss in Inefficiency' },
+              { num: loading ? '—' : `${Math.round((stats.resolved / Math.max(stats.reported, 1)) * 100) || 70}%`, label: t('home.integrity.closedNoProof') },
+              { num: '12B', label: t('home.integrity.annualLoss') },
             ].map(stat => (
               <div key={stat.label} style={{ border: '2px solid #000', padding: '32px 24px' }}>
                 <div style={{ ...s.displayLg, color: '#000000', fontSize: 'clamp(28px, 4vw, 40px)', marginBottom: 8 }}>{stat.num}</div>
@@ -358,14 +391,14 @@ export default function HomePage() {
 
       {/* ═══ 3. LIVE STATS BAR ══════════════════════════════════════════════ */}
       <section style={{ backgroundColor: '#f6f3f2', borderBottom: '1px solid #cfc4c5', padding: '32px 32px' }}>
-        <div style={{ ...s.container, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0 }}>
+        <div className="responsive-grid stats-bar" style={{ ...s.container, gap: 0 }}>
           {[
-            { label: 'Issues Reported', val: loading ? '…' : fmtNum(stats.reported), color: '#1c1b1b' },
-            { label: 'Resolved',        val: loading ? '…' : fmtNum(stats.resolved),  color: '#1c8c4e' },
-            { label: 'AI + Peer Verified', val: loading ? '…' : fmtNum(stats.verified), color: '#000000' },
-            { label: 'Active This Week', val: loading ? '…' : fmtNum(stats.activeThisWeek), color: '#7e7576' },
+            { label: t('home.stats.reported'), val: loading ? '…' : fmtNum(stats.reported), color: '#1c1b1b' },
+            { label: t('home.stats.resolved'),  val: loading ? '…' : fmtNum(stats.resolved),  color: '#1c8c4e' },
+            { label: t('home.stats.verified'),  val: loading ? '…' : fmtNum(stats.verified), color: '#000000' },
+            { label: t('home.stats.active'),     val: loading ? '…' : fmtNum(stats.activeThisWeek), color: '#7e7576' },
           ].map((st, i) => (
-            <div key={st.label} style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '16px 24px', borderLeft: i > 0 ? '1px solid #cfc4c5' : 'none', textAlign: 'center' }}>
+            <div key={st.label} className="stats-item" style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '16px 24px', textAlign: 'center' }}>
               <span style={{ ...s.caption, color: '#5d5f5f', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{st.label}</span>
               <span style={{ fontFamily: 'var(--font-display)', fontSize: 30, fontWeight: 700, color: st.color, lineHeight: 1 }}>{st.val}</span>
             </div>
@@ -377,20 +410,20 @@ export default function HomePage() {
       <section ref={pipeRef as any} style={{ backgroundColor: '#fcf9f8', padding: '80px 32px' }}>
         <div style={s.container}>
           <div style={{ marginBottom: 40 }}>
-            <h2 style={{ ...s.headlineMd, color: '#000000', textTransform: 'uppercase', marginBottom: 8 }}>The Verification Pipeline</h2>
+            <h2 style={{ ...s.headlineMd, color: '#000000', textTransform: 'uppercase', marginBottom: 8 }}>{t('home.pipeline.h2')}</h2>
             <div style={{ height: 4, width: 80, background: '#000000' }} />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', border: '2px solid #000' }}>
+          <div className="responsive-grid responsive-grid-4" style={{ border: '2px solid #000', gap: 0 }}>
             {pipelineSteps.map((step, i) => {
               const { Icon, num, title, desc, route } = step;
               return (
                 <div
                   key={num}
+                  className="pipeline-step"
                   onClick={() => navigate(route)}
                   style={{
                     padding: '32px 24px',
-                    borderRight: i < 3 ? '1px solid #000' : 'none',
                     cursor: 'pointer',
                     transition: 'background .2s, color .2s',
                     display: 'flex', flexDirection: 'column', gap: 12,
@@ -412,13 +445,14 @@ export default function HomePage() {
       <section ref={bentoRef as any} style={{ backgroundColor: '#ffffff', padding: '80px 32px' }}>
         <div style={s.container}>
           <h2 style={{ ...s.headlineLg, color: '#000000', textTransform: 'uppercase', textAlign: 'center', marginBottom: 64 }}>
-            Institutional Capabilities
+            {t('home.bento.h2')}
           </h2>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gridTemplateRows: 'auto auto', gap: 16 }}>
+          <div className="responsive-grid responsive-grid-6" style={{ gridTemplateRows: 'auto auto', gap: 16 }}>
             {/* Wide card — Predictive Maintenance */}
             <div
-              style={{ gridColumn: 'span 4', border: '2px solid #cfc4c5', padding: '32px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', transition: 'border-color .2s, box-shadow .2s', cursor: 'default', minHeight: 200 }}
+              className="bento-wide"
+              style={{ border: '2px solid #cfc4c5', padding: '32px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', transition: 'border-color .2s, box-shadow .2s', cursor: 'default', minHeight: 200 }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = '#000000'; e.currentTarget.style.boxShadow = '4px 4px 0px 0px #000000'; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = '#cfc4c5'; e.currentTarget.style.boxShadow = 'none'; }}
             >
@@ -436,7 +470,8 @@ export default function HomePage() {
 
             {/* Tall card — Civic DAO */}
             <div
-              style={{ gridColumn: 'span 2', gridRow: 'span 2', border: '2px solid #cfc4c5', padding: '32px', background: '#f6f3f2', display: 'flex', flexDirection: 'column', transition: 'border-color .2s, box-shadow .2s', cursor: 'default' }}
+              className="bento-tall"
+              style={{ border: '2px solid #cfc4c5', padding: '32px', background: '#f6f3f2', display: 'flex', flexDirection: 'column', transition: 'border-color .2s, box-shadow .2s', cursor: 'default' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = '#000000'; e.currentTarget.style.boxShadow = '4px 4px 0px 0px #000000'; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = '#cfc4c5'; e.currentTarget.style.boxShadow = 'none'; }}
             >
@@ -460,7 +495,8 @@ export default function HomePage() {
 
             {/* Small card — Tamper Proof */}
             <div
-              style={{ gridColumn: 'span 2', border: '2px solid #cfc4c5', padding: '28px 24px', transition: 'border-color .2s, box-shadow .2s', cursor: 'default' }}
+              className="bento-small"
+              style={{ border: '2px solid #cfc4c5', padding: '28px 24px', transition: 'border-color .2s, box-shadow .2s', cursor: 'default' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = '#000000'; e.currentTarget.style.boxShadow = '4px 4px 0px 0px #000000'; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = '#cfc4c5'; e.currentTarget.style.boxShadow = 'none'; }}
             >
@@ -475,7 +511,8 @@ export default function HomePage() {
 
             {/* Small card — API Economy */}
             <div
-              style={{ gridColumn: 'span 2', border: '2px solid #cfc4c5', padding: '28px 24px', transition: 'border-color .2s, box-shadow .2s', cursor: 'default' }}
+              className="bento-small"
+              style={{ border: '2px solid #cfc4c5', padding: '28px 24px', transition: 'border-color .2s, box-shadow .2s', cursor: 'default' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = '#000000'; e.currentTarget.style.boxShadow = '4px 4px 0px 0px #000000'; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = '#cfc4c5'; e.currentTarget.style.boxShadow = 'none'; }}
             >
@@ -494,15 +531,15 @@ export default function HomePage() {
         <div style={{ ...s.container, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 64, alignItems: 'center' }}>
           <div>
             <h2 style={{ ...s.headlineLg, color: '#ffffff', marginBottom: 16, textTransform: 'uppercase' }}>
-              Radical<br />Transparency
+              {t('home.transparency.h2')}
             </h2>
             <p style={{ ...s.bodyLg, color: 'rgba(255,255,255,0.6)', marginBottom: 32 }}>
-              Access the underlying architectural audit trail for every single civic action. No black boxes, only data.
+              {t('home.transparency.body')}
             </p>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 20 }}>
               {[
-                { title: 'SHA-256 Verified Assets', desc: 'Images verified via unique visual fingerprints.', icon: CheckCircle },
-                { title: 'Proof of Repair',         desc: 'Multi-factor confirmation from citizens and AI.',  icon: ShieldCheck },
+                { title: t('home.transparency.sha'),   desc: t('home.transparency.sha.desc'),   icon: CheckCircle },
+                { title: t('home.transparency.proof'), desc: t('home.transparency.proof.desc'), icon: ShieldCheck },
               ].map(({ title, desc, icon: Icon }) => (
                 <li key={title} style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
                   <Icon size={20} style={{ flexShrink: 0, marginTop: 2 }} />
@@ -519,7 +556,7 @@ export default function HomePage() {
               onMouseEnter={e => (e.currentTarget.style.background = '#f0f0f0')}
               onMouseLeave={e => (e.currentTarget.style.background = '#FFFFFF')}
             >
-              View Audit Logs <ArrowRight size={14} />
+              {t('home.transparency.viewLogs')} <ArrowRight size={14} />
             </button>
           </div>
 
@@ -544,9 +581,9 @@ export default function HomePage() {
       {/* ═══ 7. COVERAGE MAP ════════════════════════════════════════════════ */}
       <section ref={coverageRef as any} style={{ backgroundColor: '#ffffff', padding: '80px 32px', overflow: 'hidden' }}>
         <div style={{ ...s.container, textAlign: 'center' }}>
-          <h2 style={{ ...s.headlineLg, color: '#000000', textTransform: 'uppercase', marginBottom: 8 }}>National Coverage</h2>
+          <h2 style={{ ...s.headlineLg, color: '#000000', textTransform: 'uppercase', marginBottom: 8 }}>{t('home.coverage.h2')}</h2>
           <p style={{ ...s.bodyMd, color: '#5d5f5f', marginBottom: 48 }}>
-            Deployed across {loading ? '42' : Math.max(42, Math.ceil(stats.reported / 10))} metro zones with expanding nodes every month.
+            {t('home.coverage.body').replace('{count}', loading ? '42' : String(Math.max(42, Math.ceil(stats.reported / 10))))}
           </p>
 
           <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#f0edec', border: '2px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
@@ -563,7 +600,7 @@ export default function HomePage() {
 
             {/* Stat overlay card */}
             <div style={{ position: 'absolute', bottom: 24, left: 24, padding: '16px 20px', background: '#ffffff', border: '2px solid #000', textAlign: 'left' }}>
-              <div style={{ ...s.caption, color: '#7e7576', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>ACTIVE NODES</div>
+              <div style={{ ...s.caption, color: '#7e7576', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{t('home.coverage.activeNodes')}</div>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color: '#000', lineHeight: 1 }}>
                 {loading ? '—' : `${(stats.reported * 12 + 1204).toLocaleString()}`}
               </div>
@@ -583,7 +620,7 @@ export default function HomePage() {
               onMouseDown={e => (e.currentTarget.style.transform = 'scale(0.96)')}
               onMouseUp={e => (e.currentTarget.style.transform = 'scale(1)')}
             >
-              <Globe size={15} /> Launch Core Map Platform
+              <Globe size={15} /> {t('home.coverage.launchMap')}
             </button>
             <button
               style={{ ...s.btnBlack, background: 'transparent', color: '#000', border: '2px solid #000' }}
@@ -591,7 +628,7 @@ export default function HomePage() {
               onMouseEnter={e => { e.currentTarget.style.background = '#000000'; e.currentTarget.style.color = '#ffffff'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#000000'; }}
             >
-              <Terminal size={15} /> Report a Hazard
+              <Terminal size={15} /> {t('home.coverage.reportHazard')}
             </button>
           </div>
         </div>

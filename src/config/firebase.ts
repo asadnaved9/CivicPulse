@@ -52,6 +52,12 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
     if (currentUser) {
       const token = await currentUser.getIdToken();
       headers.set('Authorization', `Bearer ${token}`);
+    } else {
+      // In local demo / hackathon presentation mode, check for mock session role
+      const mockRole = sessionStorage.getItem('civicpulse_session_role');
+      if (mockRole) {
+        headers.set('Authorization', `Bearer mock_demo_token_${mockRole}`);
+      }
     }
   } catch (err) {
     console.error("fetchWithAuth token retrieval error:", err);

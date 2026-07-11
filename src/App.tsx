@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Navbar } from './components/Navbar';
 import { Toaster } from 'react-hot-toast';
@@ -31,10 +32,27 @@ const AdminMapPage = React.lazy(() => import('./pages/admin/AdminMapPage'));
 const AdminAnalyticsPage = React.lazy(() => import('./pages/admin/AdminAnalyticsPage'));
 const AdminNotificationsPage = React.lazy(() => import('./pages/admin/AdminNotificationsPage'));
 const AdminSettingsPage = React.lazy(() => import('./pages/admin/AdminSettingsPage'));
+const AdminDepartmentsPage = React.lazy(() => import('./pages/admin/AdminDepartmentsPage'));
+const AdminDependenciesPage = React.lazy(() => import('./pages/admin/AdminDependenciesPage'));
+const AdminWorkersPage = React.lazy(() => import('./pages/admin/AdminWorkersPage'));
 
 // ── Super Admin portal (lazy) ─────────────────────────────────────────────────
 const SuperAdminLayout        = React.lazy(() => import('./pages/super-admin/SuperAdminLayout'));
 const SuperAdminDashboardPage = React.lazy(() => import('./pages/super-admin/SuperAdminDashboardPage'));
+const MunicipalitiesPage      = React.lazy(() => import('./pages/super-admin/MunicipalitiesPage'));
+const DepartmentsPage         = React.lazy(() => import('./pages/super-admin/DepartmentsPage'));
+const NationalMapPage         = React.lazy(() => import('./pages/super-admin/NationalMapPage'));
+const AdminsPage              = React.lazy(() => import('./pages/super-admin/AdminsPage'));
+const AllUsersPage            = React.lazy(() => import('./pages/super-admin/AllUsersPage'));
+const RolesPage               = React.lazy(() => import('./pages/super-admin/RolesPage'));
+const AnalyticsPage           = React.lazy(() => import('./pages/super-admin/AnalyticsPage'));
+const AIMonitoringPage        = React.lazy(() => import('./pages/super-admin/AIMonitoringPage'));
+const SystemLogsPage          = React.lazy(() => import('./pages/super-admin/SystemLogsPage'));
+const AuditReportsPage        = React.lazy(() => import('./pages/super-admin/AuditReportsPage'));
+const ConfigurationPage       = React.lazy(() => import('./pages/super-admin/ConfigurationPage'));
+const SettingsPage            = React.lazy(() => import('./pages/super-admin/SettingsPage'));
+const ApiKeysPage             = React.lazy(() => import('./pages/super-admin/ApiKeysPage'));
+const IntegrationsPage        = React.lazy(() => import('./pages/super-admin/IntegrationsPage'));
 
 // Generic suspense loading wrapper
 const PageLoader: React.FC = () => (
@@ -140,6 +158,9 @@ function AppRouter() {
           <Route path="analytics" element={<AdminAnalyticsPage />} />
           <Route path="notifications" element={<AdminNotificationsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
+          <Route path="departments" element={<AdminDepartmentsPage />} />
+          <Route path="dependencies" element={<AdminDependenciesPage />} />
+          <Route path="workers" element={<AdminWorkersPage />} />
         </Route>
 
         {/* ── Super Admin portal ───────────────────────────────────────── */}
@@ -152,6 +173,20 @@ function AppRouter() {
           }
         >
           <Route path="dashboard" element={<SuperAdminDashboardPage />} />
+          <Route path="municipalities" element={<MunicipalitiesPage />} />
+          <Route path="departments" element={<DepartmentsPage />} />
+          <Route path="map" element={<NationalMapPage />} />
+          <Route path="admins" element={<AdminsPage />} />
+          <Route path="users" element={<AllUsersPage />} />
+          <Route path="roles" element={<RolesPage />} />
+          <Route path="analytics" element={<AnalyticsPage />} />
+          <Route path="ai" element={<AIMonitoringPage />} />
+          <Route path="logs" element={<SystemLogsPage />} />
+          <Route path="audit" element={<AuditReportsPage />} />
+          <Route path="config" element={<ConfigurationPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="api-keys" element={<ApiKeysPage />} />
+          <Route path="integrations" element={<IntegrationsPage />} />
         </Route>
 
         {/* ── Citizen shell (all other routes) ─────────────────────────── */}
@@ -164,26 +199,28 @@ function AppRouter() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <BrowserRouter>
-          <AppRouter />
-          <Toaster
-            position="bottom-right"
-            toastOptions={{
-              style: {
-                background: 'var(--surface-2)',
-                color: 'var(--text-1)',
-                border: '1px solid var(--border)',
-                fontFamily: 'var(--font-sans)',
-                fontSize: '13px',
-                borderRadius: '6px',
-              },
-              success: { iconTheme: { primary: 'var(--success)', secondary: '#FFFFFF' } },
-              error:   { iconTheme: { primary: 'var(--danger)',  secondary: '#FFFFFF' } },
-            }}
-          />
-        </BrowserRouter>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <AppRouter />
+            <Toaster
+              position="bottom-right"
+              toastOptions={{
+                style: {
+                  background: 'var(--surface-2)',
+                  color: 'var(--text-1)',
+                  border: '1px solid var(--border)',
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: '13px',
+                  borderRadius: '6px',
+                },
+                success: { iconTheme: { primary: 'var(--success)', secondary: '#FFFFFF' } },
+                error:   { iconTheme: { primary: 'var(--danger)',  secondary: '#FFFFFF' } },
+              }}
+            />
+          </BrowserRouter>
+        </AuthProvider>
+      </LanguageProvider>
     </ErrorBoundary>
   );
 }

@@ -14,11 +14,13 @@ import {
   Lightbulb, Droplet, Trash2, HelpCircle, Mic, RefreshCw, Video, Eye
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function ReportPage() {
   const navigate = useNavigate();
   const routerLocation = useLocation();
   const { user, profile, refreshProfile } = useAuth();
+  const { t } = useLanguage();
 
   // Map and Marker Refs for OpenFreeMap
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -28,7 +30,7 @@ export default function ReportPage() {
   // Redirect if not authenticated
   useEffect(() => {
     if (!user) {
-      toast.error("Please sign in to report a community issue.");
+      toast.error(t('report.toast.signIn'));
       navigate('/');
     }
   }, [user, navigate]);
@@ -360,13 +362,15 @@ export default function ReportPage() {
   };
 
   // Get current position (Strict GPS with standard accuracy fallback for desktop compatibility)
-  const useMyLocation = () => {
+  const useMyLocation = (silent = false) => {
     setGeocoding(true);
     setGpsError(false);
     setGpsFallbackActive(false);
 
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
+      if (!silent) {
+        toast.error("Geolocation is not supported by your browser");
+      }
       setGeocoding(false);
       return;
     }
@@ -383,7 +387,9 @@ export default function ReportPage() {
           setShowPresetLocation(false); // Hide presets list on precise GPS lock!
           triggerReverseGeocode(latitude, longitude);
           setGeocoding(false);
-          toast.success("GPS Lock Established!");
+          if (!silent) {
+            toast.success("GPS Lock Established!");
+          }
         },
         (error) => {
           console.error(`Geolocation error (highAccuracy: ${highAccuracy}):`, error);
@@ -398,7 +404,9 @@ export default function ReportPage() {
             if (error.code === 2) reason = "Position unavailable. Your device cannot determine its location.";
             if (error.code === 3) reason = "Timeout. The request to get your location took too long.";
             
-            alert(`Could not fetch location: ${reason}\n\n(Error code: ${error.code})`);
+            if (!silent) {
+              toast.error(`Could not fetch location: ${reason}`);
+            }
             setGpsError(true);
             setGeocoding(false);
           }
@@ -418,7 +426,7 @@ export default function ReportPage() {
       triggerReverseGeocode(passedLocation.lat, passedLocation.lng);
     } else if (!lat && !lng) {
       // Automatically attempt to fetch live GPS coordinates on load
-      useMyLocation();
+      useMyLocation(true);
     }
   }, [passedLocation]);
 
@@ -682,31 +690,31 @@ export default function ReportPage() {
       }
 
       await refreshProfile();
-      toast.success("Civic report posted successfully!");
+      toast.success(t('report.toast.success'));
       
       // Redirect to newly created issue page
       navigate(`/issue/${docRef.id}`, { state: { justReported: true } });
     } catch (err: any) {
       console.error("Submission error:", err);
-      toast.error(err.message || "Failed to submit your civic report.");
+      toast.error(err.message || t('report.toast.error'));
     } finally {
       setSubmitting(false);
     }
   };
 
   const categories = [
-    { id: 'pothole', label: 'Pothole', icon: <AlertTriangle size={16} /> },
-    { id: 'streetlight', label: 'Streetlight', icon: <Lightbulb size={16} /> },
-    { id: 'water', label: 'Water Leak', icon: <Droplet size={16} /> },
-    { id: 'waste', label: 'Waste/Garbage', icon: <Trash2 size={16} /> },
-    { id: 'other', label: 'Other Hazard', icon: <HelpCircle size={16} /> }
+    { id: 'pothole', label: t('report.category.pothole'), icon: <AlertTriangle size={16} /> },
+    { id: 'streetlight', label: t('report.category.streetlight'), icon: <Lightbulb size={16} /> },
+    { id: 'water', label: t('report.category.water'), icon: <Droplet size={16} /> },
+    { id: 'waste', label: t('report.category.waste'), icon: <Trash2 size={16} /> },
+    { id: 'other', label: t('report.category.other'), icon: <HelpCircle size={16} /> }
   ];
 
   return (
     <div style={{ maxWidth: '1200px', margin: '40px auto', padding: '0 24px' }}>
-      <h1 style={{ marginBottom: '8px' }}>Report an Infrastructure Hazard</h1>
+      <h1 style={{ marginBottom: '8px' }}>{t('report.title')}</h1>
       <p style={{ color: 'var(--text-2)', marginBottom: '32px' }}>
-        Help repair your ward. Upload a photo of the physical damage and let our AI categorize and estimate priority.
+        {t('report.subtitle')}
       </p>
 
       <form onSubmit={handleSubmit} className="grid-cols-2">
@@ -815,10 +823,10 @@ export default function ReportPage() {
               >
                 <Camera size={40} style={{ color: 'var(--text-3)' }} />
                 <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-1)' }}>
-                  Drag photo here or click to upload
+                  {t('report.upload.drag')}
                 </span>
                 <span style={{ fontSize: '12px', color: 'var(--text-3)' }}>
-                  Accepts JPG or PNG (Max 10MB)
+                  {t('report.upload.format')}
                 </span>
                 <input 
                   type="file" 
@@ -845,7 +853,7 @@ export default function ReportPage() {
               >
                 <Loader className="shimmer" size={32} style={{ color: 'var(--primary)', animation: 'spin 1.5s linear infinite' }} />
                 <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-1)' }}>
-                  AI Classifier Triaging Damage...
+                  {t('report.ai.triaging')}
                 </span>
               </div>
             )}
@@ -860,7 +868,7 @@ export default function ReportPage() {
               onClick={startCamera}
             >
               <Video size={16} />
-              Switch to Live Camera AI Scan
+              {t('report.camera.switch')}
             </button>
           )}
 
@@ -873,7 +881,7 @@ export default function ReportPage() {
                 onClick={captureFrame}
               >
                 <Camera size={16} />
-                Capture & Auto-Fill Form
+                {t('report.camera.capture')}
               </button>
               <button
                 type="button"
@@ -881,7 +889,7 @@ export default function ReportPage() {
                 style={{ flex: 1 }}
                 onClick={stopCamera}
               >
-                Cancel Live Scan
+                {t('report.camera.cancel')}
               </button>
             </div>
           )}
@@ -919,8 +927,8 @@ export default function ReportPage() {
             >
               <CheckCircle size={18} style={{ flexShrink: 0 }} />
               <div>
-                <strong style={{ display: 'block', marginBottom: '2px' }}>AI Safety Assessment Complete:</strong>
-                <span>{aiAssessment} Est. resolution: <strong>{estDays} days</strong>.</span>
+                <strong style={{ display: 'block', marginBottom: '2px' }}>{t('report.ai.success')}</strong>
+                <span>{aiAssessment} {t('report.ai.est')} <strong>{estDays} {t('report.ai.days')}</strong>.</span>
               </div>
             </div>
           )}
@@ -931,12 +939,12 @@ export default function ReportPage() {
           
           {/* Title */}
           <div className="form-group">
-            <label className="form-label">Issue Title (AI Pre-Filled)</label>
+            <label className="form-label">{t('report.form.title')}</label>
             <input 
               type="text" 
               className="form-input" 
               required
-              placeholder="e.g. Broken streetlight on Outer Ring Road" 
+              placeholder={t('report.form.titlePlaceholder')} 
               value={title} 
               onChange={(e) => setTitle(e.target.value)}
             />
@@ -944,7 +952,7 @@ export default function ReportPage() {
 
           {/* Category */}
           <div className="form-group">
-            <label className="form-label">Category</label>
+            <label className="form-label">{t('report.form.category')}</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
               {categories.map((cat) => (
                 <button
@@ -963,7 +971,7 @@ export default function ReportPage() {
 
           {/* Severity */}
           <div className="form-group">
-            <label className="form-label">AI Priority Level ({severity}/5)</label>
+            <label className="form-label">{t('report.form.priority')} ({severity}/5)</label>
             <div style={{ display: 'flex', gap: '8px' }}>
               {[1, 2, 3, 4, 5].map((lvl) => (
                 <button
@@ -992,7 +1000,7 @@ export default function ReportPage() {
           {/* Description */}
           <div className="form-group" style={{ position: 'relative' }}>
             <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Description & Local Context</span>
+              <span>{t('report.form.description')}</span>
               <div style={{ display: 'flex', gap: '8px' }}>
                 {showVoiceSimulation && (
                   <button
@@ -1012,13 +1020,13 @@ export default function ReportPage() {
                   disabled={voiceCleaning}
                 >
                   <Mic size={12} style={{ color: voiceActive ? 'var(--danger)' : 'var(--text-1)' }} />
-                  {voiceActive ? "Listening..." : (voiceCleaning ? "AI Cleaning..." : "Speak Report (AI Cleaned)")}
+                  {voiceActive ? t('report.voice.listening') : (voiceCleaning ? t('report.voice.cleaning') : t('report.voice.speak'))}
                 </button>
               </div>
             </label>
             <textarea 
               className="form-textarea"
-              placeholder="Provide specific landmarks, estimated duration, or municipal safety impact details..."
+              placeholder={t('report.form.descPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               required
@@ -1091,18 +1099,18 @@ export default function ReportPage() {
           {/* Location Area */}
           <div className="form-group" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px' }}>
             <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Hazard Location</span>
+              <span>{t('report.location.title')}</span>
               {gpsFallbackActive ? (
                 <span style={{ fontSize: '11px', color: '#F59E0B', fontWeight: 600 }}>
-                  📍 Fallback Coordinates Active
+                  {t('report.location.fallbackActive')}
                 </span>
               ) : lat && lng ? (
                 <span style={{ fontSize: '11px', color: '#10B981', fontWeight: 600 }}>
-                  ✓ GPS Location Active
+                  {t('report.location.gpsActive')}
                 </span>
               ) : (
                 <span style={{ fontSize: '11px', color: 'var(--text-2)', fontWeight: 600 }}>
-                  — Location Not Yet Detected
+                  {t('report.location.notDetected')}
                 </span>
               )}
             </label>
@@ -1111,11 +1119,11 @@ export default function ReportPage() {
                 type="button"
                 className="btn btn-secondary"
                 style={{ flex: 1 }}
-                onClick={useMyLocation}
+                onClick={() => useMyLocation(false)}
                 disabled={geocoding}
               >
                 <MapPin size={15} />
-                {geocoding ? "Detecting GPS..." : "Detect My GPS Location"}
+                {geocoding ? t('report.location.detecting') : t('report.location.detect')}
               </button>
             </div>
 
@@ -1142,7 +1150,7 @@ export default function ReportPage() {
                         setGpsError(false);
                         setGpsFallbackActive(true);
                         setShowPresetLocation(false); // Hide presets list after selection
-                        toast.success(`Location aligned to ${cp.name}`);
+                        toast.success(t('report.toast.locationAligned').replace('{name}', cp.name));
                       }}
                     >
                       📍 <strong>{cp.name}</strong> ({cp.lat.toFixed(4)}, {cp.lng.toFixed(4)})
@@ -1172,7 +1180,7 @@ export default function ReportPage() {
                   type="text" 
                   className="form-input text-sm"
                   style={{ background: 'var(--bg)' }}
-                  placeholder="Address or Landmark reference" 
+                  placeholder={t('report.location.addressPlaceholder')} 
                   value={address} 
                   onChange={(e) => setAddress(e.target.value)}
                 />
@@ -1190,7 +1198,7 @@ export default function ReportPage() {
                   fontSize: '12px'
                 }}
               >
-                No GPS lock selected. Use button above or click preset district.
+                {t('report.location.noLock')}
               </div>
             )}
           </div>
@@ -1205,10 +1213,10 @@ export default function ReportPage() {
             {submitting ? (
               <>
                 <Loader size={16} className="shimmer" style={{ animation: 'spin 1s linear infinite' }} />
-                Submitting to Ward Database...
+                {t('report.submit.loading')}
               </>
             ) : (
-              "Submit Verified Report to Municipal Ledger"
+              t('report.submit.button')
             )}
           </button>
 

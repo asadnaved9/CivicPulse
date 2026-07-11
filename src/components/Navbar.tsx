@@ -5,10 +5,12 @@ import { Bell, PlusCircle, LogIn, LogOut, User, MapPin, Menu, X, Check, Eye, Sun
 import { toast } from 'react-hot-toast';
 import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../config/firebase';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { user, profile, loginWithGoogle, loginAnonymously, logout } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -108,16 +110,16 @@ export const Navbar: React.FC = () => {
         {/* Desktop Links (Hidden on Mobile) */}
         <div className="navbar-center hide-on-mobile">
           <Link to="/map" className={`navbar-link ${isActive('/map') ? 'active' : ''}`}>
-            Map
+            {t('nav.map')}
           </Link>
           <Link to="/dashboard" className={`navbar-link ${isActive('/dashboard') ? 'active' : ''}`}>
-            Dashboard
+            {t('nav.dashboard')}
           </Link>
           <Link to="/insights" className={`navbar-link ${isActive('/insights') ? 'active' : ''}`}>
-            Insights
+            {t('nav.insights')}
           </Link>
           <Link to="/community" className={`navbar-link ${isActive('/community') ? 'active' : ''}`}>
-            Community
+            {t('nav.community')}
           </Link>
         </div>
 
@@ -180,14 +182,14 @@ export const Navbar: React.FC = () => {
                 >
                   <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                     <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-1)' }}>
-                      Alerts ({notifications.length})
+                      {t('nav.alerts')} ({notifications.length})
                     </span>
                     {notifications.length > 0 && (
                       <button 
                         onClick={handleMarkAllRead}
                         style={{ background: 'transparent', border: 'none', fontSize: '11px', color: 'var(--primary)', cursor: 'pointer', fontWeight: 500 }}
                       >
-                        Mark all as read
+                        {t('nav.markAllRead')}
                       </button>
                     )}
                   </div>
@@ -214,13 +216,13 @@ export const Navbar: React.FC = () => {
                             {notif.message}
                           </p>
                           <span style={{ fontSize: '10px', color: 'var(--text-3)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Eye size={10} /> Click to view details
+                            <Eye size={10} /> {t('nav.clickToView')}
                           </span>
                         </div>
                       ))
                     ) : (
                       <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-3)', fontSize: '12px' }}>
-                        No unread notifications
+                        {t('nav.noUnread')}
                       </div>
                     )}
                   </div>
@@ -234,7 +236,7 @@ export const Navbar: React.FC = () => {
               {/* Desktop Only Buttons */}
               <Link to="/report" className="btn btn-primary hide-on-mobile" style={{ padding: '8px 14px' }}>
                 <PlusCircle size={15} />
-                Report Issue
+                {t('nav.reportIssue')}
               </Link>
 
               <Link 
@@ -275,7 +277,7 @@ export const Navbar: React.FC = () => {
               style={{ padding: '8px 14px' }}
             >
               <LogIn size={15} />
-              Sign In
+              {t('nav.signIn')}
             </button>
           )}
 
@@ -317,7 +319,7 @@ export const Navbar: React.FC = () => {
             style={{ height: '40px', borderBottom: 'none' }}
             onClick={handleLinkClick}
           >
-            Map
+            {t('nav.map')}
           </Link>
           <Link 
             to="/dashboard" 
@@ -325,7 +327,7 @@ export const Navbar: React.FC = () => {
             style={{ height: '40px', borderBottom: 'none' }}
             onClick={handleLinkClick}
           >
-            Dashboard
+            {t('nav.dashboard')}
           </Link>
           <Link 
             to="/insights" 
@@ -333,7 +335,7 @@ export const Navbar: React.FC = () => {
             style={{ height: '40px', borderBottom: 'none' }}
             onClick={handleLinkClick}
           >
-            Insights
+            {t('nav.insights')}
           </Link>
           <Link 
             to="/community" 
@@ -341,7 +343,7 @@ export const Navbar: React.FC = () => {
             style={{ height: '40px', borderBottom: 'none' }}
             onClick={handleLinkClick}
           >
-            Community
+            {t('nav.community')}
           </Link>
 
           {user ? (
@@ -354,7 +356,7 @@ export const Navbar: React.FC = () => {
                 onClick={handleLinkClick}
               >
                 <PlusCircle size={15} />
-                Report Issue
+                {t('nav.reportIssue')}
               </Link>
               <Link 
                 to="/profile" 
@@ -363,7 +365,7 @@ export const Navbar: React.FC = () => {
                 onClick={handleLinkClick}
               >
                 <User size={15} />
-                My Profile ({profile?.points ?? 0} pts)
+                {t('nav.myProfile')} ({profile?.points ?? 0} {t('profile.points')})
               </Link>
               <button 
                 onClick={() => {
@@ -374,7 +376,7 @@ export const Navbar: React.FC = () => {
                 style={{ justifyContent: 'center', padding: '10px' }}
               >
                 <LogOut size={15} />
-                Sign Out
+                {t('profile.logout')}
               </button>
             </>
           ) : (
@@ -389,7 +391,7 @@ export const Navbar: React.FC = () => {
                 style={{ justifyContent: 'center', padding: '10px' }}
               >
                 <LogIn size={15} />
-                Sign In
+                {t('nav.signIn')}
               </button>
             </>
           )}
@@ -425,9 +427,9 @@ export const Navbar: React.FC = () => {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ margin: 0 }}>Join CivicPulse</h3>
+            <h3 style={{ margin: 0 }}>{t('nav.joinTitle')}</h3>
             <p className="text-sm" style={{ color: 'var(--text-2)' }}>
-              Sign in to report community problems, upvote active issues, write comments, and earn recognition badges.
+              {t('nav.joinDesc')}
             </p>
             <button 
               className="btn btn-primary" 
@@ -437,7 +439,7 @@ export const Navbar: React.FC = () => {
                 await loginWithGoogle();
               }}
             >
-              Sign In with Google
+              {t('nav.signInGoogle')}
             </button>
             <button 
               className="btn btn-secondary" 
@@ -447,14 +449,14 @@ export const Navbar: React.FC = () => {
                 await loginAnonymously();
               }}
             >
-              Continue Anonymously
+              {t('nav.continueAnon')}
             </button>
             <button 
               className="btn text-muted" 
               style={{ background: 'transparent', alignSelf: 'center', fontSize: '12px', padding: '4px' }}
               onClick={() => setShowAuthModal(false)}
             >
-              Cancel
+              {t('nav.cancel')}
             </button>
           </div>
         </div>

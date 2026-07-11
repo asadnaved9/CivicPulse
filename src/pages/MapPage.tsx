@@ -10,6 +10,7 @@ import {
 import { toast } from 'react-hot-toast';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { useLanguage } from '../contexts/LanguageContext';
 
 function escapeHTML(str: string): string {
   if (!str) return '';
@@ -23,6 +24,7 @@ function escapeHTML(str: string): string {
 
 export default function MapPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [issues, setIssues] = useState<any[]>([]);
   const [predictions, setPredictions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -512,7 +514,7 @@ export default function MapPage() {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-2)', textTransform: 'uppercase' }}>
-            Filters:
+            {t('map.filters')}
           </span>
           
           {/* Category Filter Group */}
@@ -530,7 +532,7 @@ export default function MapPage() {
                   color: filterCategory === cat ? '#FFFFFF' : 'var(--text-1)'
                 }}
               >
-                {cat === 'all' ? 'All categories' : cat.charAt(0).toUpperCase() + cat.slice(1)}
+                {cat === 'all' ? t('map.categories.all') : t(`map.categories.${cat}` as any)}
               </button>
             ))}
           </div>
@@ -552,7 +554,7 @@ export default function MapPage() {
                   color: filterStatus === st ? '#FFFFFF' : 'var(--text-1)'
                 }}
               >
-                {st === 'all' ? 'All statuses' : st.charAt(0).toUpperCase() + st.slice(1)}
+                {st === 'all' ? t('map.statuses.all') : t(`map.statuses.${st}` as any)}
               </button>
             ))}
           </div>
@@ -581,7 +583,7 @@ export default function MapPage() {
               title="Switch to interactive OpenFreeMap"
             >
               <MapIcon size={13} />
-              OpenFreeMap
+              {t('map.mode.openfreemap')}
             </button>
             <button
               onClick={() => setMapMode('grid')}
@@ -602,7 +604,7 @@ export default function MapPage() {
               title="Switch to SVG Grid Overlay Map"
             >
               <Grid size={13} />
-              SVG Grid Map
+              {t('map.mode.svggrid')}
             </button>
           </div>
 
@@ -612,7 +614,7 @@ export default function MapPage() {
             style={{ padding: '6px 12px', fontSize: '12px' }}
           >
             <Layers size={14} />
-            {showRiskZones ? "Hide AI Risk Grids" : "Show AI Risk Grids"}
+            {showRiskZones ? t('map.risk.hide') : t('map.risk.show')}
           </button>
 
           <button
@@ -622,7 +624,7 @@ export default function MapPage() {
             title="Collapse filters for larger map"
           >
             <X size={14} />
-            Collapse
+            {t('map.collapse')}
           </button>
         </div>
       </div>
@@ -668,7 +670,7 @@ export default function MapPage() {
             className="hover-card"
           >
             <Layers size={13} style={{ color: 'var(--primary)' }} />
-            Show Filters & Controls
+            {t('map.showFilters')}
           </button>
         )}
 
@@ -696,10 +698,10 @@ export default function MapPage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ fontSize: '14px' }}>💡</span>
-              <strong style={{ fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#10B981', fontFamily: 'var(--font-mono)' }}>PRO-TIP: LIVE GRID MAP</strong>
+              <strong style={{ fontSize: '11px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#10B981', fontFamily: 'var(--font-mono)' }}>{t('map.protip.title')}</strong>
             </div>
             <p style={{ margin: 0, fontSize: '11px', lineHeight: '1.4', color: '#A1A1AA' }}>
-              Right-Click anywhere on the map grid to report an active hazard directly at those GPS coordinates!
+              {t('map.protip.desc')}
             </p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
               <button
@@ -717,7 +719,7 @@ export default function MapPage() {
                   letterSpacing: '0.05em'
                 }}
               >
-                OK, Got It
+                {t('map.protip.ok')}
               </button>
             </div>
           </div>
@@ -1028,7 +1030,7 @@ export default function MapPage() {
                 style={{ width: '100%', padding: '6px 12px', fontSize: '12px' }}
               >
                 <PlusCircle size={13} />
-                Report Hazard Here
+                {t('map.hazard.reportHere')}
               </button>
             </div>
           </div>
@@ -1085,7 +1087,7 @@ export default function MapPage() {
                   {selectedIssue.category === 'other' && <HelpCircle size={48} className="text-gray-400" />}
                   {!['pothole', 'streetlight', 'water', 'waste', 'other'].includes(selectedIssue.category) && <HelpCircle size={48} className="text-gray-400" />}
                   <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: '#94a3b8', fontFamily: 'var(--font-mono)' }}>
-                    No Image Attached
+                    {t('map.hazard.noImage')}
                   </span>
                 </div>
               )}
@@ -1124,7 +1126,7 @@ export default function MapPage() {
                   borderRadius: '4px'
                 }}
               >
-                Severity {selectedIssue.severity}/5
+                {t('map.hazard.severity')} {selectedIssue.severity}/5
               </div>
             </div>
 
@@ -1143,21 +1145,21 @@ export default function MapPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div style={{ background: 'var(--surface-2)', padding: '8px 12px', borderRadius: '4px' }}>
                   <span style={{ fontSize: '10px', color: 'var(--text-3)', display: 'block', textTransform: 'uppercase' }}>
-                    Category
+                    {t('map.hazard.category')}
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 500, marginTop: '2px' }}>
                     {getCategoryIcon(selectedIssue.category)}
-                    {selectedIssue.category.charAt(0).toUpperCase() + selectedIssue.category.slice(1)}
+                    {t(`map.categories.${selectedIssue.category}` as any)}
                   </div>
                 </div>
 
                 <div style={{ background: 'var(--surface-2)', padding: '8px 12px', borderRadius: '4px' }}>
                   <span style={{ fontSize: '10px', color: 'var(--text-3)', display: 'block', textTransform: 'uppercase' }}>
-                    Upvotes
+                    {t('map.hazard.upvotes')}
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 500, marginTop: '2px' }}>
                     <MapPin size={13} style={{ color: 'var(--primary)' }} />
-                    {(selectedIssue.upvotes || []).length} community votes
+                    {(selectedIssue.upvotes || []).length} {t('map.hazard.votesCount')}
                   </div>
                 </div>
               </div>
@@ -1165,17 +1167,17 @@ export default function MapPage() {
               {/* Description */}
               <div>
                 <span style={{ fontSize: '11px', color: 'var(--text-2)', display: 'block', marginBottom: '4px', textTransform: 'uppercase' }}>
-                  Description
+                  {t('map.hazard.description')}
                 </span>
                 <p className="text-sm" style={{ margin: 0, color: 'var(--text-2)' }}>
-                  {selectedIssue.description || "No description provided."}
+                  {selectedIssue.description || t('map.hazard.noDesc')}
                 </p>
               </div>
 
               {/* Address */}
               <div>
                 <span style={{ fontSize: '11px', color: 'var(--text-2)', display: 'block', marginBottom: '4px', textTransform: 'uppercase' }}>
-                  Reported Address
+                  {t('map.hazard.reportedAddress')}
                 </span>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
                   <MapPin size={14} style={{ color: 'var(--primary)', flexShrink: 0, marginTop: '2px' }} />
@@ -1198,7 +1200,7 @@ export default function MapPage() {
                   }}
                 >
                   <ShieldAlert size={16} />
-                  <span>Officially escalated to Municipal Corporation!</span>
+                  <span>{t('map.hazard.escalated')}</span>
                 </div>
               )}
             </div>
@@ -1210,7 +1212,7 @@ export default function MapPage() {
                 className="btn btn-primary"
                 style={{ width: '100%', justifyContent: 'center' }}
               >
-                View Complete Resolution Hub
+                {t('map.hazard.viewResolution')}
                 <ArrowRight size={15} />
               </button>
             </div>
@@ -1266,10 +1268,10 @@ export default function MapPage() {
               </button>
               
               <span className="text-mono" style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: 600, display: 'block', textTransform: 'uppercase', marginBottom: '4px' }}>
-                AI CIVIC METRICS
+                {t('map.metrics.title')}
               </span>
               <h2 style={{ fontSize: '18px', fontWeight: 600, margin: 0, paddingRight: '30px' }}>
-                {selectedPrediction.sector || "Koramangala"} Civic Report Card
+                {selectedPrediction.sector || "Koramangala"} {t('map.metrics.reportCard')}
               </h2>
             </div>
 
@@ -1278,30 +1280,30 @@ export default function MapPage() {
               {loadingReportCard ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '12px' }}>
                   <Loader className="shimmer" size={24} style={{ color: 'var(--primary)', animation: 'spin 1.5s linear infinite' }} />
-                  <span style={{ fontSize: '12px', color: 'var(--text-3)' }}>Analyzing historical resolutions & live logs...</span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-3)' }}>{t('map.metrics.analyzing')}</span>
                 </div>
               ) : reportCard ? (
                 <>
                   {/* Overall score banner */}
                   <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '6px', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
-                      <span style={{ fontSize: '10px', color: 'var(--text-3)', display: 'block', textTransform: 'uppercase' }}>Overall Ward Grade</span>
+                      <span style={{ fontSize: '10px', color: 'var(--text-3)', display: 'block', textTransform: 'uppercase' }}>{t('map.metrics.grade')}</span>
                       <strong style={{ fontSize: '32px', color: 'var(--primary)' }}>{reportCard.overallGrade}</strong>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: '10px', color: 'var(--text-3)', display: 'block', textTransform: 'uppercase' }}>Resolution Trend</span>
+                      <span style={{ fontSize: '10px', color: 'var(--text-3)', display: 'block', textTransform: 'uppercase' }}>{t('map.metrics.trend')}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', marginTop: '4px' }}>
                         {reportCard.overallTrend === 'improving' ? (
                           <span style={{ color: 'var(--success)', fontWeight: 600, fontSize: '13px', display: 'flex', alignItems: 'center' }}>
-                            ▲ Improving
+                            {t('map.metrics.improving')}
                           </span>
                         ) : reportCard.overallTrend === 'worsening' ? (
                           <span style={{ color: 'var(--danger)', fontWeight: 600, fontSize: '13px', display: 'flex', alignItems: 'center' }}>
-                            ▼ Worsening
+                            {t('map.metrics.worsening')}
                           </span>
                         ) : (
                           <span style={{ color: 'var(--text-2)', fontWeight: 600, fontSize: '13px', display: 'flex', alignItems: 'center' }}>
-                            ▶ Stable
+                            {t('map.metrics.stable')}
                           </span>
                         )}
                       </div>
@@ -1334,7 +1336,7 @@ export default function MapPage() {
                 </>
               ) : (
                 <div style={{ textAlign: 'center', color: 'var(--text-3)', fontSize: '12px' }}>
-                  No grade data loaded.
+                  {t('map.metrics.noData')}
                 </div>
               )}
             </div>
@@ -1353,12 +1355,12 @@ export default function MapPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: '150px', flexShrink: 0 }}>
             <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', color: forecastDays > 0 ? '#EF4444' : 'var(--text-2)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: forecastDays > 0 ? '#EF4444' : 'var(--text-3)', animation: forecastDays > 0 ? 'pulse 1.5s infinite' : 'none' }} />
-              {forecastDays > 0 ? `AI Forecast Active` : "Live Status Mode"}
+              {forecastDays > 0 ? t('map.forecast.active') : t('map.forecast.live')}
             </span>
           </div>
 
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0 }}>
-            <span className="text-mono" style={{ fontSize: '11px', color: 'var(--text-3)', flexShrink: 0 }}>Current</span>
+            <span className="text-mono" style={{ fontSize: '11px', color: 'var(--text-3)', flexShrink: 0 }}>{t('map.forecast.current')}</span>
             <input 
               type="range" 
               min="0" 
@@ -1379,16 +1381,16 @@ export default function MapPage() {
               }}
             />
             <span className="text-mono" style={{ fontSize: '11px', color: forecastDays > 0 ? '#EF4444' : 'var(--text-3)', fontWeight: forecastDays > 0 ? 'bold' : 'normal', flexShrink: 0 }}>
-              {forecastDays === 0 ? "Now" : (forecastDays === 7 ? "+7 Days Forecast" : "+30 Days Forecast")}
+              {forecastDays === 0 ? t('map.forecast.now') : (forecastDays === 7 ? t('map.forecast.7days') : t('map.forecast.30days'))}
             </span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
             <div style={{ fontSize: '11px', color: 'var(--text-2)', maxWidth: '220px', textAlign: 'right' }} className="hide-on-mobile">
               {forecastDays === 0 ? (
-                <span>Scrub right to morph into <strong>AI Forecast Mode</strong> & predict future municipal hotspots.</span>
+                <span>{t('map.forecast.scrubRight')}</span>
               ) : (
-                <span style={{ color: '#EF4444' }}>Showing predictive density based on seasonal heat & precipitation models.</span>
+                <span style={{ color: '#EF4444' }}>{t('map.forecast.predictiveDensity')}</span>
               )}
             </div>
 
@@ -1412,7 +1414,7 @@ export default function MapPage() {
               title="Collapse timeline scrubber"
             >
               <X size={12} />
-              <span className="hide-on-mobile">Collapse</span>
+              <span className="hide-on-mobile">{t('map.collapse')}</span>
             </button>
           </div>
         </div>
@@ -1444,7 +1446,7 @@ export default function MapPage() {
             className="hover-card"
           >
             <Calendar size={13} style={{ color: 'var(--primary)' }} />
-            Show Timeline & Forecast
+            {t('map.forecast.showTimeline')}
           </button>
         )}
       </div>
