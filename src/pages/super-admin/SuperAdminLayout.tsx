@@ -52,7 +52,6 @@ const navSections: NavSection[] = [
     items: [
       { labelKey: 'superadmin.nav.config',       path: '/super-admin/config',       icon: <Layers size={15} /> },
       { labelKey: 'superadmin.nav.settings',     path: '/super-admin/settings',     icon: <Settings size={15} /> },
-      { labelKey: 'superadmin.nav.apiKeys',      path: '/super-admin/api-keys',     icon: <Key size={15} /> },
       { labelKey: 'superadmin.nav.integrations',  path: '/super-admin/integrations', icon: <Plug size={15} /> },
     ],
   },

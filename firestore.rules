@@ -36,7 +36,9 @@ service cloud.firestore {
 
     // ── Collection: Users ────────────────────────────────────────────────────
     match /users/{userId} {
-      allow read: if true;
+      // M-3 FIX: Restrict reads to authenticated users only — prevents PII
+      // (email, displayName, role) from being exposed to unauthenticated visitors.
+      allow read: if isSignedIn();
 
       // Citizens can create their own profile, but may NOT set a 'role' field unless they are the specific dummy seed accounts.
       // Admins/Super Admins can create profiles with any fields.
@@ -89,7 +91,9 @@ service cloud.firestore {
     // ── Collection: Zone Predictions ─────────────────────────────────────────
     match /zonePredictions/{predictionId} {
       allow read, list: if true;
-      allow write: if isSignedIn();
+      // M-2 FIX: Restrict writes to admins only — prevents any authenticated citizen
+      // from overwriting AI-generated zone risk assessments.
+      allow write: if isAdmin();
     }
 
     // ── Collection: Notifications ────────────────────────────────────────────

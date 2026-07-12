@@ -51,7 +51,6 @@ const SystemLogsPage          = React.lazy(() => import('./pages/super-admin/Sys
 const AuditReportsPage        = React.lazy(() => import('./pages/super-admin/AuditReportsPage'));
 const ConfigurationPage       = React.lazy(() => import('./pages/super-admin/ConfigurationPage'));
 const SettingsPage            = React.lazy(() => import('./pages/super-admin/SettingsPage'));
-const ApiKeysPage             = React.lazy(() => import('./pages/super-admin/ApiKeysPage'));
 const IntegrationsPage        = React.lazy(() => import('./pages/super-admin/IntegrationsPage'));
 
 // Generic suspense loading wrapper
@@ -185,7 +184,6 @@ function AppRouter() {
           <Route path="audit" element={<AuditReportsPage />} />
           <Route path="config" element={<ConfigurationPage />} />
           <Route path="settings" element={<SettingsPage />} />
-          <Route path="api-keys" element={<ApiKeysPage />} />
           <Route path="integrations" element={<IntegrationsPage />} />
         </Route>
 
