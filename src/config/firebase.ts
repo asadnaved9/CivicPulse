@@ -24,14 +24,24 @@ const firebaseConfig = {
   firestoreDatabaseId: firebaseAppletConfig.firestoreDatabaseId || ""
 };
 
+const missingVars = [
+  ['VITE_FIREBASE_API_KEY', firebaseConfig.apiKey],
+  ['VITE_FIREBASE_AUTH_DOMAIN', firebaseConfig.authDomain],
+  ['VITE_FIREBASE_PROJECT_ID', firebaseConfig.projectId],
+  ['VITE_FIREBASE_APP_ID', firebaseConfig.appId],
+].filter(([, v]) => !v || v.startsWith('placeholder'));
+
 // Check if variables are missing
-const isFirebaseConfigured = !!firebaseConfig.apiKey && firebaseConfig.apiKey !== "placeholder-key";
+const isFirebaseConfigured = missingVars.length === 0;
 
 if (!isFirebaseConfigured) {
   console.warn(
-    "Firebase environment variables are missing. Please configure VITE_FIREBASE_API_KEY and VITE_FIREBASE_PROJECT_ID in your Secrets panel."
+    `[CivicPulse] Firebase auth is NOT configured. Missing/placeholder env vars:\n` +
+    missingVars.map(([k]) => `  ✗ ${k}`).join('\n') +
+    `\n\nSet these on your deployment platform (Vercel env vars / Firebase Hosting / etc.) and redeploy.`
   );
 }
+
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 

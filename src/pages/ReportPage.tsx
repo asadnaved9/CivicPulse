@@ -700,9 +700,9 @@ export default function ReportPage() {
           }
         });
 
-        // Race the uploads against a 6-second timeout to prevent getting stuck
+        // Race the uploads against a 20-second timeout to prevent getting stuck
         const timeoutPromise = new Promise<never>((_, reject) => 
-          setTimeout(() => reject(new Error("Storage upload timed out")), 6000)
+          setTimeout(() => reject(new Error("Storage upload timed out")), 20000)
         );
 
         imageUrls = await Promise.race([
@@ -744,10 +744,10 @@ export default function ReportPage() {
         updatedAt: serverTimestamp()
       };
 
-      // Race the write against a 6-second timeout to prevent getting stuck if offline/unreachable
+      // Race the write against a 20-second timeout to prevent getting stuck if offline/unreachable
       const docPromise = addDoc(collection(db, 'issues'), issueData);
       const writeTimeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error("Ward database connection timed out")), 6000)
+        setTimeout(() => reject(new Error("Ward database connection timed out")), 20000)
       );
       const docRef = await Promise.race([docPromise, writeTimeoutPromise]) as any;
 

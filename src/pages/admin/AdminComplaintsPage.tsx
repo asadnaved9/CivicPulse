@@ -254,12 +254,12 @@ const AdminComplaintsPage: React.FC = () => {
             const imageId = `resolved_${Date.now()}`;
             const storageRef = ref(storage, `resolutions/${imageId}.jpg`);
             
-            // Upload with a 5-second timeout to prevent getting stuck
+            // Upload with a 20-second timeout to prevent getting stuck
             const uploadPromise = uploadString(storageRef, resolvedImage, 'data_url')
               .then(() => getDownloadURL(storageRef));
               
             const timeoutPromise = new Promise<string>((_, reject) => 
-              setTimeout(() => reject(new Error("Resolution proof upload timed out")), 5000)
+              setTimeout(() => reject(new Error("Resolution proof upload timed out")), 20000)
             );
 
             resolvedImageUrlStr = await Promise.race([uploadPromise, timeoutPromise]);
