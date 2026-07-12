@@ -35,6 +35,7 @@ const AdminSettingsPage = React.lazy(() => import('./pages/admin/AdminSettingsPa
 const AdminDepartmentsPage = React.lazy(() => import('./pages/admin/AdminDepartmentsPage'));
 const AdminDependenciesPage = React.lazy(() => import('./pages/admin/AdminDependenciesPage'));
 const AdminWorkersPage = React.lazy(() => import('./pages/admin/AdminWorkersPage'));
+const AdminInspectorPage = React.lazy(() => import('./pages/admin/AdminInspectorPage'));
 
 // ── Super Admin portal (lazy) ─────────────────────────────────────────────────
 const SuperAdminLayout        = React.lazy(() => import('./pages/super-admin/SuperAdminLayout'));
@@ -160,6 +161,7 @@ function AppRouter() {
           <Route path="departments" element={<AdminDepartmentsPage />} />
           <Route path="dependencies" element={<AdminDependenciesPage />} />
           <Route path="workers" element={<AdminWorkersPage />} />
+          <Route path="inspector" element={<AdminInspectorPage />} />
         </Route>
 
         {/* ── Super Admin portal ───────────────────────────────────────── */}

@@ -21,7 +21,7 @@ interface Issue {
   category: string;
   severity: number;
   severityReason?: string;
-  status: 'reported' | 'verified' | 'in_progress' | 'resolved';
+  status: 'reported' | 'verified' | 'in_progress' | 'blocked' | 'resolved';
   address: string;
   imageUrl?: string;
   resolvedImageUrl?: string;
@@ -35,6 +35,19 @@ interface Issue {
   assignedDepartment?: string;
   routingReason?: string;
   progressStages?: ProgressStage[];
+  workerGroundReport?: {
+    text: string;
+    workerName: string;
+    reportedAt: any;
+  };
+  autoEscalationSuggestion?: string;
+  autoEscalationDepts?: string[];
+  dependencies?: {
+    dept: string;
+    status: 'pending' | 'resolved';
+    resolutionNote?: string;
+    resolvedAt?: any;
+  }[];
 }
 
 const AdminComplaintsPage: React.FC = () => {
@@ -238,6 +251,8 @@ const AdminComplaintsPage: React.FC = () => {
         return { bg: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', label: 'Verified' };
       case 'in_progress':
         return { bg: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B', label: 'In Progress' };
+      case 'blocked':
+        return { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', label: 'Blocked' };
       case 'resolved':
         return { bg: 'rgba(16, 185, 129, 0.1)', color: '#10B981', label: 'Resolved' };
       default:
@@ -251,7 +266,7 @@ const AdminComplaintsPage: React.FC = () => {
     return { borderLeft: '4px solid #10B981', color: '#10B981', bg: 'rgba(16, 185, 129, 0.05)' };
   };
 
-  const handleUpdateStatus = async (issueId: string, newStatus: 'verified' | 'in_progress' | 'resolved') => {
+  const handleUpdateStatus = async (issueId: string, newStatus: 'verified' | 'in_progress' | 'resolved' | 'blocked') => {
     setUpdatingStatus(true);
     try {
       const docRef = doc(db, 'issues', issueId);
@@ -319,6 +334,73 @@ const AdminComplaintsPage: React.FC = () => {
     } catch (err) {
       console.error('Failed to update status:', err);
       toast.error('Failed to update status.');
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const handleSimulateBlock = async (issueId: string) => {
+    setUpdatingStatus(true);
+    try {
+      const docRef = doc(db, 'issues', issueId);
+      const updates = {
+        status: 'blocked' as any,
+        workerGroundReport: {
+          text: "Heavy live wires scattered. Can't proceed safely without power cut and traffic diversion.",
+          workerName: "Rahul Kumar",
+          reportedAt: new Date()
+        },
+        autoEscalationSuggestion: "Alert: Electricity & Traffic Dept",
+        autoEscalationDepts: ["Forest Department", "CESC Electrical Infrastructure Division", "Traffic Police"],
+        updatedAt: serverTimestamp()
+      };
+
+      if (isFirebaseConfigured && auth.currentUser) {
+        await updateDoc(docRef, updates);
+      } else {
+        setIssues(prev => prev.map(i => i.id === issueId ? { ...i, ...updates } : i));
+      }
+
+      if (selectedIssue && selectedIssue.id === issueId) {
+        setSelectedIssue(prev => prev ? { ...prev, ...updates } : null);
+      }
+      toast.success("Worker ground report logged. Status changed to BLOCKED.");
+    } catch (err) {
+      console.error('Failed to log ground report:', err);
+      toast.error('Failed to update issue.');
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const handleEscalateNow = async (issueId: string, depts: string[]) => {
+    setUpdatingStatus(true);
+    try {
+      const docRef = doc(db, 'issues', issueId);
+      const deps = depts.map(d => ({
+        dept: d,
+        status: 'pending' as const
+      }));
+
+      const updates = {
+        dependencies: deps,
+        updatedAt: serverTimestamp()
+      };
+
+      if (isFirebaseConfigured && auth.currentUser) {
+        await updateDoc(docRef, updates);
+      } else {
+        setIssues(prev => prev.map(i => i.id === issueId ? { ...i, ...updates } : i));
+      }
+
+      if (selectedIssue && selectedIssue.id === issueId) {
+        setSelectedIssue(prev => prev ? { ...prev, ...updates } : null);
+      }
+      toast.success("Issue escalated! Multi-department dependency tree initialized.");
+      setShowEscalation(true);
+    } catch (err) {
+      console.error('Failed to escalate issue:', err);
+      toast.error('Failed to escalate.');
     } finally {
       setUpdatingStatus(false);
     }
@@ -701,16 +783,49 @@ const AdminComplaintsPage: React.FC = () => {
                         <AlertTriangle size={12} /> Worker Ground Report
                       </span>
                       <p style={{ fontSize: '11px', color: 'var(--text-1)', margin: 0, fontStyle: 'italic', background: 'var(--surface)', padding: 8, borderRadius: 4, borderLeft: '2px solid #f59e0b' }}>
-                        "Heavy live wires scattered. Can't proceed safely without power cut and traffic diversion." — Rahul Kumar (On Site)
+                        "{selectedIssue.workerGroundReport?.text || "Heavy live wires scattered. Can't proceed safely without power cut and traffic diversion."}" — {selectedIssue.workerGroundReport?.workerName || "Rahul Kumar"} (On Site)
                       </p>
                       <div style={{ marginTop: 4, paddingTop: 8, borderTop: '1px dashed rgba(245, 158, 11, 0.3)' }}>
                         <span style={{ fontSize: '10px', color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Auto-Escalation Suggestion</span>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
-                          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-1)' }}>Alert: Electricity &amp; Traffic Dept</span>
-                          <button style={{ background: '#f59e0b', color: '#fff', border: 'none', borderRadius: 4, padding: '4px 10px', fontSize: '10px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 4px rgba(245, 158, 11, 0.2)' }}>
-                            ESCALATE NOW
+                          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-1)' }}>{selectedIssue.autoEscalationSuggestion || "Alert: Electricity & Traffic Dept"}</span>
+                          <button 
+                            onClick={() => handleEscalateNow(selectedIssue.id, selectedIssue.autoEscalationDepts || ["Forest Department", "CESC Electrical Infrastructure Division", "Traffic Police"])}
+                            disabled={updatingStatus || (selectedIssue.dependencies && selectedIssue.dependencies.length > 0)}
+                            style={{ 
+                              background: (selectedIssue.dependencies && selectedIssue.dependencies.length > 0) ? 'var(--border)' : '#f59e0b', 
+                              color: '#fff', 
+                              border: 'none', 
+                              borderRadius: 4, 
+                              padding: '4px 10px', 
+                              fontSize: '10px', 
+                              fontWeight: 700, 
+                              cursor: (selectedIssue.dependencies && selectedIssue.dependencies.length > 0) ? 'not-allowed' : 'pointer', 
+                              boxShadow: '0 2px 4px rgba(245, 158, 11, 0.2)' 
+                            }}
+                          >
+                            {(selectedIssue.dependencies && selectedIssue.dependencies.length > 0) ? 'ESCALATED' : 'ESCALATE NOW'}
                           </button>
                         </div>
+                        {(selectedIssue.dependencies && selectedIssue.dependencies.length > 0) && (
+                          <button
+                            onClick={() => setShowEscalation(true)}
+                            style={{
+                              marginTop: 8,
+                              width: '100%',
+                              background: 'transparent',
+                              border: '1px solid var(--primary)',
+                              color: 'var(--primary)',
+                              borderRadius: 4,
+                              padding: '6px',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            View Real-Time Escalation Tree
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}
@@ -760,6 +875,27 @@ const AdminComplaintsPage: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Simulate Ground Report (Only when In Progress) */}
+                  {selectedIssue.status === 'in_progress' && (
+                    <button
+                      onClick={() => handleSimulateBlock(selectedIssue.id)}
+                      disabled={updatingStatus}
+                      style={{
+                        background: 'transparent',
+                        color: '#f59e0b',
+                        border: '1px solid #f59e0b',
+                        borderRadius: 4,
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        padding: '8px 12px',
+                        transition: 'background 0.15s'
+                      }}
+                    >
+                      ⚠️ Simulate Worker Ground Block Report
+                    </button>
+                  )}
+
                   {/* Manual verified toggle */}
                   {selectedIssue.status === 'reported' && (
                     <button
@@ -802,8 +938,8 @@ const AdminComplaintsPage: React.FC = () => {
         </div>
       )}
       {/* Escalation Details Modal */}
-      {showEscalation && (
-        <AdminEscalationDetails onClose={() => setShowEscalation(false)} />
+      {showEscalation && selectedIssue && (
+        <AdminEscalationDetails issue={selectedIssue} onClose={() => setShowEscalation(false)} />
       )}
     </div>
   );

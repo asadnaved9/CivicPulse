@@ -354,6 +354,7 @@ export const en = {
   "admin.nav.analytics": "Analytics",
   "admin.nav.notifications": "Notifications",
   "admin.nav.settings": "Settings",
+  "admin.nav.inspectorPanel": "Inspector Panel",
   
   // Admin Dashboard
   "admin.dashboard.title": "Welcome, {name}",

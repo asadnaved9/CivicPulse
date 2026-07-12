@@ -354,6 +354,7 @@ export const hi = {
   "admin.nav.analytics": "विश्लेषण",
   "admin.nav.notifications": "सूचनाएं",
   "admin.nav.settings": "सेटिंग्स",
+  "admin.nav.inspectorPanel": "निरीक्षक पैनल",
   
   // Admin Dashboard
   "admin.dashboard.title": "स्वागत है, {name}",

@@ -6,7 +6,7 @@ import { LanguageCode } from '../../i18n';
 import {
   LayoutDashboard, FileText, Users, Map, BarChart2,
   Bell, Settings, LogOut, ChevronLeft, ChevronRight,
-  Building2, Shield,
+  Building2, Shield, ClipboardCheck
 } from 'lucide-react';
 
 interface NavItem {
@@ -22,6 +22,7 @@ const navItems: NavItem[] = [
   { translationKey: 'admin.nav.dependencies',path: '/admin/dependencies',icon: <Shield size={16} /> },
   { translationKey: 'admin.nav.workers',     path: '/admin/workers',     icon: <Users size={16} /> },
   { translationKey: 'admin.nav.assignments', path: '/admin/assignments', icon: <Users size={16} /> },
+  { translationKey: 'admin.nav.inspectorPanel', path: '/admin/inspector', icon: <ClipboardCheck size={16} /> },
   { translationKey: 'admin.nav.map',         path: '/admin/map',         icon: <Map size={16} /> },
   { translationKey: 'admin.nav.analytics',   path: '/admin/analytics',   icon: <BarChart2 size={16} /> },
   { translationKey: 'admin.nav.notifications', path: '/admin/notifications', icon: <Bell size={16} /> },

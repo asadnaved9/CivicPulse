@@ -352,8 +352,9 @@ export const bn = {
   "admin.nav.workers": "কর্মী",
   "admin.nav.map": "ওয়ার্ড মানচিত্র",
   "admin.nav.analytics": "বিশ্লেষণ",
-  "admin.nav.notifications": "বিজ্ঞপ্তিসমূহ",
+  "admin.nav.notifications": "বিজ্ঞপ্তিসमূহ",
   "admin.nav.settings": "সেটিংস",
+  "admin.nav.inspectorPanel": "পরিদর্শক প্যানেল",
   
   // Admin Dashboard
   "admin.dashboard.title": "স্বাগতম, {name}",
