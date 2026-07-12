@@ -627,11 +627,11 @@ export default function DashboardPage() {
               <div key={story.title} style={css.storyCard}>
                 <div style={css.storyImgRow}>
                   <div style={css.storyHalf}>
-                    <img src={story.before} alt="Before" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={story.before} alt="Before" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     <span style={css.storyLabel('before')}>{t('dashboard.stories.before')}</span>
                   </div>
                   <div style={{ ...css.storyHalf, borderLeft: '2px solid var(--border)' }}>
-                    <img src={story.after} alt="After" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={story.after} alt="After" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     <span style={css.storyLabel('after')}>{t('dashboard.stories.after')}</span>
                   </div>
                 </div>
@@ -661,6 +661,7 @@ export default function DashboardPage() {
                       style={css.lbAvatar}
                       src={u.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${u.displayName}`}
                       alt={u.displayName}
+                      loading="lazy"
                     />
                     <div>
                       <div style={css.lbName}>{u.displayName || 'Anonymous Citizen'}</div>

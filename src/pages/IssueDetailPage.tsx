@@ -11,6 +11,7 @@ import {
   Camera
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import imageCompression from 'browser-image-compression';
 
 export default function IssueDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -269,17 +270,40 @@ export default function IssueDetailPage() {
     }
   };
 
-  const handleProofUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProofUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
-      setResolvedImagePreview(base64String);
-      setResolvedImage(base64String.split(',')[1]);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const options = {
+        maxSizeMB: 0.15, // Max 150KB for rapid downloads
+        maxWidthOrHeight: 1024, // 1024px maximum width or height
+        useWebWorker: true,
+      };
+
+      toast.loading("Optimizing image...", { id: 'proof-compressing' });
+      const compressedFile = await imageCompression(file, options);
+      toast.success("Image optimized!", { id: 'proof-compressing' });
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setResolvedImagePreview(base64String);
+        setResolvedImage(base64String.split(',')[1]);
+      };
+      reader.readAsDataURL(compressedFile);
+    } catch (err) {
+      console.error("Proof compression failed:", err);
+      toast.error("Image processing error. Uploading original file.", { id: 'proof-compressing' });
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setResolvedImagePreview(base64String);
+        setResolvedImage(base64String.split(',')[1]);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleVerifyProof = async () => {

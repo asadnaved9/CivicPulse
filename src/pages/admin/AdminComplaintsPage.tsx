@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ProgressTimeline, { ProgressStage } from './ProgressTimeline';
+import imageCompression from 'browser-image-compression';
 
 interface Issue {
   id: string;
@@ -55,14 +56,35 @@ const AdminComplaintsPage: React.FC = () => {
   // Resolution Proof Upload State
   const [resolvedImage, setResolvedImage] = useState<string | null>(null);
 
-  const handleResolvedImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleResolvedImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setResolvedImage(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const options = {
+        maxSizeMB: 0.15, // Max 150KB for rapid downloads
+        maxWidthOrHeight: 1024, // 1024px maximum width or height
+        useWebWorker: true,
+      };
+
+      toast.loading("Optimizing image...", { id: 'resolved-compressing' });
+      const compressedFile = await imageCompression(file, options);
+      toast.success("Image optimized!", { id: 'resolved-compressing' });
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setResolvedImage(reader.result as string);
+      };
+      reader.readAsDataURL(compressedFile);
+    } catch (err) {
+      console.error("Resolution compression failed:", err);
+      toast.error("Image processing error. Uploading original file.", { id: 'resolved-compressing' });
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setResolvedImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const [routingLoading, setRoutingLoading] = useState(false);

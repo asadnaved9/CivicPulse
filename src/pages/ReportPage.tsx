@@ -16,6 +16,7 @@ import {
 import { toast } from 'react-hot-toast';
 import { useLanguage } from '../contexts/LanguageContext';
 import { logger } from '../utils/logger';
+import imageCompression from 'browser-image-compression';
 
 export default function ReportPage() {
   const navigate = useNavigate();
@@ -602,26 +603,53 @@ export default function ReportPage() {
     }
   };
 
-  // Process and convert file to Base64
-  const processFile = (file: File) => {
+  // Process and convert file to Base64 with compression
+  const processFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
       toast.error("Please upload an image file (PNG/JPG).");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
-      setImagePreview(base64String);
+    try {
+      const options = {
+        maxSizeMB: 0.15, // Max 150KB for rapid downloads
+        maxWidthOrHeight: 1024, // 1024px maximum width or height
+        useWebWorker: true,
+      };
+
+      toast.loading("Optimizing image...", { id: 'compressing' });
+      const compressedFile = await imageCompression(file, options);
+      toast.success("Image optimized!", { id: 'compressing' });
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setImagePreview(base64String);
+        
+        // Extract the raw base64 data for the API (strip header)
+        const rawBase64 = base64String.split(',')[1];
+        setImage(rawBase64);
+        setFrames([]);
+        setFramePreviews([]);
+        triggerVisionAgent(rawBase64);
+      };
+      reader.readAsDataURL(compressedFile);
+    } catch (err) {
+      console.error("Compression failed:", err);
+      toast.error("Image processing error. Uploading original file.", { id: 'compressing' });
       
-      // Extract the raw base64 data for the API (strip header)
-      const rawBase64 = base64String.split(',')[1];
-      setImage(rawBase64);
-      setFrames([]);
-      setFramePreviews([]);
-      triggerVisionAgent(rawBase64);
-    };
-    reader.readAsDataURL(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setImagePreview(base64String);
+        const rawBase64 = base64String.split(',')[1];
+        setImage(rawBase64);
+        setFrames([]);
+        setFramePreviews([]);
+        triggerVisionAgent(rawBase64);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   // Call vision agent proxy route
@@ -673,7 +701,7 @@ export default function ReportPage() {
     e.preventDefault();
 
     if (!user || user.isAnonymous) {
-      toast.error("Please sign in with a registered account to submit a verified report to the municipal ledger.");
+      window.dispatchEvent(new CustomEvent('open-auth-modal'));
       return;
     }
 

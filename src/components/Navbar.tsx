@@ -36,6 +36,12 @@ export const Navbar: React.FC = () => {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
+  useEffect(() => {
+    const handleOpenAuthModal = () => setShowAuthModal(true);
+    window.addEventListener('open-auth-modal', handleOpenAuthModal);
+    return () => window.removeEventListener('open-auth-modal', handleOpenAuthModal);
+  }, []);
+
   // Sync real-time unread notifications
   useEffect(() => {
     if (!user?.uid || !isFirebaseConfigured) {
