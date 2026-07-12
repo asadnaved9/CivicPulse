@@ -25,9 +25,9 @@ function getFallbackModels(): { provider: string; model: string }[] {
   
   // Default fallback sequence if not specified
   return [
-    { provider: 'gemini', model: 'gemini-3.5-flash' },
-    { provider: 'gemini', model: 'gemini-3.1-flash-lite' },
-    { provider: 'gemini', model: 'gemini-flash-latest' }
+    { provider: 'gemini', model: 'gemini-2.5-flash' },
+    { provider: 'gemini', model: 'gemini-2.0-flash' },
+    { provider: 'gemini', model: 'gemini-1.5-flash' }
   ];
 }
 
@@ -203,7 +203,7 @@ export async function runWithRetry<T>(
   retries = 3,
   delayMs = 1500,
   fallbackValue: T,
-  models: string[] = ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest']
+  models: string[] = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
 ): Promise<T> {
   // Try using the new generateText if the apiCall isn't strictly tied to a local variable
   // but to preserve absolute safety, let's keep the original logic for direct callers of runWithRetry

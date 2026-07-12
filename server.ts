@@ -1092,7 +1092,7 @@ app.post("/api/agents/verify-resolution", requireAuth, aiLimiter, async (req, re
 
     const agent1Parts = [...parts, { text: agent1Prompt }];
     const agent1Response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-2.5-flash",
       contents: { parts: agent1Parts },
       config: {
         responseMimeType: "application/json",
@@ -1131,7 +1131,7 @@ app.post("/api/agents/verify-resolution", requireAuth, aiLimiter, async (req, re
 
     const agent2Parts = [...parts, { text: agent2Prompt }];
     const agent2Response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-2.5-flash",
       contents: { parts: agent2Parts },
       config: {
         responseMimeType: "application/json",

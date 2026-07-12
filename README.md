@@ -53,7 +53,7 @@ CivicPulse utilizes a sophisticated array of Gemini-powered agents for automated
 | **Backend** | Node.js, Express.js, TypeScript Executable (`tsx`) |
 | **Database** | Firebase Firestore (Persistent NoSQL Data Store), Firebase Storage |
 | **Authentication** | Firebase Auth (Anonymous Access, Email/Password Credentials) |
-| **AI Models** | `@google/genai` (utilizing `gemini-3.5-flash` model templates) |
+| **AI Models** | `@google/genai` (utilizing `gemini-2.5-flash` model templates) |
 | **Testing & CI/CD**| Vitest, React Testing Library, GitHub Actions |
 
 ---
