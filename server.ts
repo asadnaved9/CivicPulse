@@ -292,11 +292,13 @@ app.get("/api/ip-location", rateLimiter(60000, 60), async (req, res) => {
   return res.status(500).json({ error: "Could not determine IP location" });
 });
 
-// Vision Triage Endpoint (analyses uploaded hazard images)
 app.post("/api/agents/vision", requireAuth, aiLimiter, async (req, res) => {
-  const { image } = req.body;
-  if (typeof image !== "string" || image.length < 10) {
-    return res.status(400).json({ error: "Bad Request: Missing or invalid image parameter" });
+  const { image, images } = req.body;
+  const hasImagesArray = Array.isArray(images) && images.length > 0;
+  const hasSingleImage = typeof image === "string" && image.length >= 10;
+
+  if (!hasImagesArray && !hasSingleImage) {
+    return res.status(400).json({ error: "Bad Request: Missing or invalid image(s) parameter" });
   }
 
   if (!ai) {
@@ -327,24 +329,34 @@ app.post("/api/agents/vision", requireAuth, aiLimiter, async (req, res) => {
   try {
     const parsed = await runWithRetry(
       async (modelName) => {
-        const response = await ai.models.generateContent({
-          model: modelName,
-          contents: {
-            parts: [
+        const inlineDataParts = hasImagesArray
+          ? images.map((img: string) => ({
+              inlineData: {
+                mimeType: "image/jpeg",
+                data: img
+              }
+            }))
+          : [
               {
                 inlineData: {
                   mimeType: "image/jpeg",
                   data: image
                 }
-              },
+              }
+            ];
+
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: {
+            parts: [
+              ...inlineDataParts,
               {
-                text: "You are a civic issue classification AI. Analyze this image of a municipal/civic issue.\n" +
-                      "Evaluate if the image depicts a public civic issue or infrastructural concern such as potholes, broken streets, failing streetlights, water logging, leaking pipes, garbage piles, waste dumping, public park damage, or public property hazards. " +
+                text: "You are a civic issue classification AI. Analyze the uploaded image(s) depicting a municipal/civic issue. If multiple images are provided, analyze them as a chronological sequence or multiple angles of the same issue.\n" +
+                      "Evaluate if the image(s) depict a public civic issue or infrastructural concern such as potholes, broken streets, failing streetlights, water logging, leaking pipes, garbage piles, waste dumping, public park damage, or public property hazards. " +
                       "If it is a personal selfie, food, indoor pets, or completely unrelated non-civic scene, mark isValidCivicIssue as false and specify the invalidReason."
               }
             ]
-          },
-          config: {
+          },config: {
             responseMimeType: "application/json",
             responseSchema: {
               type: Type.OBJECT,

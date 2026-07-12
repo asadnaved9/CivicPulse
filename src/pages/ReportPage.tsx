@@ -11,7 +11,7 @@ import { awardPoints, createNotification } from '../utils/pointsEngine';
 import { encodeGeohash } from '../utils/geohash';
 import { 
   Camera, MapPin, Loader, AlertTriangle, CheckCircle, 
-  Lightbulb, Droplet, Trash2, HelpCircle, Mic, RefreshCw, Video, Eye
+  Lightbulb, Droplet, Trash2, HelpCircle, Mic, RefreshCw, Video, Eye, X
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -36,6 +36,10 @@ export default function ReportPage() {
   // Form States
   const [image, setImage] = useState<string | null>(null); // base64 representation
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [frames, setFrames] = useState<string[]>([]); // Multi-frame series Base64
+  const [framePreviews, setFramePreviews] = useState<string[]>([]); // Multi-frame previews
+  const [isCapturingSeries, setIsCapturingSeries] = useState(false);
+  const [captureProgress, setCaptureProgress] = useState(0);
   const [analyzing, setAnalyzing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -270,6 +274,8 @@ export default function ReportPage() {
           setImagePreview(dataUrl);
           const base64Data = dataUrl.split(',')[1];
           setImage(base64Data);
+          setFrames([]);
+          setFramePreviews([]);
           triggerVisionAgent(base64Data);
         }
         stopCamera();
@@ -336,6 +342,74 @@ export default function ReportPage() {
       }
     };
   }, [cameraActive, stream, isCameraBlocked]);
+
+  const startSeriesCapture = () => {
+    if (!cameraActive) return;
+    setIsCapturingSeries(true);
+    setFrames([]);
+    setFramePreviews([]);
+    setCaptureProgress(0);
+    setImagePreview(null);
+    setImage(null);
+    toast.success("Starting multi-frame series capture (1 frame every 3s)...");
+  };
+
+  useEffect(() => {
+    if (!isCapturingSeries || !cameraActive) return;
+
+    let count = 0;
+    const interval = setInterval(() => {
+      if (isCameraBlocked) {
+        // Mock capture since camera is blocked
+        const randomPreset = SCAN_PRESETS[Math.floor(Math.random() * SCAN_PRESETS.length)];
+        setFramePreviews(prev => [...prev, randomPreset.url]);
+        setFrames(prev => {
+          const updated = [...prev, randomPreset.url];
+          if (updated.length >= 5) {
+            clearInterval(interval);
+            setIsCapturingSeries(false);
+            setCameraActive(false);
+            triggerVisionAgent(updated);
+            toast.success("Finished capturing series!");
+          }
+          return updated;
+        });
+        count += 1;
+        setCaptureProgress(count);
+      } else {
+        // Capture actual frame from stream
+        const video = document.getElementById('scan-video') as HTMLVideoElement;
+        if (video && stream) {
+          const canvas = document.createElement('canvas');
+          canvas.width = 800;
+          canvas.height = 600;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.7); // 0.7 quality for compression
+            const base64Data = dataUrl.split(',')[1];
+            
+            setFramePreviews(prev => [...prev, dataUrl]);
+            setFrames(prev => {
+              const updated = [...prev, base64Data];
+              if (updated.length >= 5) {
+                clearInterval(interval);
+                setIsCapturingSeries(false);
+                stopCamera();
+                triggerVisionAgent(updated);
+                toast.success("Finished capturing series!");
+              }
+              return updated;
+            });
+            count += 1;
+            setCaptureProgress(count);
+          }
+        }
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isCapturingSeries, cameraActive, isCameraBlocked, stream]);
 
   // Geocoding helper
   const triggerReverseGeocode = async (latitude: number, longitude: number) => {
@@ -543,21 +617,27 @@ export default function ReportPage() {
       // Extract the raw base64 data for the API (strip header)
       const rawBase64 = base64String.split(',')[1];
       setImage(rawBase64);
+      setFrames([]);
+      setFramePreviews([]);
       triggerVisionAgent(rawBase64);
     };
     reader.readAsDataURL(file);
   };
 
   // Call vision agent proxy route
-  const triggerVisionAgent = async (base64Data: string) => {
+  const triggerVisionAgent = async (base64Data: string | string[]) => {
     setAnalyzing(true);
     setValidationError(null);
     setAiAssessment(null);
     try {
+      const payload = Array.isArray(base64Data) 
+        ? { images: base64Data } 
+        : { image: base64Data };
+
       const response = await fetchWithAuth('/api/agents/vision', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64Data })
+        body: JSON.stringify(payload)
       });
       const data = await response.json();
 
@@ -565,6 +645,8 @@ export default function ReportPage() {
         setValidationError(data.invalidReason || "This doesn't appear to be a civic issue. Please upload a photo of public infrastructure damage.");
         setImage(null);
         setImagePreview(null);
+        setFrames([]);
+        setFramePreviews([]);
         toast.error("Vision Analysis Rejected: Not a valid civic issue.");
       } else {
         // Pre-fill fields with AI parameters
@@ -595,39 +677,44 @@ export default function ReportPage() {
       return;
     }
 
-    if (!imagePreview || !lat || !lng || !address) {
+    if ((!imagePreview && framePreviews.length === 0) || !lat || !lng || !address) {
       toast.error("Please complete the image verification and set a valid location.");
       return;
     }
 
     setSubmitting(true);
     try {
-      let imageUrl = "https://picsum.photos/seed/reported/800/600";
+      let imageUrls: string[] = [];
+      const previewsToUpload = framePreviews.length > 0 ? framePreviews : (imagePreview ? [imagePreview] : []);
 
-      // 1. Upload photo to Firebase Storage if fully configured
+      // 1. Upload photos to Firebase Storage if fully configured
       try {
-        if (imagePreview.startsWith('data:')) {
-          const imageId = `issue_${Date.now()}`;
-          const storageRef = ref(storage, `issues/${imageId}.jpg`);
-          
-          // Race the upload against a 4-second timeout to prevent getting stuck
-          const uploadPromise = uploadString(storageRef, imagePreview, 'data_url')
-            .then(() => getDownloadURL(storageRef));
-            
-          const timeoutPromise = new Promise<string>((_, reject) => 
-            setTimeout(() => reject(new Error("Storage upload timed out")), 4000)
-          );
+        const uploadPromises = previewsToUpload.map(async (preview, idx) => {
+          if (preview.startsWith('data:')) {
+            const imageId = `issue_${Date.now()}_${idx}`;
+            const storageRef = ref(storage, `issues/${imageId}.jpg`);
+            await uploadString(storageRef, preview, 'data_url');
+            return await getDownloadURL(storageRef);
+          } else {
+            return preview;
+          }
+        });
 
-          imageUrl = await Promise.race([uploadPromise, timeoutPromise]);
-        } else {
-          // If it's a remote URL (preset), use it directly
-          imageUrl = imagePreview;
-        }
+        // Race the uploads against a 6-second timeout to prevent getting stuck
+        const timeoutPromise = new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error("Storage upload timed out")), 6000)
+        );
+
+        imageUrls = await Promise.race([
+          Promise.all(uploadPromises),
+          timeoutPromise
+        ]) as string[];
       } catch (storageErr) {
-        console.warn("Storage upload bypassed or timed out (falling back to preview image):", storageErr);
-        // Fallback to the imagePreview itself (if it's base64 or preset) so the user's image is not lost
-        imageUrl = imagePreview;
+        console.warn("Storage upload bypassed or timed out (falling back to preview images):", storageErr);
+        imageUrls = previewsToUpload;
       }
+
+      const primaryImageUrl = imageUrls[0] || "https://picsum.photos/seed/reported/800/600";
 
       // 2. Create document in Firestore
       const issueData = {
@@ -641,7 +728,8 @@ export default function ReportPage() {
         lng,
         geohash: encodeGeohash(lat, lng, 5),
         address,
-        imageUrl,
+        imageUrl: primaryImageUrl,
+        imageUrls: imageUrls,
         reportedBy: user?.uid || 'anonymous',
         reporterName: profile?.displayName || 'Citizen Warden',
         upvotes: [],
@@ -803,9 +891,9 @@ export default function ReportPage() {
                   </div>
                 )}
               </div>
-            ) : imagePreview ? (
+            ) : (imagePreview || framePreviews.length > 0) ? (
               <img 
-                src={imagePreview} 
+                src={imagePreview || framePreviews[0]} 
                 alt="Upload Preview" 
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
@@ -860,6 +948,32 @@ export default function ReportPage() {
             )}
           </div>
 
+          {/* Filmstrip Gallery */}
+          {framePreviews.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-2)' }}>
+                Captured Series ({framePreviews.length} frames):
+              </span>
+              <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
+                {framePreviews.map((src, index) => (
+                  <div key={index} style={{ position: 'relative', width: '80px', height: '60px', flexShrink: 0, borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                    <img src={src} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFramePreviews(prev => prev.filter((_, idx) => idx !== index));
+                        setFrames(prev => prev.filter((_, idx) => idx !== index));
+                      }}
+                      style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(239, 68, 68, 0.9)', color: '#FFF', border: 'none', borderRadius: '50%', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}
+                    >
+                      <X size={10} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Toggle Live Camera Controls */}
           {!imagePreview && !cameraActive && (
             <button
@@ -874,24 +988,63 @@ export default function ReportPage() {
           )}
 
           {cameraActive && (
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                type="button"
-                className="btn btn-primary"
-                style={{ flex: 1, background: '#10B981', borderColor: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                onClick={captureFrame}
-              >
-                <Camera size={16} />
-                {t('report.camera.capture')}
-              </button>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                style={{ flex: 1 }}
-                onClick={stopCamera}
-              >
-                {t('report.camera.cancel')}
-              </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+              {isCapturingSeries ? (
+                <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-1)' }}>Capturing Series...</span>
+                    <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--primary)' }}>{captureProgress}/5 frames</span>
+                  </div>
+                  <div style={{ height: '6px', background: 'var(--border)', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ width: `${(captureProgress / 5) * 100}%`, height: '100%', background: 'var(--primary)', transition: 'width 0.3s ease' }} />
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-secondary text-xs"
+                    style={{ width: '100%', padding: '6px', minHeight: 'auto' }}
+                    onClick={() => {
+                      setIsCapturingSeries(false);
+                      stopCamera();
+                      if (frames.length > 0) {
+                        triggerVisionAgent(frames);
+                      }
+                    }}
+                  >
+                    Finish Capture Early
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      style={{ flex: 1, background: '#10B981', borderColor: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                      onClick={captureFrame}
+                    >
+                      <Camera size={16} />
+                      {t('report.camera.capture')}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      style={{ flex: 1 }}
+                      onClick={stopCamera}
+                    >
+                      {t('report.camera.cancel')}
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ width: '100%', borderColor: 'var(--primary)', color: 'var(--primary)', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                    onClick={startSeriesCapture}
+                  >
+                    <Video size={16} />
+                    Capture 5-Frame Series (Interval)
+                  </button>
+                </>
+              )}
             </div>
           )}
 
