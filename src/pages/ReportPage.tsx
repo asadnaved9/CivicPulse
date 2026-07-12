@@ -28,13 +28,7 @@ export default function ReportPage() {
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!user) {
-      toast.error(t('report.toast.signIn'));
-      navigate('/');
-    }
-  }, [user, navigate]);
+  // Removed redirect so anonymous/guest users can explore reporting form
 
   // Handle passed location state from Map right-click
   const passedLocation = routerLocation.state as { lat?: number; lng?: number } | null;
@@ -595,6 +589,12 @@ export default function ReportPage() {
   // Handle Submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!user || user.isAnonymous) {
+      toast.error("Please sign in with a registered account to submit a verified report to the municipal ledger.");
+      return;
+    }
+
     if (!imagePreview || !lat || !lng || !address) {
       toast.error("Please complete the image verification and set a valid location.");
       return;
@@ -1217,7 +1217,7 @@ export default function ReportPage() {
                 {t('report.submit.loading')}
               </>
             ) : (
-              t('report.submit.button')
+              (!user || user.isAnonymous) ? "Sign in to Submit Report" : t('report.submit.button')
             )}
           </button>
 

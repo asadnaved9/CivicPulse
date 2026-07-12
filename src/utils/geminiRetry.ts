@@ -120,7 +120,7 @@ export async function generateText<T>(params: GenerateTextParams<T>): Promise<T>
             messagesContent = prompt;
           } else if (Array.isArray(prompt)) {
             // Map Gemini parts to OpenAI messages content array
-            messagesContent = prompt.map(part => {
+            messagesContent = prompt.map((part: any) => {
               if (typeof part === 'string') {
                 return { type: 'text', text: part };
               }
