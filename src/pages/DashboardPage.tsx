@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, doc, getDoc, getDocs, onSnapshot, updateDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, onSnapshot, updateDoc, query, where } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../config/firebase';
 import {
   Award, ShieldAlert, CloudSun, Camera, Mic, Map as MapIcon,
-  HelpCircle, ThumbsUp, Bell, Settings, MapPin, FileText, Droplets, Trees
+  HelpCircle, ThumbsUp, Bell, Settings, MapPin, FileText, Droplets, Trees,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import LocalitySelect from '../components/LocalitySelect';
@@ -32,6 +33,7 @@ export default function DashboardPage() {
   const [geohash, setGeohash] = useState<string>('');
   const [weatherData, setWeatherData] = useState<any | null>(null);
   const [weatherAlert, setWeatherAlert] = useState<any | null>(null);
+  const [activeHazards, setActiveHazards] = useState<any[]>([]);
   const [showLocalityModal, setShowLocalityModal] = useState(false);
 
   // Stats
@@ -178,6 +180,40 @@ export default function DashboardPage() {
     }, () => { /* ignore */ });
     return () => unsub();
   }, [geohash]);
+
+  // Real-time geofenced active hazard alerts
+  useEffect(() => {
+    if (!geohash || !isFirebaseConfigured) return;
+    const q = query(
+      collection(db, 'issues'),
+      where('geohash', '==', geohash)
+    );
+    const unsub = onSnapshot(q, snap => {
+      const hazards: any[] = [];
+      snap.forEach(doc => {
+        const data = doc.data();
+        const isActive = data.status !== 'resolved' && data.status !== 'duplicate' && data.status !== 'rejected';
+        const isCritical = Number(data.severity) >= 4;
+        if (isActive && isCritical) {
+          hazards.push({ id: doc.id, ...data });
+        }
+      });
+      
+      // Notify the user via toast on new critical hazard detection
+      if (hazards.length > activeHazards.length) {
+        const newHazards = hazards.filter(h => !activeHazards.some(ah => ah.id === h.id));
+        newHazards.forEach(h => {
+          toast.error(`⚠️ HAZARD ALERT: ${h.title || 'Critical Issue'} detected nearby!`, {
+            duration: 6000
+          });
+        });
+      }
+      setActiveHazards(hazards);
+    }, err => {
+      console.error('Error listening to geofenced hazards:', err);
+    });
+    return () => unsub();
+  }, [geohash, activeHazards.length]);
 
   const handleUpvote = (id: string) => {
     toast.success(t('dashboard.news.supported'));
@@ -374,6 +410,33 @@ export default function DashboardPage() {
           </button>
         </div>
       </header>
+
+      {/* ── Geofenced Hazard Alerts ──────────────────────────────────── */}
+      {activeHazards.map(hazard => (
+        <div 
+          key={hazard.id} 
+          style={{ ...css.alertBox('critical'), cursor: 'pointer', transition: 'transform 0.15s' }}
+          onClick={() => navigate(`/issues/${hazard.id}`)}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.005)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}
+        >
+          <div style={css.alertIcon('critical')}>
+            <AlertTriangle size={18} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-1)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ color: 'var(--danger)', fontWeight: 800 }}>⚠️ CRITICAL HAZARD NEARBY</span>
+              <span style={{ fontSize: 9, backgroundColor: 'var(--danger)', color: '#fff', padding: '1px 6px', borderRadius: 4 }}>Severity {hazard.severity}/5</span>
+            </div>
+            <h4 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 4px', color: 'var(--text-1)' }}>
+              {hazard.title || 'Civic Hazard'}
+            </h4>
+            <p style={{ fontSize: 13, color: 'var(--text-2)', margin: 0, lineHeight: 1.6 }}>
+              {hazard.description || 'An active, unresolved critical hazard has been reported in your immediate vicinity. Click for location and details.'}
+            </p>
+          </div>
+        </div>
+      ))}
 
       {/* ── Weather Alert ───────────────────────────────────────────── */}
       {weatherAlert && weatherAlert.severity !== 'low' && (
