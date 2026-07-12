@@ -141,16 +141,23 @@ export default function MapPage() {
     const container = document.getElementById('openfreemap-canvas');
     if (!container) return;
 
-    const mapInstance = new maplibregl.Map({
-      container: 'openfreemap-canvas',
-      style: 'https://tiles.openfreemap.org/styles/liberty',
-      center: [88.3639, 22.5726], // Koramangala, Kolkata
-      zoom: 12.5,
-      pitch: 0,
-      bearing: 0
-    });
-
-    mapRef.current = mapInstance;
+    let mapInstance: maplibregl.Map;
+    try {
+      mapInstance = new maplibregl.Map({
+        container: 'openfreemap-canvas',
+        style: 'https://tiles.openfreemap.org/styles/liberty',
+        center: [88.3639, 22.5726], // Koramangala, Kolkata
+        zoom: 12.5,
+        pitch: 0,
+        bearing: 0
+      });
+      mapRef.current = mapInstance;
+    } catch (err) {
+      console.error("MapLibre GL initialization failed, switching to Grid mode:", err);
+      toast.error("Interactive Map failed to load. Switching to SVG layout.");
+      setMapMode('grid');
+      return;
+    }
 
     // Navigation Controls
     mapInstance.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'top-right');
@@ -635,6 +642,7 @@ export default function MapPage() {
         className="map-workspace-container"
         style={{ 
           flex: 1, 
+          minHeight: '600px',
           position: 'relative', 
           background: '#FFFFFF', 
           overflow: 'hidden',
