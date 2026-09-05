@@ -1,0 +1,12 @@
+{
+  "name": "Remix: CivicPulse for BuildwithAi",
+  "description": "A production-grade, community-driven civic issue classification, predictive hazard modeling, and Member of Parliament (MP) Decision Intelligence Suite powered by Gemini AI.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

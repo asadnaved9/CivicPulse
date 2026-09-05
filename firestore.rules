@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default safety catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Allow full read/write to all active collections to support client-side and server-side fallback testing
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+
+    match /issues/{issueId} {
+      allow read, write: if true;
+    }
+
+    match /suggestions/{suggestionId} {
+      allow read, write: if true;
+    }
+
+    match /clusters/{clusterId} {
+      allow read, write: if true;
+    }
+
+    match /recommendations/{recId} {
+      allow read, write: if true;
+    }
+
+    match /developmentPlans/{planId} {
+      allow read, write: if true;
+    }
+
+    match /activities/{activityId} {
+      allow read, write: if true;
+    }
+
+    match /zonePredictions/{predictionId} {
+      allow read, write: if true;
+    }
+
+    match /notifications/{notifId} {
+      allow read, write: if true;
+    }
+
+    match /analytics/{docId} {
+      allow read, write: if true;
+    }
+
+    match /proposals/{proposalId} {
+      allow read, write: if true;
+    }
+  }
+}
