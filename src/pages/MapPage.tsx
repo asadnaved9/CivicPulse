@@ -65,11 +65,11 @@ export default function MapPage() {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; lat: number; lng: number } | null>(null);
   const [hoveredSvgElement, setHoveredSvgElement] = useState<{ item: any; x: number; y: number } | null>(null);
 
-  // Bangalore coordinate boundaries for SVG coordinate transformation
-  const latMin = 12.9200;
-  const latMax = 12.9950;
-  const lngMin = 77.6000;
-  const lngMax = 77.7700;
+  // Ranchi coordinate boundaries for SVG coordinate transformation
+  const latMin = 23.3100;
+  const latMax = 23.4000;
+  const lngMin = 85.2900;
+  const lngMax = 85.3600;
 
   // Convert GPS Coordinates to SVG Workspace (800x500)
   const convertToCoords = (lat: number, lng: number) => {
@@ -89,105 +89,105 @@ export default function MapPage() {
   const fallbackHotspots: HotspotItem[] = [
     {
       id: 'h1',
-      theme: 'Primary Health Centre Ward 8',
+      theme: 'Urban Primary Health Centre Ward 18',
       category: 'healthcare',
-      location: 'Ward 8 - Southeast Transit Link',
+      location: 'Ward 18 - Hindpiri Transit Link',
       demandScore: 94,
       priorityScore: 96,
-      populationImpact: '18,200 citizens',
-      count: 482,
-      aiRecommendation: 'Construct a Primary Health Centre to relieve pressure on the regional hospital located 14km away.',
-      confidence: '94%',
-      department: 'Ministry of Health & Family Welfare',
+      populationImpact: '22,400 citizens',
+      count: 512,
+      aiRecommendation: 'Construct a state-of-the-art Urban PHC to relieve intense outpatient congestion at RIMS Ranchi situated 7.5km away.',
+      confidence: '95%',
+      department: 'Health, Medical Education & Family Welfare Dept, Jharkhand',
       governmentScheme: 'National Urban Health Mission (NUHM)',
-      nearestSchoolHospital: 'St. John\'s Medical College Hospital (14.2 km)',
-      lat: 12.9450,
-      lng: 77.6350,
+      nearestSchoolHospital: 'Rajendra Institute of Medical Sciences (RIMS) (7.2 km)',
+      lat: 23.3640,
+      lng: 85.3210,
       supportingIssues: [
-        { title: 'Sub-centre water pipeline leak', address: 'Southeast Ring road', status: 'reported' },
-        { title: 'Emergency dispatch road blocked', address: 'Ward 8 Lane 4', status: 'investigating' }
+        { title: 'Sub-centre water pipeline leak', address: 'Hindpiri 2nd St', status: 'reported' },
+        { title: 'Emergency ambulance lane blocked', address: 'Church Road link', status: 'investigating' }
       ]
     },
     {
       id: 'h2',
-      theme: 'Central Smart Streetlighting Expansion',
+      theme: 'Main Road Smart LED Streetlighting Overhaul',
       category: 'streetlight',
-      location: 'Ward 8 Commercial Ring',
+      location: 'Ward 18 Commercial Corridor',
       demandScore: 88,
       priorityScore: 85,
-      populationImpact: '12,500 residents',
-      count: 124,
-      aiRecommendation: 'Retrofit existing sodium-vapor lamps with dynamic smart LEDs to reduce nocturnal pedestrian risk zones.',
-      confidence: '91%',
-      department: 'Municipal Corporation Lighting Division',
+      populationImpact: '18,500 residents & traders',
+      count: 142,
+      aiRecommendation: 'Replace outdated sodium-vapor fittings with automated smart LED streetlights from Albert Ekka Chowk to Overbridge.',
+      confidence: '92%',
+      department: 'Ranchi Municipal Corporation (RMC) Electrical Cell',
       governmentScheme: 'Street Lighting National Programme (SLNP)',
-      nearestSchoolHospital: 'Koramangala Public School (0.6 km)',
-      lat: 12.9344,
-      lng: 77.6255,
+      nearestSchoolHospital: 'St. Xavier\'s College Ranchi (0.5 km)',
+      lat: 23.3650,
+      lng: 85.3250,
       supportingIssues: [
-        { title: 'Dark lane behind central market', address: 'Commercial Ave', status: 'reported' },
-        { title: 'Streetlight pole 42 broken wire', address: 'Block 3 Crossing', status: 'in-progress' }
+        { title: 'Dark lane behind GEL Church complex', address: 'Main Road', status: 'reported' },
+        { title: 'Pole 34 loose connection', address: 'Daily Market Chowk', status: 'in-progress' }
       ]
     },
     {
       id: 'h3',
       theme: 'High-Stress Asphalt Pothole Corridor',
       category: 'pothole',
-      location: 'Metro Main Highway corridor',
-      demandScore: 85,
-      priorityScore: 88,
-      populationImpact: '24,000 daily commuters',
-      count: 256,
-      aiRecommendation: 'Re-surface high-stress asphalt segments using carbon-reinforced polymer composites to withstand monsoons.',
-      confidence: '89%',
-      department: 'Public Works Department (Roads Section)',
-      governmentScheme: 'Pradhan Mantri Gram Sadak Yojana (PMGSY)',
-      nearestSchoolHospital: 'Whitefield Global School (1.8 km)',
-      lat: 12.9620,
-      lng: 77.7150,
+      location: 'Circular Road Student & Commercial Axis',
+      demandScore: 87,
+      priorityScore: 89,
+      populationImpact: '35,000 daily commuters',
+      count: 284,
+      aiRecommendation: 'Full-depth bituminous reclamation and polymer-modified asphalt resurfacing along Lalpur-Circular Road corridor.',
+      confidence: '90%',
+      department: 'Road Construction Department (RCD), Jharkhand',
+      governmentScheme: 'Pradhan Mantri Gram Sadak Yojana (PMGSY) Urban Linkage',
+      nearestSchoolHospital: 'Ranchi Women\'s College (0.4 km)',
+      lat: 23.3740,
+      lng: 85.3350,
       supportingIssues: [
-        { title: 'Multiple deep craters near flyover descent', address: 'Highway Exit 4', status: 'reported' }
+        { title: 'Deep crater outside Nucleus Mall', address: 'Circular Road', status: 'reported' }
       ]
     },
     {
       id: 'h4',
-      theme: 'Clean Solar Grid & Power Redundancy',
+      theme: 'Clean Solar Rooftop & Feeder Redundancy',
       category: 'electricity',
-      location: 'Northeast Ward Center',
+      location: 'Doranda-Hinoo Civic Hub',
       demandScore: 78,
-      priorityScore: 72,
-      populationImpact: '6,800 residents',
-      count: 82,
-      aiRecommendation: 'Deploy secondary grid lines and install a centralized grid-tied 120kW solar canopy for power security.',
-      confidence: '85%',
-      department: 'State Power Distribution Corporation (BESCOM)',
-      governmentScheme: 'Solar Rooftop Subsidy Scheme',
-      nearestSchoolHospital: 'Columbia Asia Hospital (3.1 km)',
-      lat: 12.9550,
-      lng: 77.7400,
+      priorityScore: 74,
+      populationImpact: '9,200 residents',
+      count: 96,
+      aiRecommendation: 'Deploy underground cabling along airport feeder route and install 150kW distributed solar generation on civic buildings.',
+      confidence: '86%',
+      department: 'Jharkhand Bijli Vitran Nigam Limited (JBVNL)',
+      governmentScheme: 'PM Surya Ghar Muft Bijli Yojana',
+      nearestSchoolHospital: 'Paras Hospital Ranchi (2.8 km)',
+      lat: 23.3320,
+      lng: 85.3210,
       supportingIssues: [
-        { title: 'Frequent power cuts in Sector B', address: 'Avenue 2', status: 'reported' }
+        { title: 'Frequent evening feeder tripping', address: 'Doranda Bazar Lane', status: 'reported' }
       ]
     }
   ];
 
   // Static Infrastructure assets
   const infrastructureAssets = [
-    { id: 'i1', name: 'Ward 8 Government High School', category: 'education', location: 'Ward 8 West', lat: 12.9280, lng: 77.6150, description: 'Serves 620 local students. High structural rating.' },
-    { id: 'i2', name: 'Metro South Transit Exchange', category: 'public transport', location: 'Commercial Ring Axis', lat: 12.9320, lng: 77.6220, description: 'Primary intermodal transfer node. 45k daily boardings.' },
-    { id: 'i3', name: 'Vani Vilas Maternity Wing CA', category: 'healthcare', location: 'North Ward Ring', lat: 12.9600, lng: 77.7200, description: 'Affiliated civic outpatient clinic with neonatal coverage.' }
+    { id: 'i1', name: 'Zila School Ranchi', category: 'education', location: 'Shaheed Chowk, Ward 18', lat: 23.3710, lng: 85.3245, description: 'Historic premier government secondary school. High student catchment.' },
+    { id: 'i2', name: 'Ranchi Railway Station Multi-Modal Terminal', category: 'public transport', location: 'Chutia / Station Road', lat: 23.3500, lng: 85.3340, description: 'Primary passenger transit hub connecting 65,000 daily inter-district commuters.' },
+    { id: 'i3', name: 'Sadar Hospital Ranchi', category: 'healthcare', location: 'Purulia Road, Ward 14', lat: 23.3680, lng: 85.3320, description: 'Super-specialty civil district hospital with 500-bed capacity.' }
   ];
 
   // Static Local Development Plans (LDP)
   const ldpPlans = [
-    { id: 'l1', name: 'Commercial Ring Road Expansion', budget: '₹4.2 Cr', status: 'Approved Planning', lat: 12.9360, lng: 77.6320, details: 'Widening of core arterial lane to alleviate commute bottle-necks.' },
-    { id: 'l2', name: 'Northeast Stormwater Drainage Grid', budget: '₹1.8 Cr', status: 'Tendering Active', lat: 12.9692, lng: 77.7490, details: 'Construct concrete silt traps along low-elevation catchment areas.' }
+    { id: 'l1', name: 'Kantatoli - Sirmtoli Flyover Link Expansion', budget: '₹6.8 Cr', status: 'Approved Planning', lat: 23.3620, lng: 85.3410, details: 'Connector ramp and surface service road widening to unclog transit corridors.' },
+    { id: 'l2', name: 'Harmu River Rejuvenation & Stormwater Drainage', budget: '₹3.4 Cr', status: 'Tendering Active', lat: 23.3520, lng: 85.3120, details: 'Construct reinforced concrete retaining culverts and silt traps.' }
   ];
 
   // Static Completed Projects
   const completedProjects = [
-    { id: 'c1', name: 'Ward 8 Water Filtration Plant', date: 'May 2026', budget: '₹75 Lakhs', lat: 12.9390, lng: 77.6300, impact: '4,500 local residents supplied with clean reverse osmosis drinking water.' },
-    { id: 'c2', name: 'Outer Ring Road Pothole Overhaul', date: 'June 2026', budget: '₹1.2 Cr', lat: 12.9620, lng: 77.7220, impact: '12,000 daily transiting commuters benefited from micro-surfaced asphalt repair.' }
+    { id: 'c1', name: 'Karamtoli Lake Beautification & Filtration Unit', date: 'April 2026', budget: '₹95 Lakhs', lat: 23.3810, lng: 85.3360, impact: 'Revitalized freshwater lake ecosystem and public promenade.' },
+    { id: 'c2', name: 'Birsa Munda Airport Arterial Corridor Overhaul', date: 'July 2026', budget: '₹2.4 Cr', lat: 23.3270, lng: 85.3220, impact: '40,000 daily commuters benefited from heavy-duty micro-surfaced asphalt laying.' }
   ];
 
   // Real-time synchronization from Firebase
@@ -343,8 +343,8 @@ export default function MapPage() {
           }
         ]
       } as any,
-      center: [77.6255, 12.9362], // Koramangala Bangalore
-      zoom: 12.2,
+      center: [85.3252, 23.3698], // Albert Ekka Chowk, Main Road, Ranchi
+      zoom: 13.0,
       pitch: 0,
       bearing: 0
     });
@@ -637,9 +637,9 @@ export default function MapPage() {
               style={{ background: 'transparent', border: 'none', fontSize: '12px', fontWeight: 600, color: 'var(--text-1)', outline: 'none', cursor: 'pointer' }}
             >
               <option value="all">All Wards</option>
-              <option value="ward-8">Ward 8 - Koramangala Central</option>
-              <option value="ward-12">Ward 12 - Indiranagar East</option>
-              <option value="ward-15">Ward 15 - Whitefield IT Corridor</option>
+              <option value="ward-18">Ward 18 - Main Road / Hindpiri</option>
+              <option value="ward-14">Ward 14 - Lalpur / Circular Road</option>
+              <option value="ward-26">Ward 26 - Doranda / Hinoo Axis</option>
             </select>
           </div>
 
@@ -837,17 +837,17 @@ export default function MapPage() {
 
                 {/* Sub-Sector Outline Quadrants */}
                 <polygon points="50,50 300,50 300,220 50,220" fill="rgba(0,0,0,0.01)" stroke="var(--text-3)" strokeWidth="1" strokeDasharray="4,4" />
-                <text x="60" y="70" fill="var(--text-3)" fontSize="9" fontFamily="var(--font-mono)">SECTOR: WARD 12 (INDIRANAGAR)</text>
+                <text x="60" y="70" fill="var(--text-3)" fontSize="9" fontFamily="var(--font-mono)">SECTOR: WARD 14 (LALPUR / CIRCULAR ROAD)</text>
 
                 <polygon points="50,250 320,250 320,450 50,450" fill="rgba(0,0,0,0.01)" stroke="var(--text-3)" strokeWidth="1" strokeDasharray="4,4" />
-                <text x="60" y="270" fill="var(--text-3)" fontSize="9" fontFamily="var(--font-mono)">SECTOR: WARD 8 (KORAMANGALA)</text>
+                <text x="60" y="270" fill="var(--text-3)" fontSize="9" fontFamily="var(--font-mono)">SECTOR: WARD 18 (MAIN ROAD / HINDPIRI)</text>
 
                 <polygon points="360,100 750,100 750,420 360,420" fill="rgba(0,0,0,0.01)" stroke="var(--text-3)" strokeWidth="1" strokeDasharray="4,4" />
-                <text x="370" y="120" fill="var(--text-3)" fontSize="9" fontFamily="var(--font-mono)">SECTOR: WARD 15 (WHITEFIELD IT AXIS)</text>
+                <text x="370" y="120" fill="var(--text-3)" fontSize="9" fontFamily="var(--font-mono)">SECTOR: WARD 26 (DORANDA - AIRPORT AXIS)</text>
 
                 {/* Road Arteries */}
                 <path d="M 120,400 Q 250,300 420,240 T 700,180" fill="none" stroke="#D4D4D4" strokeWidth="2.5" />
-                <text x="440" y="225" fill="var(--text-3)" fontSize="8" transform="rotate(-15, 440, 225)">HAL ROAD TRANSIT LINK</text>
+                <text x="440" y="225" fill="var(--text-3)" fontSize="8" transform="rotate(-15, 440, 225)">MAIN ROAD ARTERIAL LINK</text>
 
                 {/* Render Schematic Elements dynamically matching active Layer */}
                 {filteredLayerItems.map((item: any, idx) => {

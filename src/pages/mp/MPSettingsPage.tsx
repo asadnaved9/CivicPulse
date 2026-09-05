@@ -25,9 +25,9 @@ export default function MPSettingsPage() {
 
   const languages: { code: Language; name: string; native: string }[] = [
     { code: 'en', name: 'English', native: 'English' },
-    { code: 'kn', name: 'Kannada', native: 'ಕನ್ನಡ' },
+    { code: 'bn', name: 'Bengali', native: 'বাংলা' },
     { code: 'hi', name: 'Hindi', native: 'हिन्दी' },
-    { code: 'es', name: 'Spanish', native: 'Español' }
+    { code: 'kn', name: 'Kannada', native: 'ಕನ್ನಡ' }
   ];
 
   return (
@@ -183,7 +183,7 @@ export default function MPSettingsPage() {
               Parliamentary Session Credentials
             </h2>
             <div style={{ fontSize: '12px', color: '#64748b' }}>
-              Constituency: Bangalore Central Parliamentary Representative
+              Constituency: Ranchi Parliamentary Representative (Jharkhand)
             </div>
           </div>
         </div>

@@ -104,7 +104,7 @@ export default function SettingsPage() {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
           {[
             { code: 'en', label: 'English', native: 'English' },
-            { code: 'es', label: 'Spanish', native: 'Español' },
+            { code: 'bn', label: 'Bengali', native: 'বাংলা' },
             { code: 'hi', label: 'Hindi', native: 'हिन्दी' },
             { code: 'kn', label: 'Kannada', native: 'ಕನ್ನಡ' }
           ].map((lang) => {

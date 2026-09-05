@@ -19,9 +19,11 @@ import { MobileMapMockup } from '../components/MobileMapMockup';
 import { AnimatedHowItWorks2D } from '../components/AnimatedHowItWorks2D';
 import { InteractiveCityRadar } from '../components/InteractiveCityRadar';
 import { AnimatedConclusion2D } from '../components/AnimatedConclusion2D';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <div style={{ background: 'var(--bg)', color: 'var(--text-1)', minHeight: '100vh', width: '100%', position: 'relative', overflow: 'hidden', transition: 'background 0.3s ease, color 0.3s ease' }}>
@@ -46,8 +48,7 @@ export default function HomePage() {
               margin: 0,
               color: 'var(--text-1)'
             }}>
-              Every Issue Reported.<br />
-              Every Repair Verified.
+              {t('home.heroTitle', 'Every Issue Reported. Every Repair Verified.')}
             </h1>
             
             <p style={{ 
@@ -57,7 +58,7 @@ export default function HomePage() {
               maxWidth: '540px',
               margin: 0
             }}>
-              AI-driven accountability for the modern city. Transparent, verifiable, and tamper-proof infrastructure monitoring.
+              {t('home.heroSubtitle', 'AI-driven accountability for the modern city. Transparent, verifiable, and tamper-proof infrastructure monitoring.')}
             </p>
 
             <div style={{ display: 'flex', gap: '16px', marginTop: '12px', flexWrap: 'wrap' }}>
@@ -77,7 +78,7 @@ export default function HomePage() {
                 }}
               >
                 <TrendingUp size={18} style={{ marginRight: '8px' }} />
-                DEVELOPMENT
+                {t('development').toUpperCase()}
               </button>
               <button 
                 onClick={() => navigate('/report', { state: { mode: 'problem' } })}
@@ -96,7 +97,7 @@ export default function HomePage() {
                 }}
               >
                 <PlusCircle size={18} style={{ marginRight: '8px' }} />
-                REPORT AN ISSUE
+                {t('nav.reportIssue').toUpperCase()}
               </button>
             </div>
           </div>

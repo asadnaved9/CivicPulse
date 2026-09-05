@@ -77,16 +77,16 @@ export function buildEvidenceChain(
     citizenEvidence: {
       totalSubmissions: suggestions.length || (cluster?.count || 4),
       totalUpvotes,
-      primaryWard: proposal.ward || cluster?.ward || 'Central Bengaluru',
+      primaryWard: proposal.ward || cluster?.ward || 'Ranchi Central',
       sampleRequests
     },
     demographicEvidence: {
-      wardName: demographics?.name || 'Koramangala (Ward 151)',
-      population: demographics?.population || 48500,
-      densityKm2: demographics?.densityKm2 || 12400,
-      literacyRatePct: demographics?.literacyRatePct || 88.4,
-      povertyHouseholdPct: demographics?.povertyHouseholdPct || 14.2,
-      bplHouseholds: demographics?.bplHouseholds || 1620,
+      wardName: demographics?.name || 'Main Road (Ward 18)',
+      population: demographics?.population || 52500,
+      densityKm2: demographics?.densityKm2 || 11200,
+      literacyRatePct: demographics?.literacyRatePct || 87.2,
+      povertyHouseholdPct: demographics?.povertyHouseholdPct || 15.8,
+      bplHouseholds: demographics?.bplHouseholds || 1840,
       dataSource: demographics?.dataSource || 'Census of India 2011 & SECC Urban Demographics'
     },
     priorityScoreBreakdown: {
@@ -107,7 +107,7 @@ export function buildEvidenceChain(
     schemeEvidence: {
       schemeName: recommendation?.matchedScheme?.name || 'Atal Mission for Rejuvenation and Urban Transformation (AMRUT 2.0)',
       fundingPattern: '50% Central Assistance / 50% State & ULB Share',
-      eligibleDepartment: 'Bruhat Bengaluru Mahanagara Palike (BBMP) Infrastructure Division'
+      eligibleDepartment: 'Ranchi Municipal Corporation (RMC) Infrastructure Division'
     },
     auditTrail: (proposal.statusHistory || []).map((h: any) => ({
       status: h.status,

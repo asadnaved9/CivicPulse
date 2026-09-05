@@ -43,15 +43,15 @@ export default function MPDashboardPage() {
         } else {
           // Fallback initial notifications if collection is empty
           setNotifications([
-            { id: '1', title: 'High Density Cluster Alert', message: 'Indiranagar Water Supply cluster reached critical priority score threshold (88/100).', recipient: 'MP Office', timestamp: new Date() },
-            { id: '2', title: 'New Citizen Submission', message: 'Koramangala 4th Block report assigned to BBMP Roads & Footpaths.', recipient: 'Ward Officer', timestamp: new Date(Date.now() - 3600000) },
+            { id: '1', title: 'High Density Cluster Alert', message: 'Lalpur Circular Road Water Supply cluster reached critical priority score threshold (88/100).', recipient: 'MP Office', timestamp: new Date() },
+            { id: '2', title: 'New Citizen Submission', message: 'Main Road Ward 18 report assigned to RMC Roads & Footpaths Cell.', recipient: 'Ward Officer', timestamp: new Date(Date.now() - 3600000) },
             { id: '3', title: 'Proposal Milestone', message: 'Ward Road Resurfacing Proposal moved to Phase 2 (Technical Review).', recipient: 'MP Office', timestamp: new Date(Date.now() - 86400000) }
           ]);
         }
       } catch (err) {
         setNotifications([
-          { id: '1', title: 'High Density Cluster Alert', message: 'Indiranagar Water Supply cluster reached critical priority score threshold (88/100).', recipient: 'MP Office', timestamp: new Date() },
-          { id: '2', title: 'New Citizen Submission', message: 'Koramangala 4th Block report assigned to BBMP Roads & Footpaths.', recipient: 'Ward Officer', timestamp: new Date(Date.now() - 3600000) },
+          { id: '1', title: 'High Density Cluster Alert', message: 'Lalpur Circular Road Water Supply cluster reached critical priority score threshold (88/100).', recipient: 'MP Office', timestamp: new Date() },
+          { id: '2', title: 'New Citizen Submission', message: 'Main Road Ward 18 report assigned to RMC Roads & Footpaths Cell.', recipient: 'Ward Officer', timestamp: new Date(Date.now() - 3600000) },
           { id: '3', title: 'Proposal Milestone', message: 'Ward Road Resurfacing Proposal moved to Phase 2 (Technical Review).', recipient: 'MP Office', timestamp: new Date(Date.now() - 86400000) }
         ]);
       }

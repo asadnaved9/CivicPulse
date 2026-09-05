@@ -86,7 +86,7 @@ export default function MPLoginPage() {
         </div>
 
         <div style={{ fontSize: '11px', color: 'var(--text-3)' }}>
-          CivicPulse Governance System • Bangalore Central Parliamentary Office
+          CivicPulse Governance System • Ranchi Parliamentary Office
         </div>
       </div>
     </div>

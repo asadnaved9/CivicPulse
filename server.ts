@@ -13,6 +13,7 @@ import { DPI_ROLLOUTS } from "./src/data/dpiRollouts";
 import { processUSSDInput } from "./src/services/ussdEngine";
 import { processVoiceInput } from "./src/services/voiceProviders/voiceRouter";
 import { classifyOnDevice, checkEdgeHealth, classifyDeterministic } from "./src/services/edgeInference";
+import { screenCivicPrompt } from "./src/utils/civicGuardrail";
 
 dotenv.config();
 
@@ -186,19 +187,19 @@ app.get("/api/geocode", rateLimiter(60000, 60), async (req, res) => {
 
   const mapsApiKey = process.env.VITE_GOOGLE_MAPS_API_KEY;
   if (!mapsApiKey) {
-    // Fallback: Return realistic Bangalore neighborhood addresses
+    // Fallback: Return realistic Ranchi neighborhood addresses
     const latitude = parseFloat(lat as string);
     const longitude = parseFloat(lng as string);
-    let area = "Bangalore Urban";
+    let area = "Ranchi Urban, Jharkhand";
     
-    if (latitude >= 12.9300 && latitude <= 12.9450 && longitude >= 77.6150 && longitude <= 77.6350) {
-      area = "Koramangala 4th Block, Bengaluru, Karnataka 560034";
-    } else if (latitude >= 12.9700 && latitude <= 12.9900 && longitude >= 77.6300 && longitude <= 77.6500) {
-      area = "Indiranagar 100 Feet Rd, Bengaluru, Karnataka 560038";
-    } else if (latitude >= 12.9600 && latitude <= 12.9800 && longitude >= 77.7400 && longitude <= 77.7600) {
-      area = "Whitefield Main Rd, Bengaluru, Karnataka 560066";
+    if (latitude >= 23.3550 && latitude <= 23.3750 && longitude >= 85.3150 && longitude <= 85.3350) {
+      area = "Mahatma Gandhi Main Road, Ranchi, Jharkhand 834001";
+    } else if (latitude >= 23.3700 && latitude <= 23.3850 && longitude >= 85.3300 && longitude <= 85.3450) {
+      area = "Circular Road, Lalpur, Ranchi, Jharkhand 834001";
+    } else if (latitude >= 23.3200 && latitude <= 23.3450 && longitude >= 85.3100 && longitude <= 85.3300) {
+      area = "Doranda Bazar Rd, Ranchi, Jharkhand 834002";
     } else {
-      area = `HSR Layout Sector 2, Bengaluru, Karnataka 560102`;
+      area = `Harmu Housing Colony, Ranchi, Jharkhand 834002`;
     }
     return res.json({ address: area });
   }
@@ -417,6 +418,16 @@ app.post("/api/edge/classify", async (req, res) => {
   if (!text || typeof text !== 'string') {
     return res.status(400).json({ error: "Missing required text field" });
   }
+  // ── Civic Guardrail ──────────────────────────────────────────────────────
+  const guard = screenCivicPrompt(text);
+  if (!guard.allowed) {
+    return res.status(400).json({
+      error: 'GUARDRAIL_BLOCKED',
+      code: guard.refusalCode,
+      message: guard.refusalMessage
+    });
+  }
+  // ─────────────────────────────────────────────────────────────────────────
   const result = await classifyOnDevice(text);
   return res.json(result);
 });
@@ -426,6 +437,16 @@ app.post("/api/infer/tiered", async (req, res) => {
   if (!text || typeof text !== 'string') {
     return res.status(400).json({ error: "Missing required text field" });
   }
+  // ── Civic Guardrail ──────────────────────────────────────────────────────
+  const guard = screenCivicPrompt(text);
+  if (!guard.allowed) {
+    return res.status(400).json({
+      error: 'GUARDRAIL_BLOCKED',
+      code: guard.refusalCode,
+      message: guard.refusalMessage
+    });
+  }
+  // ─────────────────────────────────────────────────────────────────────────
 
   // 1. Check if edge tier is available
   const edgeHealth = await checkEdgeHealth();
@@ -1649,13 +1670,22 @@ app.get("/api/edge/health", async (req, res) => {
   }
 });
 
-// POST /api/edge/classify - On-device classification via local model or deterministic fallback
 app.post("/api/edge/classify", async (req, res) => {
   try {
     const { text } = req.body;
     if (!text) {
       return res.status(400).json({ error: "text is required" });
     }
+    // ── Civic Guardrail ────────────────────────────────────────────────────
+    const guard = screenCivicPrompt(text);
+    if (!guard.allowed) {
+      return res.status(400).json({
+        error: 'GUARDRAIL_BLOCKED',
+        code: guard.refusalCode,
+        message: guard.refusalMessage
+      });
+    }
+    // ───────────────────────────────────────────────────────────────────────
     const result = await classifyOnDevice(text);
     return res.json(result);
   } catch (err: any) {
@@ -1671,6 +1701,16 @@ app.post("/api/infer/tiered", async (req, res) => {
     if (!text) {
       return res.status(400).json({ error: "text is required" });
     }
+    // ── Civic Guardrail ────────────────────────────────────────────────────
+    const guard = screenCivicPrompt(text);
+    if (!guard.allowed) {
+      return res.status(400).json({
+        error: 'GUARDRAIL_BLOCKED',
+        code: guard.refusalCode,
+        message: guard.refusalMessage
+      });
+    }
+    // ───────────────────────────────────────────────────────────────────────
     const edgeHealth = await checkEdgeHealth();
 
     if (edgeHealth.available) {

@@ -110,25 +110,25 @@ export const Navbar: React.FC = () => {
         {/* Desktop Links (Hidden on Mobile) */}
         <div className="navbar-center hide-on-mobile" style={{ gap: '20px', alignItems: 'center' }}>
           <Link to="/" className={`navbar-link ${isActive('/') ? 'active' : ''}`}>
-            Overview
+            {t('overview')}
           </Link>
           <Link to="/development" className={`navbar-link ${isActive('/development') ? 'active' : ''}`}>
-            Development
+            {t('development')}
           </Link>
           <Link to="/map" className={`navbar-link ${isActive('/map') ? 'active' : ''}`}>
-            Map
+            {t('map')}
           </Link>
           <Link to="/community" className={`navbar-link ${isActive('/community') ? 'active' : ''}`}>
-            Community
+            {t('nav.community')}
           </Link>
           <Link to="/recommendations" className={`navbar-link ${isActive('/recommendations') ? 'active' : ''}`}>
-            AI Planning
+            {t('aiPlanning')}
           </Link>
           <Link to="/report" className={`navbar-link ${isActive('/report') ? 'active' : ''}`}>
-            Suggest
+            {t('suggest')}
           </Link>
           <Link to="/settings" className={`navbar-link ${isActive('/settings') ? 'active' : ''}`}>
-            Settings
+            {t('settings')}
           </Link>
         </div>
 
@@ -250,7 +250,7 @@ export const Navbar: React.FC = () => {
                 style={{ padding: '8px 16px', borderRadius: '24px', fontWeight: 600 }}
               >
                 <PlusCircle size={16} />
-                Report Issue
+                {t('nav.reportIssue')}
               </Link>
 
               <Link 
@@ -291,7 +291,7 @@ export const Navbar: React.FC = () => {
               style={{ padding: '8px 14px' }}
             >
               <LogIn size={15} />
-              Sign In
+              {t('signIn')}
             </button>
           )}
 
@@ -346,7 +346,7 @@ export const Navbar: React.FC = () => {
             style={{ height: '40px', display: 'flex', alignItems: 'center' }}
             onClick={handleLinkClick}
           >
-            Overview
+            {t('overview')}
           </Link>
           <Link 
             to="/development" 
@@ -354,7 +354,7 @@ export const Navbar: React.FC = () => {
             style={{ height: '40px', display: 'flex', alignItems: 'center' }}
             onClick={handleLinkClick}
           >
-            Development
+            {t('development')}
           </Link>
           <Link 
             to="/map" 
@@ -362,7 +362,7 @@ export const Navbar: React.FC = () => {
             style={{ height: '40px', display: 'flex', alignItems: 'center' }}
             onClick={handleLinkClick}
           >
-            Map
+            {t('map')}
           </Link>
           <Link 
             to="/community" 
@@ -370,7 +370,7 @@ export const Navbar: React.FC = () => {
             style={{ height: '40px', display: 'flex', alignItems: 'center' }}
             onClick={handleLinkClick}
           >
-            Community
+            {t('nav.community')}
           </Link>
           <Link 
             to="/recommendations" 
@@ -378,7 +378,7 @@ export const Navbar: React.FC = () => {
             style={{ height: '40px', display: 'flex', alignItems: 'center' }}
             onClick={handleLinkClick}
           >
-            AI Planning
+            {t('aiPlanning')}
           </Link>
           <Link 
             to="/report" 
@@ -387,7 +387,7 @@ export const Navbar: React.FC = () => {
             style={{ height: '40px', display: 'flex', alignItems: 'center' }}
             onClick={handleLinkClick}
           >
-            Suggest
+            {t('suggest')}
           </Link>
           <Link 
             to="/settings" 
@@ -395,7 +395,7 @@ export const Navbar: React.FC = () => {
             style={{ height: '40px', display: 'flex', alignItems: 'center' }}
             onClick={handleLinkClick}
           >
-            Settings
+            {t('settings')}
           </Link>
 
           {user ? (
@@ -419,7 +419,7 @@ export const Navbar: React.FC = () => {
                 style={{ justifyContent: 'center', padding: '10px' }}
               >
                 <LogOut size={15} />
-                Sign Out
+                {t('signOut')}
               </button>
             </>
           ) : (
@@ -434,7 +434,7 @@ export const Navbar: React.FC = () => {
                 style={{ justifyContent: 'center', padding: '10px' }}
               >
                 <LogIn size={15} />
-                Sign In
+                {t('signIn')}
               </button>
             </>
           )}
@@ -470,9 +470,9 @@ export const Navbar: React.FC = () => {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ margin: 0 }}>Join CivicPulse</h3>
+            <h3 style={{ margin: 0 }}>{t('joinCivicPulse')}</h3>
             <p className="text-sm" style={{ color: 'var(--text-2)' }}>
-              Sign in to report community problems, upvote active issues, write comments, and earn recognition badges.
+              {t('signInDesc')}
             </p>
             <button 
               className="btn btn-primary" 
@@ -482,7 +482,7 @@ export const Navbar: React.FC = () => {
                 await loginWithGoogle();
               }}
             >
-              Sign In with Google
+              {t('signInGoogle')}
             </button>
             <button 
               className="btn btn-secondary" 
@@ -492,14 +492,14 @@ export const Navbar: React.FC = () => {
                 await loginAnonymously();
               }}
             >
-              Continue Anonymously
+              {t('continueAnon')}
             </button>
             <button 
               className="btn text-muted" 
               style={{ background: 'transparent', alignSelf: 'center', fontSize: '12px', padding: '4px' }}
               onClick={() => setShowAuthModal(false)}
             >
-              Cancel
+              {t('cancel')}
             </button>
           </div>
         </div>

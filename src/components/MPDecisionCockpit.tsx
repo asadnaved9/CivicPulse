@@ -37,7 +37,7 @@ export default function MPDecisionCockpit({
   // MP Copilot Chat States
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'assistant'; text: string }>>([
-    { role: 'assistant', text: "Welcome, Honorable MP. I am your Decision Copilot. Ask me anything about Bangalore Central's active theme clusters, priority hotspots, recommended alignments, or local development plans." }
+    { role: 'assistant', text: "Welcome, Honorable MP. I am your Decision Copilot. Ask me anything about Ranchi Parliamentary Constituency's active theme clusters, priority hotspots, recommended alignments, or local development plans." }
   ]);
   const [chatLoading, setChatLoading] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);

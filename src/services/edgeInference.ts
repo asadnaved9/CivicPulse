@@ -1,4 +1,5 @@
 import { Ollama } from 'ollama';
+import { screenCivicPrompt } from '../utils/civicGuardrail';
 
 export interface EdgeClassification {
   type: 'CIVIC_ISSUE' | 'DEVELOPMENT_NEED';
@@ -40,6 +41,24 @@ export async function checkEdgeHealth(): Promise<{ available: boolean; model?: s
  * Deterministic keyword-based classification fallback when Ollama is unavailable
  */
 export function classifyDeterministic(rawText: string): EdgeClassification {
+  // ── Guardrail check ───────────────────────────────────────────────────────
+  const guard = screenCivicPrompt(rawText);
+  if (!guard.allowed) {
+    // Return a structured refusal masquerading as a classification so callers
+    // don't need a special code-path; the refusalMessage is surfaced in the
+    // cleanedDescription field for API consumers.
+    return {
+      type: 'CIVIC_ISSUE',
+      category: 'Guardrail Refusal',
+      urgency: 0,
+      cleanedDescription: guard.refusalMessage ?? 'Request blocked by civic guardrail.',
+      language: 'en',
+      piiRedacted: false,
+      tier: 'deterministic_fallback',
+      modelUsed: `guardrail:${guard.refusalCode ?? 'OUT_OF_DOMAIN'}`,
+    };
+  }
+  // ─────────────────────────────────────────────────────────────────────────
   const lower = rawText.toLowerCase();
 
   // PII Redaction: mask phone numbers and email addresses
@@ -101,6 +120,23 @@ export function classifyDeterministic(rawText: string): EdgeClassification {
  * Falls back to deterministic classification if Ollama is not responding
  */
 export async function classifyOnDevice(rawText: string): Promise<EdgeClassification> {
+  // ── Guardrail check (before any AI call) ─────────────────────────────────
+  const guard = screenCivicPrompt(rawText);
+  if (!guard.allowed) {
+    console.warn(`[EdgeInference] Guardrail blocked request (${guard.refusalCode}): "${rawText.slice(0, 80)}…"`);
+    return {
+      type: 'CIVIC_ISSUE',
+      category: 'Guardrail Refusal',
+      urgency: 0,
+      cleanedDescription: guard.refusalMessage ?? 'Request blocked by civic guardrail.',
+      language: 'en',
+      piiRedacted: false,
+      tier: 'edge',
+      modelUsed: `guardrail:${guard.refusalCode ?? 'OUT_OF_DOMAIN'}`,
+    };
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   const health = await checkEdgeHealth();
 
   if (!health.available) {
@@ -127,7 +163,7 @@ Return ONLY the raw JSON object.`;
         format: 'json',
         stream: false
       }),
-      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Edge inference timeout')), 4000))
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Edge inference timeout')), 12000))
     ]);
 
     const parsed = JSON.parse(response.response.trim());

@@ -1,5 +1,5 @@
 import { db, Timestamp } from '../config/firebaseAdmin';
-import { BANGALORE_ISSUES, SEED_USERS, SEED_ACTIVITIES } from './seedData';
+import { RANCHI_ISSUES, SEED_USERS, SEED_ACTIVITIES } from './seedData';
 
 // Helper to calculate relative timestamp
 function daysAgo(num: number) {
@@ -14,29 +14,42 @@ export async function seedFirestoreIfEmptyAdmin() {
     const snapshot = await issuesRef.limit(5).get();
 
     if (snapshot.size >= 5) {
-      console.log("[Admin Seeder] Firestore is already populated with issues. Ensuring seed images/data are perfectly aligned...");
+      console.log("[Admin Seeder] Firestore has existing issues. Updating seed records with Ranchi data...");
       const batch = db.batch();
-      BANGALORE_ISSUES.forEach((issue: any, index) => {
+      RANCHI_ISSUES.forEach((issue: any, index) => {
         const issueId = `seed_issue_${index + 1}`;
         const issueDocRef = issuesRef.doc(issueId);
         batch.set(issueDocRef, {
           imageUrl: issue.imageUrl || "",
           resolvedImageUrl: issue.resolvedImageUrl || null,
           title: issue.title,
-          description: issue.description
+          description: issue.description,
+          address: issue.address,
+          lat: issue.lat,
+          lng: issue.lng,
+          category: issue.category,
+          severity: issue.severity,
+          severityReason: issue.severityReason,
+          status: issue.status,
+          upvotes: issue.upvotes,
+          verified: issue.verified,
+          verificationReason: issue.verificationReason,
+          aiTags: issue.aiTags,
+          estimatedResolutionDays: issue.estimatedResolutionDays,
+          escalated: issue.escalated
         }, { merge: true });
       });
       await batch.commit();
-      console.log("[Admin Seeder] Seed issues images matched and synchronized successfully!");
+      console.log("[Admin Seeder] Seed issues updated to Ranchi data successfully!");
       return;
     }
 
-    console.log("[Admin Seeder] Firestore has fewer than 5 issues. Seeding Bangalore data via Admin SDK...");
+    console.log("[Admin Seeder] Firestore has fewer than 5 issues. Seeding Ranchi data via Admin SDK...");
 
     // Batch seed issues
     const batch = db.batch();
     
-    BANGALORE_ISSUES.forEach((issue: any, index) => {
+    RANCHI_ISSUES.forEach((issue: any, index) => {
       const issueId = `seed_issue_${index + 1}`;
       const issueDocRef = issuesRef.doc(issueId);
       
@@ -45,8 +58,8 @@ export async function seedFirestoreIfEmptyAdmin() {
         id: issueId,
         imageUrl: issue.imageUrl || "",
         resolvedImageUrl: issue.resolvedImageUrl || null,
-        reportedBy: issue.reportedBy || "seed_reporter_bbmp",
-        reporterName: issue.reporterName || "BBMP Citizen Warden",
+        reportedBy: issue.reportedBy || "seed_reporter_rmc",
+        reporterName: issue.reporterName || "RMC Citizen Warden",
         createdAt: issue.createdAt ? Timestamp.fromDate(issue.createdAt) : Timestamp.now(),
         updatedAt: issue.updatedAt ? Timestamp.fromDate(issue.updatedAt) : Timestamp.now(),
         resolvedAt: issue.resolvedAt ? Timestamp.fromDate(issue.resolvedAt) : null,
@@ -76,7 +89,7 @@ export async function seedFirestoreIfEmptyAdmin() {
     });
 
     await batch.commit();
-    console.log("[Admin Seeder] Seeding of Bangalore issues, users, and activities completed successfully via Admin SDK!");
+    console.log("[Admin Seeder] Seeding of Ranchi issues, users, and activities completed successfully via Admin SDK!");
   } catch (error) {
     console.error("[Admin Seeder] Seeding error:", error);
   }

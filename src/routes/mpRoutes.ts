@@ -28,7 +28,7 @@ mpRouter.post("/copilot", async (req, res) => {
     return res.status(400).json({ error: "Missing or invalid message parameter." });
   }
 
-  const defaultReply = "I am currently unable to access the live constituency planning databases. However, based on general civic planning parameters for Bangalore, road quality, pedestrian safety, and public lighting are usually top infrastructural priorities in most wards.";
+  const defaultReply = "I am currently unable to access the live constituency planning databases. However, based on general civic planning parameters for Ranchi, road quality, stormwater drainage, and public lighting are usually top infrastructural priorities in most wards.";
 
   try {
     // Fetch data from Firestore to ground the model
@@ -46,7 +46,7 @@ mpRouter.post("/copilot", async (req, res) => {
 
     // Format grounding context
     const context = `
-CONSTITUENCY STATUS CONTEXT: Bangalore Central (MP Planning Office)
+CONSTITUENCY STATUS CONTEXT: Ranchi Parliamentary Constituency (MP Planning Office)
 
 ACTIVE THEME CLUSTERS (Citizen Demand):
 ${clusters.map(c => `- Theme ID: "${c.id}", Theme: "${c.theme}", Category: "${c.category}", Priority Score: ${c.priorityScore}/100, Density: ${c.count || 0} reports, AI Summary: "${c.aiSummary}"`).join("\n")}

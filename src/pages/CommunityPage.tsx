@@ -59,56 +59,56 @@ interface VolunteerEvent {
 }
 
 const mockWardens: WardenLeader[] = [
-  { rank: 1, name: 'Ramesh Kumar', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=ramesh', points: 1540, ward: 'Ward 151 - Koramangala', reported: 18, resolved: 14, badge: 'Civic Champion' },
-  { rank: 2, name: 'Ananya Sharma', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=ananya', points: 1320, ward: 'Ward 80 - Indiranagar', reported: 15, resolved: 12, badge: 'Truth Teller' },
-  { rank: 3, name: 'Priya Venkatesh', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=priya', points: 1180, ward: 'Ward 84 - Whitefield', reported: 12, resolved: 10, badge: 'Community Guardian' },
-  { rank: 4, name: 'David Wilson', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=david', points: 950, ward: 'Ward 174 - HSR Layout', reported: 9, resolved: 8, badge: 'First Report' },
-  { rank: 5, name: 'Kavitha Rao', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=kavitha', points: 890, ward: 'Ward 112 - Domlur', reported: 8, resolved: 6, badge: 'Civic Warden' },
+  { rank: 1, name: 'Deepak Oraon', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=deepak', points: 1540, ward: 'Ward 18 - Main Road / Hindpiri', reported: 18, resolved: 14, badge: 'Civic Champion' },
+  { rank: 2, name: 'Anjali Gupta', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=anjali', points: 1320, ward: 'Ward 14 - Lalpur / Circular Road', reported: 15, resolved: 12, badge: 'Truth Teller' },
+  { rank: 3, name: 'Sanjay Tirkey', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=sanjay', points: 1180, ward: 'Ward 26 - Doranda / Hinoo', reported: 12, resolved: 10, badge: 'Community Guardian' },
+  { rank: 4, name: 'Pooja Verma', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=pooja', points: 950, ward: 'Ward 21 - Harmu Housing Colony', reported: 9, resolved: 8, badge: 'First Report' },
+  { rank: 5, name: 'Manish Sinha', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=manish', points: 890, ward: 'Ward 3 - Morabadi / Kanke Road', reported: 8, resolved: 6, badge: 'Civic Warden' },
 ];
 
 const initialPosts: ForumPost[] = [
   {
     id: 'post-1',
-    author: 'Ramesh Kumar',
-    authorAvatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=ramesh',
-    ward: 'Ward 151 - Koramangala',
+    author: 'Deepak Oraon',
+    authorAvatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=deepak',
+    ward: 'Ward 18 - Main Road / Hindpiri',
     timeAgo: '2 hours ago',
     category: 'Proposal',
-    title: 'Proposal: Solar Streetlight Canopy for 80 Feet Road Commercial Lane',
-    content: 'Our ward has several dim stretches behind the commercial hub. Adding 12 solar lighting poles will enhance night safety for evening workers and pedestrians. Let us upvote this for municipal budget priority!',
+    title: 'Proposal: Solar Streetlight Canopy for Main Road Commercial Lane',
+    content: 'Our ward has several dim stretches behind Albert Ekka Chowk and GEL Church. Adding 12 solar lighting poles will enhance night safety for evening workers and shoppers. Let us upvote this for municipal budget priority!',
     upvotes: 48,
     comments: 14
   },
   {
     id: 'post-2',
-    author: 'Ananya Sharma',
-    authorAvatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=ananya',
-    ward: 'Ward 80 - Indiranagar',
+    author: 'Anjali Gupta',
+    authorAvatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=anjali',
+    ward: 'Ward 14 - Lalpur / Circular Road',
     timeAgo: '5 hours ago',
     category: 'Spotlight',
-    title: '✅ Verified Repair Spotlight: 100 Feet Road Water Pipeline Sealed',
-    content: 'Huge shoutout to the Public Works division and fellow citizen wardens! The major water main leak reported yesterday was verified and sealed within 18 hours. Great teamwork!',
+    title: '✅ Verified Repair Spotlight: Circular Road Water Pipeline Sealed',
+    content: 'Huge shoutout to the DWSD water division and fellow citizen wardens! The major water leak reported yesterday near Burdwan Compound was verified and sealed within 18 hours. Great teamwork!',
     upvotes: 76,
     comments: 9
   },
   {
     id: 'post-3',
-    author: 'BBMP Municipal Warden Office',
-    authorAvatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=bbmp',
-    ward: 'Central Bangalore',
+    author: 'RMC Municipal Warden Office',
+    authorAvatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=rmc',
+    ward: 'Ranchi Central',
     timeAgo: '1 day ago',
     category: 'Announcement',
     title: '📢 Special Ward Committee Public Meeting & Monsoon Preparedness Audit',
-    content: 'All registered Wardens are invited to attend the quarterly Ward Committee Review at Sector 3 Municipal Office this Saturday at 10 AM. Agenda includes drain desilting and emergency response.',
+    content: 'All registered Wardens are invited to attend the quarterly Ward Committee Review at RMC Kutchery Road Headquarters this Saturday at 10 AM. Agenda includes drain desilting and emergency response.',
     upvotes: 112,
     comments: 23
   }
 ];
 
 const initialEvents: VolunteerEvent[] = [
-  { id: 'evt-1', title: 'Koramangala Sidewalk Greenery & Tree Drive', date: 'Sat, Sep 12 • 08:30 AM', location: '80 Feet Road Park', organizer: 'Green Ward 151 Group', attendees: 34 },
-  { id: 'evt-2', title: 'Indiranagar Night Streetlight Audit Walk', date: 'Sun, Sep 13 • 07:00 PM', location: '100 Feet Road Metro Station', organizer: 'Safety First Ward 80', attendees: 28 },
-  { id: 'evt-3', title: 'HSR Layout Waste Segregation Workshop', date: 'Sat, Sep 19 • 10:00 AM', location: 'Sector 2 Community Hall', organizer: 'Eco Wardens Alliance', attendees: 45 }
+  { id: 'evt-1', title: 'Main Road Footpath Greenery & Plantation Drive', date: 'Sat, Sep 12 • 08:30 AM', location: 'Shaheed Chowk Park', organizer: 'Green Ranchi Wardens', attendees: 34 },
+  { id: 'evt-2', title: 'Lalpur Night Streetlight Audit Walk', date: 'Sun, Sep 13 • 07:00 PM', location: 'Nucleus Mall Crossing', organizer: 'Safety First Ward 14', attendees: 28 },
+  { id: 'evt-3', title: 'Doranda Waste Segregation & Plastic Cleanup Workshop', date: 'Sat, Sep 19 • 10:00 AM', location: 'Doranda Community Hall', organizer: 'Eco Wardens Alliance', attendees: 45 }
 ];
 
 export default function CommunityPage() {

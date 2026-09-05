@@ -34,10 +34,10 @@ export async function buildProposalDraft(recommendation: any) {
   const defaultProposal = {
     title: recommendation.recommendedProject || "Constituency Infrastructure Project",
     executiveSummary: "This project aims to bridge a critical infrastructure gap identified by active citizen distress signals and localized upvote consensus.",
-    problemStatement: `Citizens in Bangalore Central have reported recurring concerns regarding ${recommendation.category || 'general infrastructure'}. The official Local Development Plan is currently unaligned with this specific local demand.`,
+    problemStatement: `Citizens in Ranchi Parliamentary Constituency have reported recurring concerns regarding ${recommendation.category || 'general infrastructure'}. The official Local Development Plan is currently unaligned with this specific local demand.`,
     evidence: `The demand is clustered around high-density spots with a priority score of ${recommendation.priorityScore || 75}/100.`,
-    beneficiaries: "Approximately 12,500 residents and daily commuters in the immediate municipal ward.",
-    demographicData: "BBMP Ward census records indicate high density residential households with mixed income distribution.",
+    beneficiaries: "Approximately 18,500 residents and daily commuters in the immediate municipal ward.",
+    demographicData: "RMC Ward demographic records indicate high density urban households with mixed income distribution.",
     infrastructureGap: `Official Local Development Plan item "${recommendation.matchingPlanItem || 'None'}" has budget allocations but lacks local sidewalk, drainage, or community alignment.`,
     priorityScore: recommendation.priorityScore || 75,
     estimatedImpact: "Expected to reduce travel safety hazards, improve local sanitation, and increase public satisfaction rating by 25%.",
