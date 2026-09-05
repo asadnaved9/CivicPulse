@@ -287,7 +287,6 @@ app.get("/api/ip-location", rateLimiter(60000, 60), async (req, res) => {
   return res.status(500).json({ error: "Could not determine IP location" });
 });
 
-<<<<<<< Updated upstream
 // Country Adapter Configuration Route
 app.get("/api/config/country", (req, res) => {
   const countryCode = (req.query.code as string) || "IN";
@@ -511,8 +510,6 @@ Return ONLY valid JSON.`;
   });
 });
 
-=======
->>>>>>> Stashed changes
 // Vision Triage Endpoint (analyses uploaded hazard images or suggestions)
 app.post("/api/agents/vision", requireAuth, aiLimiter, async (req, res) => {
   const { image, mode = "problem" } = req.body;
@@ -1596,7 +1593,6 @@ app.post("/api/demo/healthcare-scenario", async (req, res) => {
     return res.status(500).json({ error: err.message || "Failed to execute healthcare scenario", stack: err.stack });
   }
 });
-<<<<<<< Updated upstream
 // ═══════════════════════════════════════════════════════════════
 // NEW PHASE 2 DIFFERENTIATION ROUTES (N1, N2, N4, N6, N7)
 // ═══════════════════════════════════════════════════════════════
@@ -1751,8 +1747,6 @@ app.post("/api/infer/tiered", async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 });
-=======
->>>>>>> Stashed changes
 
 // ═══════════════════════════════════════════════════════════════
 // VITE OR STATIC MIDDLEWARE
