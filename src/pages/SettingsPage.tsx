@@ -139,16 +139,16 @@ export default function SettingsPage() {
         </div>
 
         <p className="text-xs" style={{ color: 'var(--text-3)', margin: 0 }}>
-          You are currently in the Citizen Public View. Access to the MP Decision Cockpit, Knapsack Budget Planner, and Proposal Management is secured via the authorized MP Portal.
+          You are currently in the Citizen Public View. Access to the Ward Administration Cockpit, Asset Inventory, Decision Cockpit, and Hazard Management is secured via the authorized Admin Portal.
         </p>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <button
-            onClick={() => navigate('/mp/login')}
+            onClick={() => navigate('/admin/login')}
             className="btn btn-secondary"
             style={{ padding: '10px 20px', flex: 1, fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
-            <Shield size={16} style={{ color: '#3b82f6' }} />
-            <span>Open MP & Administration Portal (/mp/login) →</span>
+            <Shield size={16} style={{ color: 'var(--primary)' }} />
+            <span>Open Ward Administration Portal (/admin/login) →</span>
           </button>
         </div>
       </div>

@@ -1,12 +1,12 @@
 import React from 'react';
 import DevelopmentPage from '../DevelopmentPage';
-import { ShieldCheck, Info } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 
-export default function MPDevelopmentPage() {
+export default function AdminDevelopmentPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       
-      {/* MP Control Banner */}
+      {/* Admin Strategic Planning Banner */}
       <div 
         className="card" 
         style={{ 
@@ -22,10 +22,10 @@ export default function MPDevelopmentPage() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <ShieldCheck size={22} style={{ color: '#3b82f6' }} />
+          <ShieldCheck size={22} style={{ color: 'var(--primary)' }} />
           <div>
-            <div style={{ fontSize: '13px', fontWeight: 700, color: '#3b82f6' }}>
-              Legislative Intelligence & Analytics View
+            <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--primary)' }}>
+              Legislative Intelligence & Capital Works Planning
             </div>
             <div style={{ fontSize: '12px', color: 'var(--text-2)' }}>
               Priority scores computed with official 6-factor governance weights: Demand Density (25%), Severity (20%), Equity (20%), LDP Deficit (15%), Feasibility (10%), Co-benefit (10%).

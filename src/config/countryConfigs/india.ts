@@ -12,7 +12,7 @@ export const INDIA_CONFIG: CountryConfig = {
   adminHierarchy: {
     national: 'Union / National Level',
     stateOrProvince: 'State (e.g. Karnataka)',
-    districtOrMunicipality: 'District / Urban Local Body (e.g. BBMP)',
+    districtOrMunicipality: 'District / Urban Local Body (e.g. RMC)',
     wardOrSubPlace: 'Ward (e.g. Ward 151 - Koramangala)'
   },
   supportedLanguages: [

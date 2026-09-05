@@ -30,7 +30,7 @@ Funding Patterns & Criteria:
 - For cities with population over 10 lakh: Central share is 25% of the project cost; State and Urban Local Body (ULB) share is 75%.
 - For cities with population between 1 and 10 lakh: Central share is 33.3%; State and ULB contribute 66.7%.
 - For cities with population under 1 lakh: Central share is 50%.
-- Eligible applicants: Urban Local Bodies (ULBs), municipal corporations (such as BBMP), and state water boards.`
+- Eligible applicants: Urban Local Bodies (ULBs), municipal corporations (such as RMC), and state water boards.`
   },
   {
     id: "pmgsy",

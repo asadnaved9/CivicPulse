@@ -8,43 +8,36 @@ function daysAgo(num: number) {
   return date;
 }
 
-export async function seedFirestoreIfEmptyAdmin() {
+export async function seedFirestoreIfEmptyAdmin(force = false) {
   try {
     const issuesRef = db.collection('issues');
-    const snapshot = await issuesRef.limit(5).get();
+    const snapshot = await issuesRef.get();
 
-    if (snapshot.size >= 5) {
-      console.log("[Admin Seeder] Firestore has existing issues. Updating seed records with Ranchi data...");
-      const batch = db.batch();
-      RANCHI_ISSUES.forEach((issue: any, index) => {
-        const issueId = `seed_issue_${index + 1}`;
-        const issueDocRef = issuesRef.doc(issueId);
-        batch.set(issueDocRef, {
-          imageUrl: issue.imageUrl || "",
-          resolvedImageUrl: issue.resolvedImageUrl || null,
-          title: issue.title,
-          description: issue.description,
-          address: issue.address,
-          lat: issue.lat,
-          lng: issue.lng,
-          category: issue.category,
-          severity: issue.severity,
-          severityReason: issue.severityReason,
-          status: issue.status,
-          upvotes: issue.upvotes,
-          verified: issue.verified,
-          verificationReason: issue.verificationReason,
-          aiTags: issue.aiTags,
-          estimatedResolutionDays: issue.estimatedResolutionDays,
-          escalated: issue.escalated
-        }, { merge: true });
-      });
-      await batch.commit();
-      console.log("[Admin Seeder] Seed issues updated to Ranchi data successfully!");
-      return;
+    const nonRanchiRegex = /kolkata|kmc|cesc|bbmp|bangalore|bengaluru|salt lake|park street|koramangala|indiranagar|whitefield|mg road bangalore/i;
+
+    // Purge outdated non-Ranchi issues
+    let deletedCount = 0;
+    const deleteBatch = db.batch();
+    snapshot.docs.forEach(docSnap => {
+      const data = docSnap.data();
+      const text = `${data.address || ''} ${data.title || ''} ${data.description || ''}`;
+      if (nonRanchiRegex.test(text)) {
+        deleteBatch.delete(docSnap.ref);
+        deletedCount++;
+      }
+    });
+
+    if (deletedCount > 0) {
+      await deleteBatch.commit();
+      console.log(`[Admin Seeder] Purged ${deletedCount} non-Ranchi documents.`);
     }
 
-    console.log("[Admin Seeder] Firestore has fewer than 5 issues. Seeding Ranchi data via Admin SDK...");
+    if (!force && snapshot.size >= 10 && deletedCount === 0) {
+      console.log("[Admin Seeder] Firestore already populated with valid Ranchi issues.");
+      return { success: true, count: snapshot.size };
+    }
+
+    console.log("[Admin Seeder] Seeding/Updating all 20 Ranchi issues via Admin SDK...");
 
     // Batch seed issues
     const batch = db.batch();
@@ -58,16 +51,21 @@ export async function seedFirestoreIfEmptyAdmin() {
         id: issueId,
         imageUrl: issue.imageUrl || "",
         resolvedImageUrl: issue.resolvedImageUrl || null,
-        reportedBy: issue.reportedBy || "seed_reporter_rmc",
-        reporterName: issue.reporterName || "RMC Citizen Warden",
-        createdAt: issue.createdAt ? Timestamp.fromDate(issue.createdAt) : Timestamp.now(),
-        updatedAt: issue.updatedAt ? Timestamp.fromDate(issue.updatedAt) : Timestamp.now(),
+        reportedBy: issue.reportedBy || `citizen_rmc_${index + 1}`,
+        reporterName: issue.reporterName || `RMC Citizen Warden ${index + 1}`,
+        assignedDepartment: issue.category === 'pothole' ? 'Road Construction Department (RCD)' 
+          : issue.category === 'streetlight' ? 'RMC Electrical & Streetlighting Cell'
+          : issue.category === 'water' ? 'Drinking Water & Sanitation Department (DWSD)'
+          : issue.category === 'waste' ? 'RMC Solid Waste Management Cell'
+          : 'Jharkhand Bijli Vitran Nigam Limited (JBVNL)',
+        createdAt: issue.createdAt ? Timestamp.fromDate(issue.createdAt) : Timestamp.fromDate(daysAgo(Math.max(1, 10 - index))),
+        updatedAt: issue.updatedAt ? Timestamp.fromDate(issue.updatedAt) : Timestamp.fromDate(daysAgo(Math.max(1, 5 - Math.floor(index / 2)))),
         resolvedAt: issue.resolvedAt ? Timestamp.fromDate(issue.resolvedAt) : null,
         escalatedAt: issue.escalatedAt ? Timestamp.fromDate(issue.escalatedAt) : null,
-        verificationReason: issue.verificationReason || ""
+        verificationReason: issue.verificationReason || (issue.verified ? "Validated by RMC field inspection & AI image confidence match." : "")
       };
       
-      batch.set(issueDocRef, issueData);
+      batch.set(issueDocRef, issueData, { merge: true });
     });
 
     // Batch seed leaderboard users
@@ -76,7 +74,7 @@ export async function seedFirestoreIfEmptyAdmin() {
       batch.set(userDocRef, {
         ...user,
         joinedAt: Timestamp.fromDate(daysAgo(30))
-      });
+      }, { merge: true });
     });
 
     // Batch seed custom recent resolutions in activities
@@ -85,12 +83,14 @@ export async function seedFirestoreIfEmptyAdmin() {
       batch.set(activityDocRef, {
         ...activity,
         createdAt: Timestamp.fromDate(daysAgo(index))
-      });
+      }, { merge: true });
     });
 
     await batch.commit();
-    console.log("[Admin Seeder] Seeding of Ranchi issues, users, and activities completed successfully via Admin SDK!");
+    console.log("[Admin Seeder] Seeding of 20 Ranchi issues, users, and activities completed successfully via Admin SDK!");
+    return { success: true, count: RANCHI_ISSUES.length };
   } catch (error) {
     console.error("[Admin Seeder] Seeding error:", error);
+    return { success: false, error };
   }
 }

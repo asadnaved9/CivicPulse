@@ -506,7 +506,7 @@ export default function MPDecisionCockpit({
               Member of Parliament AI Decision Suite
             </h1>
             <p style={{ margin: 0, fontSize: '13px', color: highContrast ? '#ffffff' : 'var(--text-3)' }}>
-              Fully aligned with BBMP, Central Lad budget planning, and semantic citizen demand insights.
+              Fully aligned with RMC Municipal Corporation, Urban Development budget planning, and semantic citizen demand insights.
             </p>
           </div>
 

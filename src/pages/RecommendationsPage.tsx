@@ -79,11 +79,11 @@ export default function RecommendationsPage() {
         </div>
 
         <Link 
-          to="/mp/login" 
+          to="/admin/login" 
           className="btn btn-secondary text-xs"
           style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', fontSize: '12px', fontWeight: 600 }}
         >
-          <span>Authorized MP Portal</span>
+          <span>Authorized Admin Portal</span>
           <ArrowRight size={14} />
         </Link>
       </div>

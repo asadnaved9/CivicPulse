@@ -403,7 +403,7 @@ Return a JSON object matching this schema:
   "panchayat": "Applicable Ward Committee or Panchayat Office",
   "population": number (estimated population in a 2km radius),
   "populationDensity": "X people per sq km",
-  "administrativeArea": "BBMP Zone",
+  "administrativeArea": "RMC Zone / Ranchi Ward",
   "nearestSchool": "Name of nearest Government/Public school",
   "distanceToSchool": "X.X km",
   "estimatedSchoolAgePopulation": "X,XXX children",
@@ -416,7 +416,7 @@ Return a JSON object matching this schema:
   "infrastructureGap": "Professional summary of the infrastructure gap in this local area",
   "source": "OpenStreetMap & Census 2011"
 }
-Provide realistic, high-fidelity Bangalore-specific names (such as BBMP wards, local Government schools, primary health centers, St. Johns or Sakra or Fortis hospitals). Ensure all fields have clear, non-placeholder values. Return raw JSON.`;
+Provide realistic, high-fidelity Ranchi-specific names (such as RMC wards, local Government schools, primary health centers, RIMS, Paras, or Sadar Hospital, local landmarks). Ensure all fields have clear, non-placeholder values. Return raw JSON.`;
 
   try {
     const resultJson = await runWithRetry(

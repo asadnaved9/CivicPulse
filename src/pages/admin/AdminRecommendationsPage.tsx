@@ -4,7 +4,7 @@ import { db, isFirebaseConfigured, fetchWithAuth } from '../../config/firebase';
 import { toast } from 'react-hot-toast';
 import MPDecisionCockpit from '../../components/MPDecisionCockpit';
 
-export default function MPRecommendationsPage() {
+export default function AdminRecommendationsPage() {
   const [clusters, setClusters] = useState<any[]>([]);
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [ldpProjects, setLdpProjects] = useState<any[]>([]);
@@ -154,11 +154,11 @@ export default function MPRecommendationsPage() {
       {/* Top Header & Fast Action Triggers */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
             Executive Decision Support
           </div>
           <h1 style={{ fontSize: '24px', fontWeight: 800, margin: '0 0 4px 0', color: 'var(--text-1)' }}>
-            MP Decision Cockpit & Planning Suite
+            Admin Decision Cockpit & Planning Suite
           </h1>
           <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-3)' }}>
             Citizen Demand Alignment, Knapsack Budget Optimization, and Central/State Ministry Scheme Grounding
@@ -189,7 +189,6 @@ export default function MPRecommendationsPage() {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              backgroundColor: '#3b82f6',
               color: '#FFF',
               border: 'none',
               padding: '8px 16px',
@@ -221,11 +220,11 @@ export default function MPRecommendationsPage() {
             onDragLeave={handleDrag}
             onDrop={handleDrop}
             style={{
-              border: '2px dashed ' + (dragActive ? '#3b82f6' : 'var(--border)'),
+              border: '2px dashed ' + (dragActive ? 'var(--primary)' : 'var(--border)'),
               borderRadius: '8px',
               padding: '24px 16px',
               textAlign: 'center',
-              backgroundColor: dragActive ? 'rgba(59, 130, 246, 0.05)' : 'var(--surface-2)',
+              backgroundColor: dragActive ? 'var(--primary-subtle)' : 'var(--surface-2)',
               cursor: 'pointer',
               display: 'flex',
               flexDirection: 'column',
@@ -287,7 +286,7 @@ export default function MPRecommendationsPage() {
         </div>
       </div>
 
-      {/* Main MP Decision Cockpit */}
+      {/* Main Decision Cockpit */}
       <MPDecisionCockpit 
         clusters={clusters}
         recommendations={recommendations}

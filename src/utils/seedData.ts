@@ -471,46 +471,45 @@ export const SEED_ACTIVITIES = [
  * Checks Firestore issues count or forcefully updates seed records to Ranchi data.
  */
 export async function seedFirestoreIfEmpty() {
+  return forceSyncRanchiIssuesToFirestore(false);
+}
+
+/**
+ * Forcefully purges outdated or non-Ranchi seed issues and seeds all 20 authentic Ranchi issues.
+ */
+export async function forceSyncRanchiIssuesToFirestore(force = true) {
   try {
     const issuesRef = collection(db, 'issues');
     const snapshot = await getDocs(issuesRef);
 
-    if (snapshot.docs.length >= 5) {
-      console.log("[Seeder] Firestore is already populated with issues. Updating seed records with Ranchi data...");
-      const updateBatch = writeBatch(db);
-      RANCHI_ISSUES.forEach((issue: any, index) => {
-        const issueId = `seed_issue_${index + 1}`;
-        const issueDocRef = doc(db, 'issues', issueId);
-        updateBatch.set(issueDocRef, {
-          imageUrl: issue.imageUrl || "",
-          resolvedImageUrl: issue.resolvedImageUrl || null,
-          title: issue.title,
-          description: issue.description,
-          address: issue.address,
-          lat: issue.lat,
-          lng: issue.lng,
-          category: issue.category,
-          severity: issue.severity,
-          severityReason: issue.severityReason,
-          status: issue.status,
-          upvotes: issue.upvotes,
-          verified: issue.verified,
-          verificationReason: issue.verificationReason,
-          aiTags: issue.aiTags,
-          estimatedResolutionDays: issue.estimatedResolutionDays,
-          escalated: issue.escalated
-        }, { merge: true });
-      });
-      await updateBatch.commit();
-      console.log("[Seeder] Seed issues updated to Ranchi data successfully!");
-      return;
+    const nonRanchiRegex = /kolkata|kmc|cesc|bbmp|bangalore|bengaluru|salt lake|park street|koramangala|indiranagar|whitefield|mg road bangalore/i;
+
+    // Delete any obsolete non-Ranchi docs
+    const deleteBatch = writeBatch(db);
+    let deleteCount = 0;
+    
+    snapshot.docs.forEach((d) => {
+      const data = d.data();
+      const addr = (data.address || "") + " " + (data.title || "") + " " + (data.description || "");
+      if (nonRanchiRegex.test(addr)) {
+        deleteBatch.delete(d.ref);
+        deleteCount++;
+      }
+    });
+
+    if (deleteCount > 0) {
+      await deleteBatch.commit();
+      console.log(`[Seeder] Cleaned up ${deleteCount} outdated non-Ranchi documents.`);
     }
 
-    console.log("[Seeder] Firestore has fewer than 5 issues. Seeding Ranchi data...");
+    if (!force && snapshot.docs.length >= 10 && deleteCount === 0) {
+      console.log("[Seeder] Firestore already populated with valid Ranchi issues.");
+      return { success: true, count: snapshot.docs.length };
+    }
 
-    // Batch seed issues
+    console.log("[Seeder] Seeding/Updating all 20 Ranchi issues in Firestore...");
     const batch = writeBatch(db);
-    
+
     RANCHI_ISSUES.forEach((issue: any, index) => {
       const issueId = `seed_issue_${index + 1}`;
       const issueDocRef = doc(db, 'issues', issueId);
@@ -520,16 +519,21 @@ export async function seedFirestoreIfEmpty() {
         id: issueId,
         imageUrl: issue.imageUrl || "",
         resolvedImageUrl: issue.resolvedImageUrl || null,
-        reportedBy: issue.reportedBy || "seed_reporter_rmc",
-        reporterName: issue.reporterName || "RMC Citizen Warden",
-        createdAt: issue.createdAt,
-        updatedAt: issue.updatedAt,
+        reportedBy: issue.reportedBy || `citizen_rmc_${index + 1}`,
+        reporterName: issue.reporterName || `RMC Warden ${index + 1}`,
+        assignedDepartment: issue.category === 'pothole' ? 'Road Construction Department (RCD)' 
+          : issue.category === 'streetlight' ? 'RMC Electrical & Streetlighting Cell'
+          : issue.category === 'water' ? 'Drinking Water & Sanitation Department (DWSD)'
+          : issue.category === 'waste' ? 'RMC Solid Waste Management Cell'
+          : 'Jharkhand Bijli Vitran Nigam Limited (JBVNL)',
+        createdAt: issue.createdAt || daysAgo(Math.max(1, 10 - index)),
+        updatedAt: issue.updatedAt || daysAgo(Math.max(1, 5 - Math.floor(index / 2))),
         resolvedAt: issue.resolvedAt || null,
         escalatedAt: issue.escalatedAt || null,
-        verificationReason: issue.verificationReason || ""
+        verificationReason: issue.verificationReason || (issue.verified ? "Validated by RMC field inspection & AI image confidence match." : "")
       };
       
-      batch.set(issueDocRef, issueData);
+      batch.set(issueDocRef, issueData, { merge: true });
     });
 
     // Batch seed leaderboard users
@@ -538,7 +542,7 @@ export async function seedFirestoreIfEmpty() {
       batch.set(userDocRef, {
         ...user,
         joinedAt: daysAgo(30)
-      });
+      }, { merge: true });
     });
 
     // Batch seed custom recent resolutions in activities
@@ -547,12 +551,14 @@ export async function seedFirestoreIfEmpty() {
       batch.set(activityDocRef, {
         ...activity,
         createdAt: daysAgo(index)
-      });
+      }, { merge: true });
     });
 
     await batch.commit();
-    console.log("[Seeder] Seeding of Ranchi issues, users, and activities completed successfully!");
+    console.log("[Seeder] Successfully synchronized 20 Ranchi issues to Firestore!");
+    return { success: true, count: RANCHI_ISSUES.length };
   } catch (error) {
     console.error("[Seeder] Seeding error:", error);
+    return { success: false, error };
   }
 }

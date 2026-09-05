@@ -170,8 +170,9 @@ async function requireAuth(req: any, res: any, next: any) {
 // Seed database via Admin privileges
 app.post("/api/seed", async (req, res) => {
   try {
-    await seedFirestoreIfEmptyAdmin();
-    res.json({ success: true, message: "Database seeded successfully!" });
+    const force = req.body?.force === true || req.query?.force === 'true';
+    const result = await seedFirestoreIfEmptyAdmin(force);
+    res.json({ success: true, message: "Database synchronized with Ranchi issues successfully!", ...result });
   } catch (err: any) {
     console.error("Manual seed failed:", err);
     res.status(500).json({ error: err.message || "Manual seed failed" });

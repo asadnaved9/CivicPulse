@@ -185,10 +185,10 @@ mpRouter.post("/generate-proposal", async (req, res) => {
   const defaultProposal = {
     title: recommendation.recommendedProject || "Constituency Infrastructure Project",
     executiveSummary: "This project aims to bridge a critical infrastructure gap identified by active citizen distress signals and localized upvote consensus.",
-    problemStatement: `Citizens in Bangalore Central have reported recurring concerns regarding ${recommendation.category || 'general infrastructure'}. The official Local Development Plan is currently unaligned with this specific local demand.`,
+    problemStatement: `Citizens in Ranchi Municipal area have reported recurring concerns regarding ${recommendation.category || 'general infrastructure'}. The official Local Development Plan is currently unaligned with this specific local demand.`,
     evidence: `The demand is clustered around high-density spots with a priority score of ${recommendation.priorityScore || 75}/100.`,
     beneficiaries: "Approximately 12,500 residents and daily commuters in the immediate municipal ward.",
-    demographicData: "BBMP Ward census records indicate high density residential households with mixed income distribution.",
+    demographicData: "RMC Ward census records indicate high density residential households with mixed income distribution.",
     infrastructureGap: `Official Local Development Plan item "${recommendation.matchingPlanItem || 'None'}" has budget allocations but lacks local sidewalk, drainage, or community alignment.`,
     priorityScore: recommendation.priorityScore || 75,
     estimatedImpact: "Expected to reduce travel safety hazards, improve local sanitation, and increase public satisfaction rating by 25%.",
@@ -215,7 +215,7 @@ Generate a formal project proposal in JSON format matching this exact schema:
   "problemStatement": "Specific explanation of the civic or public safety issue",
   "evidence": "Description of citizen submissions, upvote indicators, and density",
   "beneficiaries": "Estimated population benefited and demographic segments",
-  "demographicData": "Realistic Bangalore-specific demographic characteristics",
+  "demographicData": "Realistic Ranchi-specific demographic characteristics",
   "infrastructureGap": "Description of why current plans are insufficient without this alignment",
   "priorityScore": number (75),
   "estimatedImpact": "Detail travel reduction, safety, or public satisfaction metrics",
@@ -256,10 +256,10 @@ mpRouter.post("/scheme-matcher", async (req, res) => {
 
   const defaultSchemes = [
     {
-      schemeName: "Atal Mission for Rejuvenation and Urban Transformation (AMRUT)",
+      schemeName: "Atal Mission for Rejuvenation and Urban Transformation (AMRUT 2.0)",
       suitability: "92%",
       whyFits: "AMRUT specifically funds basic urban infrastructure such as water supply, sewerage networks, and stormwater drains in municipal areas to improve water resilience.",
-      fundingRatio: "50% Center, 30% State, 20% BBMP Municipal funds"
+      fundingRatio: "50% Center, 30% State, 20% RMC Municipal funds"
     },
     {
       schemeName: "Pradhan Mantri Gram Sadak Yojana (PMGSY-III) / Urban Connect",
@@ -524,7 +524,7 @@ Generate a JSON object matching this schema:
 {
   "title": "Clear concise English title (3-5 words)",
   "category": "The selected category",
-  "department": "Responsible municipal department (e.g. BESCOM, BWSSB, BBMP Roads)",
+  "department": "Responsible municipal department (e.g. JBVNL, DWSD, RCD, RMC)",
   "priority": number (1 to 5),
   "confidence": number (0.0 to 1.0),
   "theme": "A 1-3 word theme",

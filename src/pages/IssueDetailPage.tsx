@@ -989,7 +989,7 @@ export default function IssueDetailPage() {
               <textarea
                 className="form-textarea"
                 style={{ height: '100px' }}
-                placeholder="Provide details on the repair (e.g., BESCOM crew replaced transformer; BBMP patched road with cold-asphalt mix)..."
+                placeholder="Provide details on the repair (e.g., JBVNL crew secured feeder line; RCD patched road with cold-mix asphalt)..."
                 value={closingNotes}
                 onChange={(e) => setClosingNotes(e.target.value)}
                 required
