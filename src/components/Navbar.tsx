@@ -36,22 +36,6 @@ export const Navbar: React.FC = () => {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
-  // Edge tier health check
-  const [edgeReady, setEdgeReady] = useState<boolean>(false);
-  const [edgeModel, setEdgeModel] = useState<string>('');
-
-  useEffect(() => {
-    fetch('/api/edge/health')
-      .then(res => res.json())
-      .then(data => {
-        if (data.available) {
-          setEdgeReady(true);
-          setEdgeModel(data.model || 'Gemma 3n');
-        }
-      })
-      .catch(() => setEdgeReady(false));
-  }, []);
-
   // Sync real-time unread notifications
   useEffect(() => {
     if (!user?.uid || !isFirebaseConfigured) {
@@ -121,59 +105,30 @@ export const Navbar: React.FC = () => {
               CivicPulse
             </span>
           </Link>
-          <div 
-            title={edgeReady ? `🟢 Edge Sovereign Tier Ready (${edgeModel})` : '☁️ Cloud-First / Offline Fallback Mode'}
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '5px', 
-              fontSize: '11px', 
-              color: 'var(--text-3)',
-              padding: '2px 8px',
-              borderRadius: '12px',
-              background: 'var(--surface-2)',
-              border: '1px solid var(--border)',
-              marginLeft: '8px'
-            }}
-          >
-            <span 
-              style={{ 
-                width: '7px', 
-                height: '7px', 
-                borderRadius: '50%', 
-                background: edgeReady ? '#10B981' : '#94A3B8',
-                boxShadow: edgeReady ? '0 0 6px #10B981' : 'none'
-              }} 
-            />
-            <span style={{ fontSize: '10px', fontWeight: 600 }}>
-              {edgeReady ? 'EDGE ACTIVE' : 'CLOUD TIER'}
-            </span>
-          </div>
         </div>
 
         {/* Desktop Links (Hidden on Mobile) */}
-        <div className="navbar-center hide-on-mobile" style={{ gap: '14px', alignItems: 'center' }}>
+        <div className="navbar-center hide-on-mobile" style={{ gap: '20px', alignItems: 'center' }}>
           <Link to="/" className={`navbar-link ${isActive('/') ? 'active' : ''}`}>
-            {t('overview')}
+            Overview
           </Link>
           <Link to="/development" className={`navbar-link ${isActive('/development') ? 'active' : ''}`}>
-            {t('development')}
+            Development
           </Link>
           <Link to="/map" className={`navbar-link ${isActive('/map') ? 'active' : ''}`}>
-            {t('map')}
+            Map
+          </Link>
+          <Link to="/community" className={`navbar-link ${isActive('/community') ? 'active' : ''}`}>
+            Community
           </Link>
           <Link to="/recommendations" className={`navbar-link ${isActive('/recommendations') ? 'active' : ''}`}>
-            {t('aiPlanning')}
+            AI Planning
+          </Link>
+          <Link to="/report" className={`navbar-link ${isActive('/report') ? 'active' : ''}`}>
+            Suggest
           </Link>
           <Link to="/settings" className={`navbar-link ${isActive('/settings') ? 'active' : ''}`}>
-            {t('settings')}
-          </Link>
-          <Link to="/ussd-demo" className={`navbar-link ${isActive('/ussd-demo') ? 'active' : ''}`} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span>*384#</span>
-            <span className="badge" style={{ fontSize: '9px', padding: '1px 5px', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399' }}>USSD</span>
-          </Link>
-          <Link to="/report" state={{ mode: 'problem' }} className="btn btn-secondary text-xs" style={{ padding: '6px 12px', fontSize: '12px', marginLeft: '8px' }}>
-            {t('suggest')}
+            Settings
           </Link>
         </div>
 
@@ -289,6 +244,16 @@ export const Navbar: React.FC = () => {
             <>
               {/* Desktop Only Buttons */}
               <Link 
+                to="/report" 
+                state={{ mode: 'problem' }} 
+                className="btn btn-primary hide-on-mobile" 
+                style={{ padding: '8px 16px', borderRadius: '24px', fontWeight: 600 }}
+              >
+                <PlusCircle size={16} />
+                Report Issue
+              </Link>
+
+              <Link 
                 to="/settings" 
                 className="btn btn-secondary hide-on-mobile" 
                 style={{ 
@@ -362,55 +327,75 @@ export const Navbar: React.FC = () => {
             animation: 'fadeIn 0.2s ease-out'
           }}
         >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Theme Mode
+            </span>
+            <button 
+              className="btn btn-secondary" 
+              style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+              onClick={toggleTheme}
+            >
+              {theme === 'dark' ? <><Sun size={14} /> Light Mode</> : <><Moon size={14} /> Dark Mode</>}
+            </button>
+          </div>
+
           <Link 
             to="/" 
             className={`navbar-link ${isActive('/') ? 'active' : ''}`}
-            style={{ height: '40px', borderBottom: 'none' }}
+            style={{ height: '40px', display: 'flex', alignItems: 'center' }}
             onClick={handleLinkClick}
           >
-            {t('overview')}
+            Overview
           </Link>
           <Link 
             to="/development" 
             className={`navbar-link ${isActive('/development') ? 'active' : ''}`}
-            style={{ height: '40px', borderBottom: 'none' }}
+            style={{ height: '40px', display: 'flex', alignItems: 'center' }}
             onClick={handleLinkClick}
           >
-            {t('development')}
+            Development
           </Link>
           <Link 
             to="/map" 
             className={`navbar-link ${isActive('/map') ? 'active' : ''}`}
-            style={{ height: '40px', borderBottom: 'none' }}
+            style={{ height: '40px', display: 'flex', alignItems: 'center' }}
             onClick={handleLinkClick}
           >
-            {t('map')}
+            Map
+          </Link>
+          <Link 
+            to="/community" 
+            className={`navbar-link ${isActive('/community') ? 'active' : ''}`}
+            style={{ height: '40px', display: 'flex', alignItems: 'center' }}
+            onClick={handleLinkClick}
+          >
+            Community
           </Link>
           <Link 
             to="/recommendations" 
             className={`navbar-link ${isActive('/recommendations') ? 'active' : ''}`}
-            style={{ height: '40px', borderBottom: 'none' }}
+            style={{ height: '40px', display: 'flex', alignItems: 'center' }}
             onClick={handleLinkClick}
           >
-            {t('aiPlanning')}
+            AI Planning
+          </Link>
+          <Link 
+            to="/report" 
+            state={{ mode: 'problem' }}
+            className={`navbar-link ${isActive('/report') ? 'active' : ''}`}
+            style={{ height: '40px', display: 'flex', alignItems: 'center' }}
+            onClick={handleLinkClick}
+          >
+            Suggest
           </Link>
           <Link 
             to="/settings" 
             className={`navbar-link ${isActive('/settings') ? 'active' : ''}`}
-            style={{ height: '40px', borderBottom: 'none' }}
+            style={{ height: '40px', display: 'flex', alignItems: 'center' }}
             onClick={handleLinkClick}
           >
-            {t('settings')}
-          </Link>
-          
-          <Link 
-            to="/report" 
-            state={{ mode: 'problem' }}
-            className="btn btn-secondary"
-            style={{ justifyContent: 'center', padding: '10px', marginTop: '4px' }}
-            onClick={handleLinkClick}
-          >
-            {t('suggest')}
+            Settings
           </Link>
 
           {user ? (

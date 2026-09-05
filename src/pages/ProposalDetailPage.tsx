@@ -7,8 +7,7 @@ import { Proposal, ProposalStatus } from '../types/proposal';
 import { 
   ArrowLeft, FileText, CheckCircle2, Clock, AlertCircle, 
   ChevronRight, Building2, MapPin, DollarSign, Tag, UserCheck,
-  Send, ShieldCheck, PlayCircle, Award, XCircle, Printer, Download,
-  ExternalLink, ChevronDown, ChevronUp
+  Send, ShieldCheck, PlayCircle, Award, XCircle
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -31,33 +30,6 @@ export default function ProposalDetailPage() {
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [transitionNote, setTransitionNote] = useState('');
-
-  // Evidence Chain State
-  const [evidenceChain, setEvidenceChain] = useState<any | null>(null);
-  const [evidenceLoading, setEvidenceLoading] = useState(false);
-  const [evidenceExpanded, setEvidenceExpanded] = useState(true);
-
-  const loadEvidenceChain = async () => {
-    if (!id) return;
-    setEvidenceLoading(true);
-    try {
-      const res = await fetch(`/api/lifecycle/proposals/${id}/evidence`);
-      if (res.ok) {
-        const data = await res.json();
-        setEvidenceChain(data);
-      }
-    } catch (e) {
-      console.error("Failed to load evidence chain:", e);
-    } finally {
-      setEvidenceLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (id) {
-      loadEvidenceChain();
-    }
-  }, [id]);
 
   // Real-time Firestore sync
   useEffect(() => {
@@ -188,19 +160,8 @@ export default function ProposalDetailPage() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-            <div className="text-mono" style={{ fontSize: '11px', color: 'var(--text-3)' }}>
-              DOC ID: {proposal.id}
-            </div>
-            <a
-              href={`/api/lifecycle/proposals/${proposal.id}/evidence/pdf`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-secondary text-xs"
-              style={{ padding: '6px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
-            >
-              <Printer size={13} /> Export Decision Brief (PDF)
-            </a>
+          <div className="text-mono" style={{ fontSize: '11px', color: 'var(--text-3)', textAlign: 'right' }}>
+            DOC ID: {proposal.id}
           </div>
         </div>
 
@@ -378,123 +339,6 @@ export default function ProposalDetailPage() {
         </div>
 
       </div>
-
-      {/* Government-Grade Explainability & Evidence Chain Dossier */}
-      {evidenceChain && (
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'var(--surface-1)', border: '1px solid var(--border)' }}>
-          <div 
-            onClick={() => setEvidenceExpanded(!evidenceExpanded)}
-            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <ShieldCheck size={18} className="text-primary" />
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: 'var(--text-1)' }}>
-                    Government Evidence Chain & Traceability Dossier
-                  </h2>
-                  <span className="badge" style={{ fontSize: '10px', background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa' }}>
-                    Auditable Proof
-                  </span>
-                </div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-3)' }}>
-                  Grounded in real Census 2011 demographics, 6-factor deterministic scoring, and citizen report clusters.
-                </div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <a
-                href={`/api/lifecycle/proposals/${proposal.id}/evidence/pdf`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="btn btn-secondary text-xs"
-                style={{ padding: '4px 10px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}
-              >
-                <Printer size={12} /> Print Brief
-              </a>
-              {evidenceExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            </div>
-          </div>
-
-          {evidenceExpanded && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
-              
-              {/* Evidence Section 1: 6-Factor Formula */}
-              <div style={{ background: 'var(--surface-2)', padding: '14px', borderRadius: '6px' }}>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-1)', marginBottom: '8px' }}>
-                  1. Priority Formula & Governance Reasoning
-                </div>
-                <div style={{ fontSize: '12px', color: 'var(--text-2)', marginBottom: '10px', lineHeight: '1.4' }}>
-                  {evidenceChain.priorityScoreBreakdown.reasoning}
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', fontSize: '11px' }}>
-                  <div style={{ padding: '6px 8px', background: 'var(--surface-1)', borderRadius: '4px' }}>
-                    Demand: <strong>{evidenceChain.priorityScoreBreakdown.demand}/100</strong>
-                  </div>
-                  <div style={{ padding: '6px 8px', background: 'var(--surface-1)', borderRadius: '4px' }}>
-                    Infra Gap: <strong>{evidenceChain.priorityScoreBreakdown.gap}/100</strong>
-                  </div>
-                  <div style={{ padding: '6px 8px', background: 'var(--surface-1)', borderRadius: '4px' }}>
-                    Population: <strong>{evidenceChain.priorityScoreBreakdown.population}/100</strong>
-                  </div>
-                  <div style={{ padding: '6px 8px', background: 'var(--surface-1)', borderRadius: '4px' }}>
-                    Accessibility: <strong>{evidenceChain.priorityScoreBreakdown.accessibility}/100</strong>
-                  </div>
-                  <div style={{ padding: '6px 8px', background: 'var(--surface-1)', borderRadius: '4px' }}>
-                    Urgency: <strong>{evidenceChain.priorityScoreBreakdown.urgency}/100</strong>
-                  </div>
-                  <div style={{ padding: '6px 8px', background: 'var(--surface-1)', borderRadius: '4px' }}>
-                    Invest Deficit: <strong>{evidenceChain.priorityScoreBreakdown.investmentGap}/100</strong>
-                  </div>
-                </div>
-              </div>
-
-              {/* Evidence Section 2: Demographic Baseline */}
-              <div style={{ background: 'var(--surface-2)', padding: '14px', borderRadius: '6px' }}>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-1)', marginBottom: '6px' }}>
-                  2. Ward Demographic Grounding (Census 2011 / SECC)
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px', fontSize: '11.5px' }}>
-                  <div>Ward: <strong>{evidenceChain.demographicEvidence.wardName}</strong></div>
-                  <div>Population: <strong>{evidenceChain.demographicEvidence.population.toLocaleString()}</strong></div>
-                  <div>Density: <strong>{evidenceChain.demographicEvidence.densityKm2.toLocaleString()}/km²</strong></div>
-                  <div>BPL Households: <strong>{evidenceChain.demographicEvidence.bplHouseholds} ({evidenceChain.demographicEvidence.povertyHouseholdPct}%)</strong></div>
-                </div>
-                <div style={{ fontSize: '10px', color: 'var(--text-3)', marginTop: '8px' }}>
-                  Official Source: {evidenceChain.demographicEvidence.dataSource}
-                </div>
-              </div>
-
-              {/* Evidence Section 3: Grounded Citizen Submissions */}
-              <div style={{ background: 'var(--surface-2)', padding: '14px', borderRadius: '6px' }}>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-1)', marginBottom: '6px' }}>
-                  3. Citizen Distress Signals ({evidenceChain.citizenEvidence.totalSubmissions} Reports, {evidenceChain.citizenEvidence.totalUpvotes} Upvotes)
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {evidenceChain.citizenEvidence.sampleRequests.map((req: any) => (
-                    <div 
-                      key={req.id} 
-                      style={{ 
-                        padding: '6px 10px', 
-                        background: 'var(--surface-1)', 
-                        borderRadius: '4px', 
-                        display: 'flex', 
-                        justifyContent: 'space-between',
-                        fontSize: '11.5px'
-                      }}
-                    >
-                      <span style={{ color: 'var(--text-1)' }}>{req.title}</span>
-                      <span className="badge badge-secondary" style={{ fontSize: '9px' }}>Urgency {req.urgency}/100</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-            </div>
-          )}
-        </div>
-      )}
 
     </div>
   );

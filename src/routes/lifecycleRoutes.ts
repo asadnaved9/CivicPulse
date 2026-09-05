@@ -3,8 +3,6 @@ import { GoogleGenAI } from "@google/genai";
 import { db } from "../config/firebaseAdmin";
 import { runWithRetry } from "../utils/geminiRetry";
 import { ProposalStatus, Proposal } from "../types/proposal";
-import { buildEvidenceChain, renderPrintableHTML } from "../utils/evidenceChain";
-import { lookupDemographics } from "../data/censusData/india";
 
 export const lifecycleRouter = Router();
 
@@ -260,88 +258,5 @@ lifecycleRouter.patch("/proposals/:id/status", async (req, res) => {
   } catch (err: any) {
     console.error("[LifecycleRouter] Failed to update status:", err);
     return res.status(500).json({ error: err.message || "Failed to update status" });
-  }
-});
-
-// GET /api/lifecycle/proposals/:id/evidence — Structured Evidence Chain JSON
-lifecycleRouter.get("/proposals/:id/evidence", async (req, res) => {
-  try {
-    const docRef = db.collection("proposals").doc(req.params.id);
-    const docSnap = await docRef.get();
-    if (!docSnap.exists) {
-      return res.status(404).json({ error: "Proposal not found" });
-    }
-
-    const proposal = { id: docSnap.id, ...docSnap.data() } as any;
-
-    // Fetch related recommendation, cluster, and suggestions
-    let recommendation: any = null;
-    let cluster: any = null;
-    let suggestions: any[] = [];
-
-    if (proposal.recommendationId) {
-      const recSnap = await db.collection("recommendations").doc(proposal.recommendationId).get();
-      if (recSnap.exists) recommendation = { id: recSnap.id, ...recSnap.data() };
-    }
-
-    const clusterId = recommendation?.clusterId || proposal.clusterId;
-    if (clusterId) {
-      const clSnap = await db.collection("clusters").doc(clusterId).get();
-      if (clSnap.exists) cluster = { id: clSnap.id, ...clSnap.data() };
-    }
-
-    const suggestionsSnap = await db.collection("suggestions").limit(10).get();
-    suggestions = suggestionsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-    const ward = proposal.ward || cluster?.ward || 'Koramangala 4th Block';
-    const demographics = lookupDemographics(ward);
-
-    const chain = buildEvidenceChain(proposal, recommendation, cluster, suggestions, demographics);
-    return res.json(chain);
-  } catch (err: any) {
-    console.error("[LifecycleRouter] Evidence retrieval error:", err);
-    return res.status(500).json({ error: "Failed to assemble evidence chain" });
-  }
-});
-
-// GET /api/lifecycle/proposals/:id/evidence/pdf — Printable Decision Brief HTML
-lifecycleRouter.get("/proposals/:id/evidence/pdf", async (req, res) => {
-  try {
-    const docRef = db.collection("proposals").doc(req.params.id);
-    const docSnap = await docRef.get();
-    if (!docSnap.exists) {
-      return res.status(404).send("Proposal not found");
-    }
-
-    const proposal = { id: docSnap.id, ...docSnap.data() } as any;
-
-    let recommendation: any = null;
-    let cluster: any = null;
-    let suggestions: any[] = [];
-
-    if (proposal.recommendationId) {
-      const recSnap = await db.collection("recommendations").doc(proposal.recommendationId).get();
-      if (recSnap.exists) recommendation = { id: recSnap.id, ...recSnap.data() };
-    }
-
-    const clusterId = recommendation?.clusterId || proposal.clusterId;
-    if (clusterId) {
-      const clSnap = await db.collection("clusters").doc(clusterId).get();
-      if (clSnap.exists) cluster = { id: clSnap.id, ...clSnap.data() };
-    }
-
-    const suggestionsSnap = await db.collection("suggestions").limit(10).get();
-    suggestions = suggestionsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-    const ward = proposal.ward || cluster?.ward || 'Koramangala 4th Block';
-    const demographics = lookupDemographics(ward);
-
-    const chain = buildEvidenceChain(proposal, recommendation, cluster, suggestions, demographics);
-    const html = renderPrintableHTML(chain);
-
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    return res.send(html);
-  } catch (err: any) {
-    return res.status(500).send("Error rendering decision brief");
   }
 });

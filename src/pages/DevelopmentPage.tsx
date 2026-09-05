@@ -13,12 +13,8 @@ export default function DevelopmentPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
 
-  // Active Tab: 'analytics' | 'intelligence' | 'insights-chat' | 'dpi-impact'
-  const [activeTab, setActiveTab] = useState<'analytics' | 'intelligence' | 'insights-chat' | 'dpi-impact'>('analytics');
-
-  // DPI Impact Score state
-  const [dpiScores, setDpiScores] = useState<any[]>([]);
-  const [dpiLoading, setDpiLoading] = useState(false);
+  // Active Tab: 'analytics' | 'intelligence' | 'insights-chat'
+  const [activeTab, setActiveTab] = useState<'analytics' | 'intelligence' | 'insights-chat'>('analytics');
 
   // ═══════════════════════════════════════════════════════════════
   // TAB 1: OPERATIONS ANALYTICS STATES
@@ -85,22 +81,6 @@ export default function DevelopmentPage() {
       setLdpProjects(ldpSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     } catch (err) {
       console.error("Failed to load intelligence data:", err);
-    }
-  };
-
-  const loadDpiScores = async () => {
-    setDpiLoading(true);
-    try {
-      const country = localStorage.getItem('civicpulse_country') || 'IN';
-      const res = await fetch(`/api/dpi/impact-scores?country=${country}`);
-      if (res.ok) {
-        const data = await res.json();
-        setDpiScores(data.scores || []);
-      }
-    } catch (e) {
-      console.error("DPI scores fetch error:", e);
-    } finally {
-      setDpiLoading(false);
     }
   };
 
@@ -449,9 +429,7 @@ export default function DevelopmentPage() {
           ✨ AI Development Gaps
         </button>
         <button
-          onClick={() => {
-            setActiveTab('insights-chat');
-          }}
+          onClick={() => setActiveTab('insights-chat')}
           style={{
             padding: '12px 20px',
             background: 'none',
@@ -469,29 +447,6 @@ export default function DevelopmentPage() {
           }}
         >
           💬 Grounded Analyst & Reports
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab('dpi-impact');
-            loadDpiScores();
-          }}
-          style={{
-            padding: '12px 20px',
-            background: 'none',
-            border: 'none',
-            borderBottom: activeTab === 'dpi-impact' ? '2px solid var(--primary)' : '2px solid transparent',
-            color: activeTab === 'dpi-impact' ? 'var(--text-1)' : 'var(--text-3)',
-            fontWeight: 600,
-            cursor: 'pointer',
-            fontSize: '13.5px',
-            transition: 'all 0.2s',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            whiteSpace: 'nowrap'
-          }}
-        >
-          🏛️ DPI Impact Index
         </button>
       </div>
 
@@ -951,156 +906,6 @@ export default function DevelopmentPage() {
             )}
           </div>
 
-        </div>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════════
-          TAB 4: DIGITAL PUBLIC INFRASTRUCTURE (DPI) IMPACT INDEX
-          ═══════════════════════════════════════════════════════════════ */}
-      {activeTab === 'dpi-impact' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <div className="card" style={{ padding: '24px', background: 'var(--surface-1)', border: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span className="badge" style={{ fontSize: '11px', background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa' }}>
-                    SOVEREIGN DPI EVALUATION
-                  </span>
-                  <span className="badge badge-secondary" style={{ fontSize: '11px' }}>
-                    Deterministic 4-Factor Engine
-                  </span>
-                </div>
-                <h2 style={{ fontSize: '20px', fontWeight: 700, margin: '8px 0 4px 0', color: 'var(--text-1)' }}>
-                  Digital Public Infrastructure (DPI) Impact Index
-                </h2>
-                <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-3)', maxWidth: '720px' }}>
-                  Measures whether national DPI deployments (Aadhaar, UPI, DigiLocker, CoWIN) are functioning effectively by cross-referencing official coverage targets against localized citizen friction reports and service bottlenecks.
-                </p>
-              </div>
-              <button 
-                onClick={loadDpiScores} 
-                disabled={dpiLoading}
-                className="btn btn-secondary" 
-                style={{ padding: '8px 16px', fontSize: '12px' }}
-              >
-                {dpiLoading ? 'Recalculating...' : '🔄 Recalculate DPI Index'}
-              </button>
-            </div>
-          </div>
-
-          {dpiLoading ? (
-            <div className="card" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-3)' }}>
-              <Loader size={24} className="animate-spin" style={{ margin: '0 auto 8px auto' }} />
-              <div>Evaluating DPI rollout health against citizen friction streams...</div>
-            </div>
-          ) : dpiScores.length === 0 ? (
-            <div className="card" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-3)' }}>
-              No DPI rollout benchmarks found for current national configuration.
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
-              {dpiScores.map((score) => {
-                const isHigh = score.verdict === 'HIGH_IMPACT';
-                const isMod = score.verdict === 'MODERATE_IMPACT';
-                const verdictColor = isHigh ? '#10B981' : isMod ? '#3B82F6' : '#F59E0B';
-
-                return (
-                  <div 
-                    key={score.dpiId} 
-                    className="card"
-                    style={{ 
-                      padding: '20px', 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      gap: '14px',
-                      background: 'var(--surface-2)',
-                      border: `1px solid var(--border)`
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-3)', fontWeight: 600, textTransform: 'uppercase' }}>
-                          {score.domain}
-                        </div>
-                        <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '4px 0', color: 'var(--text-1)' }}>
-                          {score.name}
-                        </h3>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '24px', fontWeight: 800, color: verdictColor }}>
-                          {score.overallScore}
-                          <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-3)' }}>/100</span>
-                        </div>
-                        <span 
-                          className="badge" 
-                          style={{ 
-                            fontSize: '9px', 
-                            background: `${verdictColor}20`, 
-                            color: verdictColor,
-                            border: `1px solid ${verdictColor}40`
-                          }}
-                        >
-                          {score.verdict.replace('_', ' ')}
-                        </span>
-                      </div>
-                    </div>
-
-                    <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-2)', lineHeight: '1.4' }}>
-                      {score.reasoning}
-                    </p>
-
-                    {/* Progress bars for 4 components */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px', background: 'var(--surface-1)', borderRadius: '6px' }}>
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '2px' }}>
-                          <span style={{ color: 'var(--text-3)' }}>Coverage Gap (30%)</span>
-                          <span style={{ fontWeight: 600 }}>{score.components.coverageScore}%</span>
-                        </div>
-                        <div style={{ height: '5px', background: 'var(--border)', borderRadius: '3px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${score.components.coverageScore}%`, background: '#3B82F6' }} />
-                        </div>
-                      </div>
-
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '2px' }}>
-                          <span style={{ color: 'var(--text-3)' }}>Citizen Sentiment (30%)</span>
-                          <span style={{ fontWeight: 600 }}>{score.components.sentimentScore}%</span>
-                        </div>
-                        <div style={{ height: '5px', background: 'var(--border)', borderRadius: '3px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${score.components.sentimentScore}%`, background: '#10B981' }} />
-                        </div>
-                      </div>
-
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '2px' }}>
-                          <span style={{ color: 'var(--text-3)' }}>Adoption Velocity (20%)</span>
-                          <span style={{ fontWeight: 600 }}>{score.components.velocityScore}%</span>
-                        </div>
-                        <div style={{ height: '5px', background: 'var(--border)', borderRadius: '3px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${score.components.velocityScore}%`, background: '#8B5CF6' }} />
-                        </div>
-                      </div>
-
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '2px' }}>
-                          <span style={{ color: 'var(--text-3)' }}>Service Quality (20%)</span>
-                          <span style={{ fontWeight: 600 }}>{score.components.serviceQualityScore}%</span>
-                        </div>
-                        <div style={{ height: '5px', background: 'var(--border)', borderRadius: '3px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${score.components.serviceQualityScore}%`, background: '#EC4899' }} />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div style={{ fontSize: '10px', color: 'var(--text-3)', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: '8px' }}>
-                      <span>Adoption: {score.metrics.currentAdoptionPct}% / {score.metrics.targetAdoptionPct}% Target</span>
-                      <span title={score.sourceCitation}>🏛️ {score.sourceCitation.slice(0, 35)}...</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </div>
       )}
 

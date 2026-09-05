@@ -1,8 +1,6 @@
 import { db, FieldValue, Timestamp } from '../config/firebaseAdmin';
 import { GoogleGenAI, Type } from '@google/genai';
 import { runWithRetry } from './geminiRetry';
-import { clusterWithDBSCAN } from './dbscanCluster';
-import { lookupDemographics } from '../data/censusData/india';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
 const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
@@ -463,8 +461,6 @@ export async function rebuildClusters() {
 
   let clusters: any[] = [];
 
-  let clusteringMethod: 'gemini' | 'dbscan' = 'gemini';
-
   // If Gemini is active, perform beautiful AI clustering
   if (ai) {
     const prompt = `You are a Civic Urban Planner AI. We have a set of citizen development suggestions submitted via a mobile app:
@@ -513,32 +509,69 @@ Array<{
 
       if (generatedClusters && generatedClusters.length > 0) {
         clusters = generatedClusters;
-        clusteringMethod = 'gemini';
       }
     } catch (err) {
-      console.error("[ClusteringEngine] Gemini clustering failed, using DBSCAN spatial clustering fallback:", err);
+      console.error("[ClusteringEngine] Gemini clustering failed, using programmatic clustering:", err);
     }
   }
 
-  // DBSCAN algorithmic spatial clustering fallback if Gemini is missing or failed
+  // Programmatic fallback if Gemini is missing or failed
   if (clusters.length === 0) {
-    console.log("[ClusteringEngine] Executing DBSCAN density clustering (epsilon=2.5km, minPoints=2)...");
-    clusteringMethod = 'dbscan';
+    console.log("[ClusteringEngine] Building clusters programmatically based on geographic proximity (radius ~2km) and category...");
+    
+    const unclustered = [...suggestions];
+    const distanceThreshold = 0.02; // Roughly 2km in lat/lng coordinates
 
-    const dbscanResults = clusterWithDBSCAN(suggestions, 2.5, 2);
+    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+      return Math.sqrt(Math.pow(lat1 - lat2, 2) + Math.pow(lon1 - lon2, 2));
+    };
 
-    clusters = dbscanResults.map(res => ({
-      id: res.clusterId,
-      theme: res.theme,
-      category: res.category,
-      aiSummary: res.aiSummary,
-      confidence: 0.94,
-      lat: res.center.lat,
-      lng: res.center.lng,
-      relatedIds: res.memberIds,
-      radiusKm: res.radiusKm,
-      ward: res.ward
-    }));
+    let clusterIndex = 1;
+    while (unclustered.length > 0) {
+      const base = unclustered.shift()!;
+      if (!base.lat || !base.lng) continue;
+
+      const clusterMembers = [base];
+      const baseCat = (base.category || 'Other').toLowerCase();
+
+      // Find other suggestions of the same category within distance threshold
+      for (let i = 0; i < unclustered.length; i++) {
+        const candidate = unclustered[i];
+        if (!candidate.lat || !candidate.lng) continue;
+        
+        const candCat = (candidate.category || 'Other').toLowerCase();
+        if (candCat === baseCat) {
+          const dist = calculateDistance(base.lat, base.lng, candidate.lat, candidate.lng);
+          if (dist <= distanceThreshold) {
+            clusterMembers.push(candidate);
+            unclustered.splice(i, 1);
+            i--; // Adjust index after splice
+          }
+        }
+      }
+
+      // Calculate centroid coordinates
+      const avgLat = clusterMembers.reduce((sum, m) => sum + m.lat, 0) / clusterMembers.length;
+      const avgLng = clusterMembers.reduce((sum, m) => sum + m.lng, 0) / clusterMembers.length;
+      const relatedIds = clusterMembers.map(m => m.id);
+
+      // Generate realistic theme title
+      const wardName = base.ward || (base.enrichedMetadata?.ward) || "Local Ward";
+      const catLabel = base.category || "General";
+      const theme = `${wardName} ${catLabel} Consolidated Improvement`;
+      const aiSummary = `Consolidated requests from ${clusterMembers.length} citizen submissions in ${wardName} regarding ${catLabel}. Key concerns include: ${clusterMembers.map(m => m.title).join("; ")}.`;
+
+      clusters.push({
+        id: `programmatic_cluster_${clusterIndex++}`,
+        theme,
+        category: base.category || "Other",
+        aiSummary,
+        confidence: 0.95,
+        lat: parseFloat(avgLat.toFixed(4)),
+        lng: parseFloat(avgLng.toFixed(4)),
+        relatedIds
+      });
+    }
   }
 
   // Retrieve active Local Development Plans to compute investment gap
@@ -555,7 +588,6 @@ Array<{
       ...cluster,
       id: clusterId,
       count: suggestionsInCluster.length,
-      clusteringMethod,
       priorityScore: scoreObj.overall,
       scoreDetails: {
         components: scoreObj.components,
@@ -634,33 +666,14 @@ export function computePriorityScore(
   });
   const gapScore = Math.min(100, Math.round(maxDistance * 18 + 15));
 
-  // Lookup real Census 2011 & SECC Demographics
-  const wardName = cluster.ward || suggestionsInCluster[0]?.ward || suggestionsInCluster[0]?.enrichedMetadata?.ward || "";
-  const censusData = lookupDemographics(wardName);
-
-  // Component 3: Population Impact (0 to 100) - grounded in Census data if available
-  let popScore = 60;
-  let popLabel = "";
-  if (censusData) {
-    // Grounded in real ward population density (e.g. 15,300/km²) and poverty proportion
-    const densityRatio = Math.min(1.0, censusData.densityKm2 / 18000);
-    const povertyWeight = (censusData.povertyHouseholdPct / 100) * 0.3;
-    popScore = Math.min(100, Math.round((densityRatio * 0.7 + povertyWeight) * 100));
-    popLabel = `${censusData.population.toLocaleString()} citizens (${censusData.densityKm2.toLocaleString()}/km², ${censusData.povertyHouseholdPct}% BPL households) [Source: ${censusData.dataSource}]`;
-  } else {
-    const popStr = suggestionsInCluster[0]?.enrichedMetadata?.populationDensity || "10,000 people/km²";
-    const parsedDensity = parseInt(popStr.replace(/[^0-9]/g, '')) || 10000;
-    popScore = Math.min(100, Math.round((parsedDensity / 15000) * 100));
-    popLabel = popStr;
-  }
+  // Component 3: Population Impact (0 to 100) - density reach
+  const popStr = suggestionsInCluster[0]?.enrichedMetadata?.populationDensity || "10,000 people/km²";
+  const parsedDensity = parseInt(popStr.replace(/[^0-9]/g, '')) || 10000;
+  const popScore = Math.min(100, Math.round((parsedDensity / 15000) * 100));
 
   // Component 4: Accessibility Gap (0 to 100)
-  // Differentiate from raw gap using census infrastructure baselines if available
-  let accessibilityScore = gapScore;
-  if (censusData) {
-    const pavedPct = censusData.infrastructureCount.pavedRoadsPct;
-    accessibilityScore = Math.min(100, Math.round(gapScore * 0.6 + (100 - pavedPct) * 0.4));
-  }
+  // TODO: differentiate from raw gap once ward-level accessibility baselines exist
+  const accessibilityScore = gapScore;
 
   // Component 5: Urgency (0 to 100) - derived from request urgency or default to 60
   let totalUrgency = 0;
@@ -689,7 +702,7 @@ export function computePriorityScore(
   );
 
   const category = cluster.category || "General";
-  const reasoning = `Priority Score: ${overall}/100. Evaluated across 6 governance factors: Demand Volume & Engagement (${Math.round(demandScore)}/100, ${count} reports, ${totalUpvotes} upvotes), Infrastructure Proximity Gap (${Math.round(gapScore)}/100, ${maxDistance.toFixed(1)} km to nearest ${category} facility), Population Reach (${Math.round(popScore)}/100 in ${popLabel}), Accessibility Gap (${Math.round(accessibilityScore)}/100), Public Urgency (${Math.round(urgencyScore)}/100), and Municipal Investment Deficit (${Math.round(investmentGapScore)}/100).`;
+  const reasoning = `Priority Score: ${overall}/100. Evaluated across 6 governance factors: Demand Volume & Engagement (${Math.round(demandScore)}/100, ${count} reports, ${totalUpvotes} upvotes), Infrastructure Proximity Gap (${Math.round(gapScore)}/100, ${maxDistance.toFixed(1)} km to nearest ${category} facility), Population Reach (${Math.round(popScore)}/100 in ${popStr}), Accessibility Gap (${Math.round(accessibilityScore)}/100), Public Urgency (${Math.round(urgencyScore)}/100), and Municipal Investment Deficit (${Math.round(investmentGapScore)}/100).`;
 
   return {
     overall,
@@ -705,7 +718,6 @@ export function computePriorityScore(
       confidence: Math.round((cluster.confidence || 0.95) * 100)
     },
     reasoning,
-    dataSource: censusData ? censusData.dataSource : 'Synthetic Urban Baseline',
     confidence: cluster.confidence || 0.95
   };
 }

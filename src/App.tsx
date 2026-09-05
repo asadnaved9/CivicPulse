@@ -19,7 +19,7 @@ const IssueDetailPage = React.lazy(() => import('./pages/IssueDetailPage'));
 const RecommendationsPage = React.lazy(() => import('./pages/RecommendationsPage'));
 const SettingsPage = React.lazy(() => import('./pages/SettingsPage'));
 const ProposalDetailPage = React.lazy(() => import('./pages/ProposalDetailPage'));
-const USSDSimulatorPage = React.lazy(() => import('./pages/USSDSimulatorPage'));
+const CommunityPage = React.lazy(() => import('./pages/CommunityPage'));
 
 // MP Dedicated Pages
 const MPLoginPage = React.lazy(() => import('./pages/mp/MPLoginPage'));
@@ -69,6 +69,7 @@ function AppContent() {
             <Route path="/mp/recommendations" element={<MPRecommendationsPage />} />
             <Route path="/mp/proposals/:id" element={<MPProposalDetailPage />} />
             <Route path="/mp/settings" element={<MPSettingsPage />} />
+            <Route path="/mp/map" element={<MapPage />} />
           </Routes>
         </Suspense>
       </MPLayout>
@@ -92,7 +93,7 @@ function AppContent() {
             <Route path="/recommendations" element={<RecommendationsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/proposal/:id" element={<ProposalDetailPage />} />
-            <Route path="/ussd-demo" element={<USSDSimulatorPage />} />
+            <Route path="/community" element={<CommunityPage />} />
 
             {/* MP Login Gate */}
             <Route path="/mp/login" element={<MPLoginPage />} />
@@ -102,22 +103,14 @@ function AppContent() {
 
       {/* Swiss minimalist design responsive footer - Hidden on Map Page and MP Login */}
       {!isMapPage && location.pathname !== '/mp/login' && (
-        <footer className="app-footer">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4.5px' }}>
+        <footer className="app-footer" style={{ justifyContent: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4.5px', alignItems: 'center', textAlign: 'center' }}>
             <span className="text-mono" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-1)', letterSpacing: '0.05em' }}>
               CIVICPULSE
             </span>
             <span style={{ fontSize: '11px', color: 'var(--text-3)' }}>
               © {new Date().getFullYear()} {t('footerText')}
             </span>
-          </div>
-          <div style={{ display: 'flex', gap: '20px', fontSize: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <Link to="/" className="text-muted" style={{ textDecoration: 'none' }}>{t('overview')}</Link>
-            <Link to="/development" className="text-muted" style={{ textDecoration: 'none' }}>{t('development')}</Link>
-            <Link to="/map" className="text-muted" style={{ textDecoration: 'none' }}>{t('map')}</Link>
-            <Link to="/recommendations" className="text-muted" style={{ textDecoration: 'none' }}>{t('aiPlanning')}</Link>
-            <Link to="/report" className="text-muted" style={{ textDecoration: 'none' }}>{t('suggest')}</Link>
-            <Link to="/settings" className="text-muted" style={{ textDecoration: 'none' }}>{t('settings')}</Link>
           </div>
         </footer>
       )}

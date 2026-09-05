@@ -76,8 +76,6 @@ export default function ReportPage() {
   const [confidence, setConfidence] = useState<number | null>(null);
   const [keywords, setKeywords] = useState<string[]>([]);
   const [theme, setTheme] = useState('');
-  const [classificationTier, setClassificationTier] = useState<'edge' | 'cloud' | 'fallback' | null>(null);
-  const [tierModel, setTierModel] = useState<string>('');
 
   // Live Scan States
   const [cameraActive, setCameraActive] = useState(false);
@@ -792,36 +790,6 @@ export default function ReportPage() {
       let finalConfidence = confidence || 0.85;
       let finalKeywords = keywords.length > 0 ? keywords : aiTags;
       let finalTheme = theme;
-      let usedTier: 'edge' | 'cloud' | 'fallback' = 'cloud';
-      let usedModel = 'gemini-2.5-flash';
-
-      // Always perform sovereign tiered classification (Edge Gemma 3n → Cloud Gemini → Deterministic)
-      try {
-        const tierRes = await fetch('/api/infer/tiered', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: description || title })
-        });
-        if (tierRes.ok) {
-          const tierData = await tierRes.json();
-          usedTier = tierData.tier;
-          usedModel = tierData.model;
-          setClassificationTier(tierData.tier);
-          setTierModel(tierData.model);
-
-          if (tierData.result?.cleanedDescription) {
-            finalDescEnglish = tierData.result.cleanedDescription;
-          }
-          if (tierData.result?.category && !category) {
-            finalCategory = tierData.result.category;
-          }
-          if (tierData.result?.urgency) {
-            finalPriority = Math.min(5, Math.max(1, Math.round(tierData.result.urgency / 20)));
-          }
-        }
-      } catch (tierErr) {
-        console.warn("[ReportPage] Tiered inference check skipped:", tierErr);
-      }
 
       if (!finalDepartment) {
         try {
@@ -1040,28 +1008,10 @@ export default function ReportPage() {
 
           {/* Details Summary Grid */}
           <div style={{ width: '100%', textAlign: 'left', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: '8px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-1)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-                <Sparkles size={16} style={{ color: 'var(--primary)' }} />
-                AI Semantic Triage Report
-              </h3>
-              <span 
-                className="badge" 
-                style={{ 
-                  fontSize: '11px', 
-                  padding: '4px 10px',
-                  background: classificationTier === 'edge' ? 'rgba(16, 185, 129, 0.15)' : classificationTier === 'fallback' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(59, 130, 246, 0.15)',
-                  color: classificationTier === 'edge' ? '#34d399' : classificationTier === 'fallback' ? '#fbbf24' : '#60a5fa',
-                  border: `1px solid ${classificationTier === 'edge' ? 'rgba(16, 185, 129, 0.3)' : classificationTier === 'fallback' ? 'rgba(245, 158, 11, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`
-                }}
-              >
-                {classificationTier === 'edge' 
-                  ? '🟢 Classified on-device (Gemma 3n via Ollama)' 
-                  : classificationTier === 'fallback' 
-                  ? '⚡ Classified offline (Zero-Cloud Deterministic)' 
-                  : '☁️ Classified via Cloud (Gemini 2.5 Flash)'}
-              </span>
-            </div>
+            <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-1)', borderBottom: '1px solid var(--border)', paddingBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Sparkles size={16} style={{ color: 'var(--primary)' }} />
+              AI Semantic Triage Report
+            </h3>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: '13.5px' }}>
               <div>

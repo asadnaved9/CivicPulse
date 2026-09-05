@@ -7,9 +7,8 @@ import { useLanguage, Language } from '../contexts/LanguageContext';
 import { 
   Award, ThumbsUp, Calendar, AlertTriangle, Lightbulb, 
   Droplet, Trash2, HelpCircle, User, LogOut, ArrowRight, MapPin,
-  Globe, Shield, Settings, Check, LogIn, Flag
+  Globe, Shield, Settings, Check, LogIn
 } from 'lucide-react';
-import { getAvailableCountries, getCountryConfig } from '../config/countryConfigs';
 
 export default function SettingsPage() {
   const { 
@@ -26,15 +25,6 @@ export default function SettingsPage() {
   const navigate = useNavigate();
   const [userIssues, setUserIssues] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCountry, setSelectedCountry] = useState<string>(() => {
-    return localStorage.getItem('civicpulse_country') || 'IN';
-  });
-
-  const handleCountryChange = (code: string) => {
-    setSelectedCountry(code);
-    localStorage.setItem('civicpulse_country', code);
-    window.dispatchEvent(new Event('civicpulse_country_changed'));
-  };
 
   // Sync user's reported issues in real-time if logged in
   useEffect(() => {
@@ -103,58 +93,7 @@ export default function SettingsPage() {
 
       {/* 1. App Settings Preferences Panel (Always Functional & Visible) */}
       <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '20px', background: 'var(--surface)' }}>
-        {/* Sovereign Country Adapter Selector */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
-          <Flag size={18} className="text-primary" />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, margin: 0, color: 'var(--text-1)' }}>
-              Sovereign Country Adapter
-            </h2>
-            <span className="badge" style={{ fontSize: '10px', background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa' }}>
-              Multi-Nation DPG Architecture
-            </span>
-          </div>
-        </div>
-
-        <p className="text-xs" style={{ color: 'var(--text-3)', margin: 0 }}>
-          Switching the country dynamically reconfigures administrative hierarchies, national scheme databases, official currency formatting, and national voice pipeline providers.
-        </p>
-
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-          {getAvailableCountries().map((c) => {
-            const isSelected = selectedCountry === c.code;
-            const cfg = getCountryConfig(c.code);
-            return (
-              <button
-                key={c.code}
-                onClick={() => handleCountryChange(c.code)}
-                className={`btn ${isSelected ? 'btn-primary' : 'btn-secondary'}`}
-                style={{
-                  flex: '1 1 240px',
-                  padding: '12px 16px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  fontWeight: isSelected ? 600 : 500,
-                  fontSize: '13px'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', textAlign: 'left' }}>
-                  <span style={{ fontSize: '18px' }}>{c.flag}</span>
-                  <div>
-                    <div>{c.name} ({c.code})</div>
-                    <div style={{ fontSize: '10px', color: isSelected ? 'rgba(255,255,255,0.8)' : 'var(--text-3)' }}>
-                      Currency: {cfg.currency.symbol} • Voice: {cfg.voiceProvider}
-                    </div>
-                  </div>
-                </div>
-                {isSelected && <Check size={14} />}
-              </button>
-            );
-          })}
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginTop: '10px' }}>
           <Globe size={18} className="text-primary" />
           <h2 style={{ fontSize: '16px', fontWeight: 600, margin: 0, color: 'var(--text-1)' }}>
             {t('changeLanguage')}

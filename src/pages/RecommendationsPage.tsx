@@ -179,24 +179,9 @@ export default function RecommendationsPage() {
                   <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-1)' }}>
                     {cluster.theme || 'Community Infrastructure Need'}
                   </span>
-                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                    {cluster.clusteringMethod && (
-                      <span 
-                        className="badge" 
-                        style={{ 
-                          fontSize: '10px', 
-                          background: cluster.clusteringMethod === 'gemini' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                          color: cluster.clusteringMethod === 'gemini' ? '#60a5fa' : '#34d399',
-                          border: `1px solid ${cluster.clusteringMethod === 'gemini' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`
-                        }}
-                      >
-                        {cluster.clusteringMethod === 'gemini' ? '✦ Gemini' : '📍 DBSCAN'}
-                      </span>
-                    )}
-                    <span className="badge badge-secondary" style={{ fontSize: '10px' }}>
-                      {cluster.count || cluster.requestCount || cluster.relatedIds?.length || 1} Reports
-                    </span>
-                  </div>
+                  <span className="badge badge-secondary" style={{ fontSize: '10px' }}>
+                    {cluster.requestCount || cluster.issueIds?.length || 1} Reports
+                  </span>
                 </div>
 
                 <div style={{ fontSize: '11px', color: 'var(--text-3)' }}>
