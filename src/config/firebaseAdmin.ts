@@ -14,7 +14,20 @@ import {
   serverTimestamp,
   Timestamp as ClientTimestamp
 } from 'firebase/firestore';
-import firebaseAppletConfig from '../../firebase-applet-config.json';
+let firebaseAppletConfig: Record<string, any> = {};
+try {
+  firebaseAppletConfig = require('../../firebase-applet-config.json');
+} catch {
+  try {
+    const modules = (import.meta as any).glob?.('../../firebase-applet-config.json', { eager: true }) || {};
+    const key = Object.keys(modules)[0];
+    if (key) {
+      firebaseAppletConfig = (modules[key] as any)?.default || modules[key] || {};
+    }
+  } catch {
+    firebaseAppletConfig = {};
+  }
+}
 
 const getEnvVar = (key: string): string => {
   if (typeof process !== 'undefined' && process.env) {

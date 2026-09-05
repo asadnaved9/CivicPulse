@@ -3,7 +3,16 @@ import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import firebaseAppletConfig from '../../firebase-applet-config.json';
+let firebaseAppletConfig: Record<string, any> = {};
+try {
+  const modules = (import.meta as any).glob?.('../../firebase-applet-config.json', { eager: true }) || {};
+  const key = Object.keys(modules)[0];
+  if (key) {
+    firebaseAppletConfig = (modules[key] as any)?.default || modules[key] || {};
+  }
+} catch {
+  firebaseAppletConfig = {};
+}
 
 const getEnvVar = (key: string): string => {
   if (typeof import.meta !== 'undefined' && import.meta.env) {
