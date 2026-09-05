@@ -19,6 +19,7 @@ const RecommendationsPage = React.lazy(() => import('./pages/RecommendationsPage
 const SettingsPage = React.lazy(() => import('./pages/SettingsPage'));
 const ProposalDetailPage = React.lazy(() => import('./pages/ProposalDetailPage'));
 const CommunityPage = React.lazy(() => import('./pages/CommunityPage'));
+const IVRCallPage = React.lazy(() => import('./pages/IVRCallPage'));
 
 // Lazy loading Unified Admin Portal Pages
 const AdminLayout = React.lazy(() => import('./pages/admin/AdminLayout'));
@@ -121,6 +122,7 @@ function AppContent() {
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/proposal/:id" element={<ProposalDetailPage />} />
             <Route path="/community" element={<CommunityPage />} />
+            <Route path="/ivr" element={<IVRCallPage />} />
 
             {/* Admin Login Gateway */}
             <Route path="/admin/login" element={<AdminLoginPage />} />

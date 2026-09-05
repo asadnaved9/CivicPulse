@@ -55,78 +55,37 @@ Traditional civic grievance apps end when an individual pothole or broken street
 
 ---
 
-## 🌐 Tiered Sovereign Intelligence Architecture
-
-CivicPulse incorporates a **Tiered Sovereign Intelligence** runtime designed for national resilience and edge-first data sovereignty:
-
-```
-                      CITIZEN MULTI-CHANNEL INTAKE
-    ┌──────────────────────┬──────────────────────┬──────────────────────┐
-    │   Web / Mobile PWA   │  VoicERA / BHASHINI  │  *384# Feature Phone │
-    │ (Rich Photos, GPS)   │  (Regional Dialects) │  (USSD / 2G Network) │
-    └──────────┬───────────┴──────────┬───────────┴──────────┬───────────┘
-               │                      │                      │
-               ▼                      ▼                      ▼
-    ┌────────────────────────────────────────────────────────────────────┐
-    │            TIER 1: ON-DEVICE EDGE SOVEREIGN INFERENCE              │
-    │  - Gemma 3n on-device via Ollama daemon (localhost:11434)          │
-    │  - Zero per-request cloud API dependency, 100% Google AI stack     │
-    │  - On-Device PII Masking: Redacts citizen phone numbers & emails   │
-    │  - Deterministic Keyword Taxonomy Engine (Instant fallback)        │
-    └─────────────────────────────────┬──────────────────────────────────┘
-                                      │ (Escalates complex briefs)
-                                      ▼
-    ┌────────────────────────────────────────────────────────────────────┐
-    │                 TIER 2: GOOGLE GEMINI CLOUD LLM                    │
-    │  - Gemini 2.5 Flash / Flash Lite via `@google/genai`               │
-    │  - Strategic Demand vs LDP alignment reasoning & Brief synthesis   │
-    │  - Exponential backoff retry wrapper (`runWithRetry`)              │
-    └─────────────────────────────────┬──────────────────────────────────┘
-                                      │
-                                      ▼
-    ┌────────────────────────────────────────────────────────────────────┐
-    │             DETERMINISTIC CIVIC INTELLIGENCE ENGINES               │
-    │  - DBSCAN Geospatial Clustering (`density-clustering` km Haversine)│
-    │  - Census 2011 & SECC Demographic Ward Grounding                   │
-    │  - Digital Public Infrastructure (DPI) 4-Component Impact Engine   │
-    │  - Country Adapter Engine (India INR/BBMP & South Africa ZAR/Metro)│
-    │  - Alchemyst AI Verified Scheme Matching Engine                    │
-    └────────────────────────────────────────────────────────────────────┘
-```
-
----
-
 ## ⚡ The Development Intelligence Pipeline
 
-The strategic intelligence subsystem transforms uncoordinated citizen suggestions into actionable, fundable municipal projects through 7 verifiable stages:
+The strategic intelligence subsystem transforms uncoordinated citizen suggestions into actionable, fundable municipal projects through 6 verifiable stages:
 
-1. **Demand Aggregation & Geographic Clustering**: Consolidates raw citizen proposals within spatial clusters using **DBSCAN Density Clustering** (`epsilon=2.5km`, `minPoints=2`) with Haversine distance projection or semantic embeddings.
-2. **6-Factor Priority Scoring Engine Grounded in Census 2011 Data**: Evaluates every initiative according to an audited governance formula:
+1. **Demand Aggregation & Geographic Clustering**: Consolidates raw citizen proposals within a ~2km spatial radius and matching civic domain using semantic embeddings or high-density fallback clustering.
+2. **6-Factor Priority Scoring Engine**: Evaluates every initiative according to a transparent, governance-challenge formula:
    $$\text{Priority Score} = 0.25(\text{Demand}) + 0.25(\text{InfraGap}) + 0.20(\text{PopImpact}) + 0.10(\text{AccessGap}) + 0.10(\text{Urgency}) + 0.10(\text{InvestDeficit})$$
-   - **Population Density Impact (20%) & Accessibility Gap (10%)**: Grounded in official **Census of India 2011** ward tables and **Socio-Economic and Caste Census (SECC)** benchmarks.
+   - **Demand Volume & Engagement (25%)**: Submission count augmented by local citizen upvote consensus.
    - **Infrastructure Proximity Gap (25%)**: Physical distance to the nearest public facility (e.g. 4.8 km to nearest PHC).
-   - **Demand Volume (25%)**: Real citizen submissions augmented by verified upvotes.
-3. **DPI Impact Scoring Engine**: Quantifies real-world civic adoption across 4 pillars (Coverage Gap 30%, Citizen Sentiment 30%, Adoption Velocity 20%, Service Quality 20%) across Aadhaar, UPI, DigiLocker, CoWIN, and South Africa Smart ID.
-4. **Demand vs Plan Alignment Comparison**: Cross-references citizen priority clusters against official Local Development Plan (LDP) records to detect unaddressed gaps (`GAP DETECTED`, `PRIORITIZE PROPOSAL`) or prevent duplicate capital spending (`PROCEED AS PLANNED`).
-5. **Knapsack Treasury Budget Optimization**: A greedy density-optimization algorithm that packages the highest impact projects for a target constituency allocation (e.g. ₹5.00 Crores).
-6. **Verified Scheme Matching (Alchemyst AI Context)**: Grounds project recommendations against official guidelines of central/state schemes (AMRUT 2.0, PM-GSY, Swachh Bharat Mission Urban, National Health Mission, Samagra Shiksha Abhiyan) to determine center-state funding ratios.
-7. **Government Decision Lifecycle Tracker & Evidence Dossier**: A strict, forward-only finite state machine tracking projects from genesis to commissioning:
+   - **Population Density Impact (20%)**: Projected ward residents served based on official municipal census benchmarks.
+   - **Accessibility Barrier (10%)**: Transit and pedestrian access impediment.
+   - **Public Urgency (10%)**: Hazard risk severity score.
+   - **Municipal Investment Deficit (10%)**: Absence of sanctioned projects in the current Local Development Plan.
+3. **Demand vs Plan Alignment Comparison**: Cross-references citizen priority clusters against official Local Development Plan (LDP) records to detect unaddressed gaps (`GAP DETECTED`, `PRIORITIZE PROPOSAL`) or prevent duplicate capital spending (`PROCEED AS PLANNED`).
+4. **Knapsack Treasury Budget Optimization**: A greedy density-optimization algorithm that packages the highest impact projects for a target constituency allocation (e.g. ₹5.00 Crores).
+5. **Verified Scheme Matching (Alchemyst AI Context)**: Grounds project recommendations against official guidelines of central/state schemes (AMRUT 2.0, PM-GSY, Swachh Bharat Mission Urban, National Health Mission, Samagra Shiksha Abhiyan) to determine center-state funding ratios.
+6. **Government Decision Lifecycle Tracker**: A strict, forward-only finite state machine tracking projects from genesis to commissioning:
    $$\text{Draft} \longrightarrow \text{Submitted} \longrightarrow \text{Approved} \longrightarrow \text{Funded} \longrightarrow \text{In Execution} \longrightarrow \text{Verified} \longrightarrow \text{Completed}$$
-   - Includes one-click **Executive Decision Brief PDF Dossier Export** compiling citizen evidence, 6-factor mathematical proofs, Census citations, and scheme funding allocations for legislative committees.
+   *(Rejection is supported at any pre-completion stage; backwards rollbacks are strictly prevented for audit integrity).*
 
 ---
 
 ## 🚀 Key Features
 
-*   **Tiered Sovereign Intelligence**: Seamless multi-tier inference routing. Runs Gemma 3n on-device via Ollama for offline classification with instant deterministic fallback and Gemini Cloud escalation.
-*   **Feature Phone Inclusion (*384# USSD / IVR Simulator)**: Dedicated interactive 2G handset UI (`/ussd-demo`) enabling zero-internet citizens to report issues, check statuses, and auto-persist tickets directly to Firestore.
-*   **Global Country Adapter Architecture**: Swappable configuration layer supporting multi-nation deployments (India: INR, BBMP, Bhashini Voice, Central Schemes; South Africa: ZAR, Metro/Ward, Edge Voice, MIG/WSIG Grants).
-*   **Census 2011 & SECC Demographics Grounding**: Replaces synthetic AI guesses with official census ward records for population density, literacy, and BPL percentages.
-*   **DPI Impact Index**: Live analytics tab evaluating national Digital Public Infrastructure rollouts against ward friction reports.
-*   **MP Decision Cockpit**: A comprehensive planning suite for elected representatives and city commissioners featuring an AI Decision Copilot, Budget Planner, Scheme Matcher, and Evidence Dossier Compiler.
-*   **Geographic Ward Ledger**: Real-time vector-tile mapping covering primary municipal zones with DBSCAN cluster polygons.
+*   **MP Decision Cockpit**: A comprehensive planning suite for elected representatives and city commissioners featuring an AI Decision Copilot, Budget Planner, Scheme Matcher, and Project Dossier Compiler.
+*   **Geographic Ward Ledger**: Real-time vector-tile mapping covering Bangalore's primary zones (Koramangala, Indiranagar, Whitefield, HSR Layout).
+*   **AI Vision Hazard Classifier**: Evaluates infrastructure severity, filters invalid images, and predicts SLA timeframes.
 *   **Dual-Image Verification**: Compares before/after maintenance photos to confirm civic contractor resolution before closing tickets.
-*   **VoicERA / BHASHINI National Voice Gateway**: Integration with national speech pipelines for vernacular audio reporting.
+*   **Multilingual Voice Intake**: Real-time speech transcription supporting regional languages (Kannada, Hindi, English, Spanish) with auto-classification into `CIVIC_ISSUE` or `DEVELOPMENT_NEED`.
+*   **Warden Gamification & Reputation**: Community leveling and badges for verified civic filings.
+*   **Automated BBMP Escalations**: Automated drafting of formal notices to Bruhat Bengaluru Mahanagara Palike commissioners for overdue SLAs.
 
 ---
 
@@ -136,12 +95,9 @@ The strategic intelligence subsystem transforms uncoordinated citizen suggestion
 *   **Backend Runtime**: Node.js, Express.js (Port `3000`), `tsx`
 *   **Database & Auth**: Firebase Firestore & Firebase Authentication
 *   **AI & Knowledge Services**:
-    *   `ollama` (Gemma 3n On-Device Edge Inference)
-    *   `@google/genai` (Gemini 2.5 Flash / Flash Lite cloud models)
+    *   `@google/genai` (Gemini 2.5 Flash / Flash Lite models)
     *   `@alchemystai/sdk` (Verified Government Scheme Context Retrieval)
-    *   `density-clustering` (Algorithmic DBSCAN geospatial clustering)
-*   **Digital Public Goods Standard**: Full adherence across all 9 DPGA indicators (see [DPG_COMPLIANCE.md](DPG_COMPLIANCE.md))
-*   **Ethics & Misuse Safeguards**: Transparent mitigation for bot flooding, political bias, hallucination, and privacy (see [ETHICS.md](ETHICS.md))
+*   **Production Bundler**: `esbuild` & `vite`
 
 ---
 
@@ -156,10 +112,10 @@ npx tsx scripts/runDemoScenario.ts
 
 This scenario runs deterministically and executes:
 1. Citizen development suggestions seeding into Firestore.
-2. DBSCAN density clustering with Census 2011 demographic grounding.
+2. 6-Factor priority clustering (identifying the Sector 2 healthcare cluster with a priority score of 89/100).
 3. Demand vs Municipal Plan comparison (identifying zero healthcare allocations in the active LDP).
 4. ₹5.00 Crore Knapsack budget packaging.
-5. Scheme matching against AMRUT and PMGSY guidelines.
+5. Scheme matching against PM-ABHIM and National Urban Health Mission guidelines.
 6. Creation of an official capital proposal and transition to `SUBMITTED` status.
 
 ---
@@ -187,14 +143,7 @@ VITE_FIREBASE_APP_ID="1:924621569984:web:c13ca32d7f145205761225"
 DISABLE_ORCHESTRATOR="true"
 ```
 
-### 2. (Optional) Run Gemma 3n On-Device via Ollama
-```bash
-# Start Ollama service (runs on localhost:11434)
-ollama run gemma3n
-```
-*Note: If Ollama is not installed or running, CivicPulse automatically utilizes its deterministic regex taxonomy engine with zero disruption.*
-
-### 3. Install & Run
+### 2. Install & Run
 ```bash
 # Install dependencies
 npm install
@@ -219,14 +168,13 @@ npm run start
 | Route | Subsystem | Description |
 |---|---|---|
 | `/` | Operations | Operational health score, recent resolutions, and civic metrics |
-| `/development` | Intelligence | Area development hotspots, LDP structurator, ward briefings, and **DPI Impact Index** |
-| `/map` | Operations | Interactive geospatial map of all open civic issues & DBSCAN clusters |
+| `/development` | Intelligence | Area development hotspots, LDP structurator, and ward briefings |
+| `/map` | Operations | Interactive geospatial map of all open civic issues & clusters |
 | `/recommendations` | Intelligence | **MP Decision Cockpit**: Copilot, Budget Planner, Scheme Matcher |
-| `/report` | Intake | Multilingual intake for `CIVIC_ISSUE` and `DEVELOPMENT_NEED` with edge status |
-| `/ussd-demo` | Inclusion | **Feature Phone Inclusion**: Interactive 2G GSM USSD/IVR simulator with Firestore persistence |
-| `/settings` | Core | Country Selector (India / South Africa), Language Selector, and Role Switch (`citizen` / `mp`) |
+| `/report` | Intake | Multilingual intake for `CIVIC_ISSUE` and `DEVELOPMENT_NEED` |
+| `/settings` | Core | Language selector (`en`, `es`, `hi`, `kn`), user profile, and role switch (`citizen` / `mp`) |
 | `/issue/:id` | Operations | Issue lifecycle detail with dual-photo verification |
-| `/proposal/:id` | Intelligence | Capital proposal dossier, Evidence Chain, Decision Brief PDF export, and status advancement |
+| `/proposal/:id` | Intelligence | Capital proposal dossier and forward-only status advancement |
 
 ---
 

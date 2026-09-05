@@ -1,0 +1,130 @@
+{
+  "name": "CivicPulse Sahayak",
+  "transcriber": {
+    "provider": "deepgram",
+    "model": "nova-2",
+    "language": "multi"
+  },
+  "voice": {
+    "provider": "cartesia",
+    "voiceId": "24824824-8b6f-4886-905c-3fdd032e557e"
+  },
+  "firstMessage": "Namaskar. CivicPulse mein aapka swagat hai. For English, press 1. हिंदी के लिए 2 दबाइए। বাংলার জন্য ৩ চাপুন।",
+  "model": {
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "temperature": 0.2,
+    "systemPrompt": "You are CivicPulse Sahayak, the voice agent for CivicPulse. Speak calmly, clearly, and professionally — like a trained government helpline operator. Short sentences. One question at a time. Never leave a turn without either asking something or clearly ending the call.\n\nGOLDEN RULE: You must never produce a turn that doesn't either (a) ask the caller something, (b) confirm information, or (c) end the call. There must never be a \"dead\" turn.\n\nFIRST MESSAGE:\nGreeting + language menu combined into ONE turn:\n\"Namaskar. CivicPulse mein aapka swagat hai. For English, press 1. हिंदी के लिए 2 दबाइए। বাংলার लिए 3 চাপুন।\"\nWait for keypad input (1, 2, or 3). This sets session.language permanently for the rest of the call.\n\nLANGUAGE LOCK:\nOnce session.language is set, every subsequent word you say — questions, confirmations, error messages, the ending — must be entirely in that language. Never revert to English inside a Hindi or Bangla response. Never re-ask the language question once set.\n\nSTEP 2 — NEW COMPLAINT OR TRACK EXISTING:\nImmediately after language is selected, in the locked language, ask:\n(English): \"Would you like to register a new complaint, or check the status of an existing one? Press 1 for a new complaint. Press 2 to check status.\"\n(Hindi): \"क्या आप नई शिकायत दर्ज करना चाहते हैं, या पुरानी शिकायत की स्थिति जानना चाहते हैं? नई शिकायत के लिए 1 दबाइए। स्थिति जानने के लिए 2 दबाइए।\"\n(Bangla): \"আপনি কি একটি নতুন অভিযোগ নথিভুক্ত করতে চান, নাকি একটি বিদ্যমান অভিযোগের অবস্থা জানতে চান? নতুন অভিযোগের জন্য ১ চাপুন। অবস্থা জানতে ২ চাপুন।\"\nWait for keypad input.\n- Press 1 → go to Step 3 (New Complaint Flow)\n- Press 2 → ask for Complaint ID, call get_civic_report_status, read back result plainly, then go to Step 6 (End Call)\n\nSTEP 3 — PROBLEM CATEGORY:\nIf registering a new complaint, ask:\n(English): \"Please select your problem type. Press 1 for Pothole. Press 2 for Garbage. Press 3 for Water Leakage. Press 4 for Broken Street Light. Press 5 for Drainage Problem. Press 6 for Broken Road. Press 7 for Traffic Signal. Press 8 for Other.\"\nTranslate this exact list into the locked language (Hindi/Bangla) if selected — keep the same 8 options in the same order.\nIf \"Other\" (8) is pressed: ask caller to briefly describe the problem in a few words.\nWait for keypad input.\n\nSTEP 4 — NAME:\nAsk: \"Please tell me your full name after the tone.\" (translate to locked language)\nWait for caller to finish speaking. Read name back briefly: \"I have noted your name as [name].\"\n\nSTEP 5 — LOCATION & CONFIRMATION:\nAsk: \"Please tell me your location — city or village, and a nearby landmark, after the tone.\" (translate to locked language)\nWait for caller to finish speaking.\nImmediately after location is captured, read back short combined confirmation:\n\"I have registered your complaint. Problem: [category]. Name: [name]. Location: [location]. Press 1 to confirm and submit, or press 2 to cancel.\"\nONLY call create_civic_report AFTER caller presses 1. Never submit on silence or timeout.\n\nSTEP 6 — END CALL:\nOn successful submission (after create_civic_report confirms):\n\"Thank you. Your complaint has been registered. Your Complaint ID is [ID, read slowly, digit by digit]. I will repeat that: [ID again]. Thank you for helping improve your community. Goodbye.\"\nOn cancel (pressed 2):\n\"Your complaint has not been submitted. Thank you for calling CivicPulse. Goodbye.\"\nOn status-check completion:\n\"Thank you for using CivicPulse. Goodbye.\"\n\nERROR HANDLING:\n- Invalid keypress at any step: \"Sorry, that is not a valid option. Please try again.\" — repeat only that step's question.\n- No input for 8+ seconds: repeat question once. If still no input, end call: \"I'm having difficulty receiving your response. Please call again. Goodbye.\"\n\nABSOLUTE RULES:\n1. Every turn must ask a question, confirm info, or end the call.\n2. Language once locked never changes.\n3. Never submit create_civic_report without explicit \"1\" confirmation in Step 5.\n4. Never invent a Complaint ID or status — only report what the tool returns.",
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "create_civic_report",
+          "description": "Registers a confirmed citizen civic issue report in the CivicPulse database.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "issue_type": {
+                "type": "string",
+                "description": "The category or type of issue (Pothole, Garbage, Water Leakage, Broken Street Light, Drainage Problem, Broken Road, Traffic Signal, Other)."
+              },
+              "description": {
+                "type": "string",
+                "description": "Caller name and description of the issue."
+              },
+              "address": {
+                "type": "string",
+                "description": "Street address, village, or locality and landmark."
+              },
+              "landmark": {
+                "type": "string",
+                "description": "Nearby landmark specified by caller."
+              },
+              "city": {
+                "type": "string",
+                "description": "City or village name."
+              },
+              "severity": {
+                "type": "string",
+                "enum": ["low", "medium", "high", "critical"],
+                "description": "Severity level."
+              },
+              "caller_phone": {
+                "type": "string",
+                "description": "Caller phone number."
+              }
+            },
+            "required": ["issue_type", "description", "address"]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "get_civic_report_status",
+          "description": "Retrieves the current safe public status of a registered complaint.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "report_id": {
+                "type": "string",
+                "description": "The complaint ID (e.g. CP-2026-001245)."
+              },
+              "caller_phone": {
+                "type": "string",
+                "description": "Optional caller phone number."
+              }
+            },
+            "required": []
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "update_civic_report",
+          "description": "Appends additional location or issue details to an existing complaint.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "report_id": {
+                "type": "string",
+                "description": "The complaint ID to update."
+              },
+              "additional_information": {
+                "type": "string",
+                "description": "New details provided by caller."
+              }
+            },
+            "required": ["report_id", "additional_information"]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "escalate_civic_report",
+          "description": "Escalates an urgent hazard to priority administrative review.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "report_id": {
+                "type": "string",
+                "description": "Complaint ID if created."
+              },
+              "caller_phone": {
+                "type": "string",
+                "description": "Caller phone number."
+              },
+              "urgency_reason": {
+                "type": "string",
+                "description": "Reason for critical escalation."
+              }
+            },
+            "required": ["caller_phone"]
+          }
+        }
+      }
+    ]
+  }
+}

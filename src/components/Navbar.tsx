@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Bell, PlusCircle, LogIn, LogOut, User, MapPin, Menu, X, Check, Eye, Sun, Moon } from 'lucide-react';
+import { Bell, PlusCircle, LogIn, LogOut, User, MapPin, Menu, X, Check, Eye, Sun, Moon, PhoneCall } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../config/firebase';
@@ -123,6 +123,9 @@ export const Navbar: React.FC = () => {
           </Link>
           <Link to="/recommendations" className={`navbar-link ${isActive('/recommendations') ? 'active' : ''}`}>
             {t('aiPlanning')}
+          </Link>
+          <Link to="/ivr" className={`navbar-link ${isActive('/ivr') ? 'active' : ''}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#4F46E5', fontWeight: 600 }}>
+            <PhoneCall size={14} /> Voice IVR
           </Link>
           <Link to="/report" className={`navbar-link ${isActive('/report') ? 'active' : ''}`}>
             {t('suggest')}

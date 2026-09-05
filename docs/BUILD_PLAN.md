@@ -511,21 +511,3 @@ The project is complete when, from a clean clone:
 10. `README.md` accurately describes the system as built (T12).
 
 If any item above is false, the project is not done — return to the corresponding task.
-
----
-
-## 🚀 Phase 2 Differentiation Sprint (N1–N12) — COMPLETE
-
-All 12 differentiation sprint deliverables have been implemented and verified:
-* **N1 — Tiered Sovereign Intelligence**: Gemma 3n on-device via Ollama with deterministic regex keyword fallback and cloud Gemini escalation.
-* **N2 — VoicERA / BHASHINI Gateway**: Sovereign voice routing for regional vernacular inputs.
-* **N3 — DBSCAN Geospatial Clustering**: Epsilon=2.5km / minPoints=2 density clustering with Haversine distance projection.
-* **N4 — Country Adapter Pattern**: Configurable support for India (`IN`) and South Africa (`ZA`).
-* **N5 — Census 2011 & SECC Demographic Grounding**: Ward-level population density and BPL grounding for 6-factor priority engine.
-* **N6 — DPI Impact Scoring Engine**: 4-pillar index covering Aadhaar, UPI, DigiLocker, CoWIN, and Smart ID.
-* **N7 — Feature Phone Inclusion (*384# USSD / IVR)**: Retro 2G handset simulation page with direct Firestore ticket persistence.
-* **N8 — Government-Grade Explainability & PDF Brief**: Automated evidence chain assembly and printable executive dossier.
-* **N9 — DPG Standard Compliance Table**: Full mapping against all 9 DPGA indicators in `DPG_COMPLIANCE.md`.
-* **N10 — Ethics & Misuse Safeguards**: Comprehensive defenses in `ETHICS.md`.
-* **N11 — Full Validation Pass**: `npm run lint`, `npm run build`, and `scripts/runDemoScenario.ts` passing.
-* **N12 — Documentation Polish**: Updated `README.md` and architecture specifications.

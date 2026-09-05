@@ -60,9 +60,16 @@ const app = getApps().length > 0
 
 const hasDatabaseId = !!(firebaseAppletConfig as any).firestoreDatabaseId;
 
-const clientDb = hasDatabaseId 
+const isTestEnv = typeof process !== 'undefined' && (
+  process.env.NODE_ENV === 'test' || 
+  !process.env.VITE_FIREBASE_PROJECT_ID || 
+  process.env.VITE_FIREBASE_PROJECT_ID === 'placeholder-project' ||
+  process.argv.some(arg => arg.includes('test'))
+);
+
+const clientDb = (!isTestEnv && hasDatabaseId)
   ? getFirestore(app, (firebaseAppletConfig as any).firestoreDatabaseId) 
-  : getFirestore(app);
+  : (!isTestEnv ? getFirestore(app) : null);
 
 // Helper to convert client DocumentSnapshot to Admin-like DocumentSnapshot
 class AdminDocumentSnapshot {
@@ -123,18 +130,21 @@ class AdminDocumentReference {
     return this._path;
   }
   async get(): Promise<AdminDocumentSnapshot> {
+    const [coll, docId] = this._path.split('/');
+    const memColl = getMemoryCollection(coll);
+
     try {
       const clientDocRef = doc(clientDb, this._path);
-      const snap = await getDoc(clientDocRef);
-      if (snap.exists()) {
+      const snapPromise = getDoc(clientDocRef);
+      const timeoutPromise = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 200));
+      const snap = await Promise.race([snapPromise, timeoutPromise]) as any;
+      if (snap && snap.exists()) {
         return new AdminDocumentSnapshot(snap.id, snap.data(), true, snap.ref);
       }
     } catch {
-      // Cloud permission or network fallback
+      // Cloud permission, network timeout or offline fallback
     }
 
-    const [coll, docId] = this._path.split('/');
-    const memColl = getMemoryCollection(coll);
     if (memColl[docId]) {
       return new AdminDocumentSnapshot(docId, memColl[docId], true, this);
     }
@@ -149,7 +159,9 @@ class AdminDocumentReference {
 
     try {
       const clientDocRef = doc(clientDb, this._path);
-      await updateDoc(clientDocRef, preparedData);
+      const updatePromise = updateDoc(clientDocRef, preparedData);
+      const timeoutPromise = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 200));
+      await Promise.race([updatePromise, timeoutPromise]);
     } catch {
       // Retained in memory store safely
     }
@@ -167,7 +179,9 @@ class AdminDocumentReference {
 
     try {
       const clientDocRef = doc(clientDb, this._path);
-      await setDoc(clientDocRef, preparedData, { merge: options?.merge ?? false });
+      const setPromise = setDoc(clientDocRef, preparedData, { merge: options?.merge ?? false });
+      const timeoutPromise = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 200));
+      await Promise.race([setPromise, timeoutPromise]);
     } catch {
       // Retained in memory store safely
     }
@@ -196,13 +210,15 @@ class AdminCollectionReference {
       if (this._limitVal !== null) {
         q = query(clientColRef, firestoreLimit(this._limitVal));
       }
-      const snap = await getDocs(q);
-      if (snap.size > 0) {
-        const docs = snap.docs.map(d => new AdminDocumentSnapshot(d.id, d.data(), true, d.ref));
+      const snapPromise = getDocs(q);
+      const timeoutPromise = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 200));
+      const snap = await Promise.race([snapPromise, timeoutPromise]) as any;
+      if (snap && snap.size > 0) {
+        const docs = snap.docs.map((d: any) => new AdminDocumentSnapshot(d.id, d.data(), true, d.ref));
         return new AdminQuerySnapshot(docs);
       }
     } catch {
-      // Cloud permission or network fallback
+      // Cloud permission, network timeout or offline fallback
     }
 
     const memColl = getMemoryCollection(this._path);

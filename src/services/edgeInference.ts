@@ -1,3 +1,4 @@
+// @ts-ignore
 import { Ollama } from 'ollama';
 import { screenCivicPrompt } from '../utils/civicGuardrail';
 
