@@ -972,21 +972,35 @@ export default function ReportPage() {
       return;
     }
 
+    console.log("[ReportSubmit] Submission initiated for mode:", mode);
     setSubmitting(true);
     try {
       let imageUrl = mode === 'suggestion' 
         ? "https://picsum.photos/seed/proposal/800/600" 
         : "https://picsum.photos/seed/reported/800/600";
 
-      // 1. Upload photo to Firebase Storage if provided & fully configured
+      // 1. Upload photo to Firebase Storage if provided as data URL, or use direct HTTP URL
       if (imagePreview) {
-        try {
-          const imageId = `${mode === 'suggestion' ? 'suggestion' : 'issue'}_${Date.now()}`;
-          const storageRef = ref(storage, `${mode === 'suggestion' ? 'suggestions' : 'issues'}/${imageId}.jpg`);
-          await uploadString(storageRef, imagePreview, 'data_url');
-          imageUrl = await getDownloadURL(storageRef);
-        } catch (storageErr) {
-          console.error("Storage upload failed (using fallback image URL):", storageErr);
+        if (imagePreview.startsWith('http://') || imagePreview.startsWith('https://')) {
+          imageUrl = imagePreview;
+          console.log("[ReportSubmit] Using existing HTTP/HTTPS image URL:", imageUrl);
+        } else if (imagePreview.startsWith('data:')) {
+          try {
+            console.log("[ReportSubmit] Uploading data_url to Firebase Storage with timeout protection...");
+            const imageId = `${mode === 'suggestion' ? 'suggestion' : 'issue'}_${Date.now()}`;
+            const storageRef = ref(storage, `${mode === 'suggestion' ? 'suggestions' : 'issues'}/${imageId}.jpg`);
+            
+            const uploadPromise = uploadString(storageRef, imagePreview, 'data_url')
+              .then(() => getDownloadURL(storageRef));
+            const timeoutPromise = new Promise<string>((_, reject) =>
+              setTimeout(() => reject(new Error("Storage upload timed out after 8s")), 8000)
+            );
+            
+            imageUrl = await Promise.race([uploadPromise, timeoutPromise]);
+            console.log("[ReportSubmit] Storage upload succeeded, imageUrl:", imageUrl);
+          } catch (storageErr) {
+            console.warn("[ReportSubmit] Storage upload failed or timed out (using fallback image URL):", storageErr);
+          }
         }
       }
 
@@ -1005,11 +1019,12 @@ export default function ReportPage() {
 
       if (!finalDepartment && mode === 'problem') {
         try {
+          console.log("[ReportSubmit] Calling clean-voice for department auto-triage fallback...");
           const res = await fetchWithAuth('/api/agents/clean-voice', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ transcript: description, mode })
-          });
+          }, 8000);
           if (res.ok) {
             const data = await res.json();
             finalTitle = title || data.title;
@@ -1023,9 +1038,10 @@ export default function ReportPage() {
             finalConfidence = data.confidence || 0.85;
             finalKeywords = data.keywords || [];
             finalTheme = data.theme;
+            console.log("[ReportSubmit] Auto-triage on submit succeeded:", data.department);
           }
         } catch (err) {
-          console.error("Auto-triage on submit failed:", err);
+          console.warn("[ReportSubmit] Auto-triage on submit skipped/failed:", err);
         }
       }
 
@@ -1070,37 +1086,45 @@ export default function ReportPage() {
           status: 'suggested'
         };
 
+        console.log("[ReportSubmit] Writing suggestion to Firestore...");
         const docRef = await addDoc(collection(db, 'suggestions'), suggestionData);
         docId = docRef.id;
+        console.log("[ReportSubmit] Suggestion registered with ID:", docId);
 
+        // Immediate UI success update
+        setSubmittedData({ ...suggestionData, id: docId });
+        setSubmittedSuccess(true);
+        toast.success('Development Proposal submitted successfully!');
 
+        // Run non-critical side-effects in background without blocking UI
         if (user?.uid) {
-          await awardPoints(user.uid, 50, 'Suggested new development idea');
-          
-          // Increment suggestion counts on user profile
-          const userRef = doc(db, 'users', user.uid);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) {
-            const userData = userSnap.data();
-            const currentBadges = userData.badges || [];
-            const currentCount = (userData.suggestionsSubmitted || 0) + 1;
-            const updates: any = { suggestionsSubmitted: currentCount };
-            
-            if (!currentBadges.includes('Visionary Scholar')) {
-              updates.badges = arrayUnion('Visionary Scholar');
-              await awardPoints(user.uid, 50, 'Badge Unlocked: Visionary Scholar');
+          (async () => {
+            try {
+              await awardPoints(user.uid, 50, 'Suggested new development idea');
+              const userRef = doc(db, 'users', user.uid);
+              const userSnap = await getDoc(userRef);
+              if (userSnap.exists()) {
+                const userData = userSnap.data();
+                const currentBadges = userData.badges || [];
+                const currentCount = (userData.suggestionsSubmitted || 0) + 1;
+                const updates: any = { suggestionsSubmitted: currentCount };
+                if (!currentBadges.includes('Visionary Scholar')) {
+                  updates.badges = arrayUnion('Visionary Scholar');
+                  await awardPoints(user.uid, 50, 'Badge Unlocked: Visionary Scholar');
+                }
+                await updateDoc(userRef, updates);
+              }
+              await createNotification(
+                user.uid,
+                `Thank you for proposing "${finalTitle || suggestionData.title}"! +50 points awarded. Triage assigned to ${finalDepartment || 'Community Board'}.`,
+                docId
+              );
+              await refreshProfile();
+            } catch (sideEffectErr) {
+              console.warn("[ReportSubmit] Suggestion post-submit side effect warning:", sideEffectErr);
             }
-            await updateDoc(userRef, updates);
-          }
-
-          await createNotification(
-            user.uid,
-            `Thank you for proposing "${finalTitle}"! +50 points awarded. Triage assigned to ${finalDepartment || 'Community Board'}.`,
-            docRef.id
-          );
+          })();
         }
-
-        setSubmittedData(suggestionData);
       } else {
         // Write report to 'issues' collection
         const issueData = {
@@ -1136,45 +1160,52 @@ export default function ReportPage() {
           theme: finalTheme
         };
 
+        console.log("[ReportSubmit] Writing issue to Firestore...", issueData);
         const docRef = await addDoc(collection(db, 'issues'), issueData);
         docId = docRef.id;
+        console.log("[ReportSubmit] Civic hazard registered with ID:", docId);
 
+        // Immediate UI success update
+        setSubmittedData({ ...issueData, id: docId });
+        setSubmittedSuccess(true);
+        toast.success('Civic Hazard Report registered successfully!');
+
+        // Run non-critical side-effects in background without blocking UI
         if (user?.uid) {
-          await awardPoints(user.uid, 50, 'Reported new civic issue');
-          
-          const userRef = doc(db, 'users', user.uid);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) {
-            const userData = userSnap.data();
-            const currentBadges = userData.badges || [];
-            const currentReports = (userData.issuesReported || 0) + 1;
-            const updates: any = { issuesReported: currentReports };
-            
-            if (!currentBadges.includes('First Report')) {
-              updates.badges = arrayUnion('First Report');
-              await awardPoints(user.uid, 50, 'Badge Unlocked: First Report');
+          (async () => {
+            try {
+              await awardPoints(user.uid, 50, 'Reported new civic issue');
+              const userRef = doc(db, 'users', user.uid);
+              const userSnap = await getDoc(userRef);
+              if (userSnap.exists()) {
+                const userData = userSnap.data();
+                const currentBadges = userData.badges || [];
+                const currentReports = (userData.issuesReported || 0) + 1;
+                const updates: any = { issuesReported: currentReports };
+                if (!currentBadges.includes('First Report')) {
+                  updates.badges = arrayUnion('First Report');
+                  await awardPoints(user.uid, 50, 'Badge Unlocked: First Report');
+                }
+                await updateDoc(userRef, updates);
+              }
+              await createNotification(
+                user.uid,
+                `Thank you for reporting "${finalTitle || issueData.title}"! +50 points awarded. AI is triaging resolution timelines.`,
+                docId
+              );
+              await refreshProfile();
+            } catch (sideEffectErr) {
+              console.warn("[ReportSubmit] Issue post-submit side effect warning:", sideEffectErr);
             }
-            await updateDoc(userRef, updates);
-          }
-
-          await createNotification(
-            user.uid,
-            `Thank you for reporting "${finalTitle}"! +50 points awarded. AI is triaging resolution timelines.`,
-            docRef.id
-          );
+          })();
         }
-
-        setSubmittedData(issueData);
       }
-
-      await refreshProfile();
-      toast.success(`${mode === 'suggestion' ? 'Development Proposal' : 'Civic Hazard Report'} submitted successfully!`);
-      setSubmittedSuccess(true);
     } catch (err: any) {
-      console.error("Submission error:", err);
-      toast.error(err.message || "Failed to submit. Please check your network and try again.");
+      console.error("[ReportSubmit] Submission error:", err);
+      toast.error(err?.message || "Failed to submit. Please check your network and try again.");
     } finally {
       setSubmitting(false);
+      console.log("[ReportSubmit] Submitting state resolved to false.");
     }
   };
 

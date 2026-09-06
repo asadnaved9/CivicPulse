@@ -54,9 +54,13 @@ export const storage = getStorage(app);
 
 /**
  * A fetch wrapper that automatically injects the Firebase ID Token
- * for authenticated requests.
+ * for authenticated requests with built-in timeout handling.
  */
-export async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
+export async function fetchWithAuth(
+  url: string, 
+  options: RequestInit = {}, 
+  timeoutMs: number = 30000
+): Promise<Response> {
   const headers = new Headers(options.headers || {});
   try {
     const currentUser = auth.currentUser;
@@ -68,10 +72,23 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
     console.error("fetchWithAuth token retrieval error:", err);
   }
   
-  return fetch(url, {
-    ...options,
-    headers
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  if (options.signal) {
+    options.signal.addEventListener('abort', () => controller.abort());
+  }
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+      headers
+    });
+    return response;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export { app };
