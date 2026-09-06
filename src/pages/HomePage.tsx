@@ -63,7 +63,7 @@ export default function HomePage() {
 
             <div style={{ display: 'flex', gap: '16px', marginTop: '12px', flexWrap: 'wrap' }}>
               <button 
-                onClick={() => navigate('/development')}
+                onClick={() => navigate('/report', { state: { mode: 'suggestion' } })}
                 className="btn" 
                 style={{ 
                   background: 'var(--primary)', 
@@ -78,7 +78,7 @@ export default function HomePage() {
                 }}
               >
                 <TrendingUp size={18} style={{ marginRight: '8px' }} />
-                {t('development').toUpperCase()}
+                {t('suggestDevelopment', 'Suggest Development').toUpperCase()}
               </button>
               <button 
                 onClick={() => navigate('/report', { state: { mode: 'problem' } })}

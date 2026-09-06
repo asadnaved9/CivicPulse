@@ -4,7 +4,10 @@ import {
   getCivicReportStatus, 
   updateCivicReport, 
   escalateCivicReport,
-  detectDuplicateReport 
+  detectDuplicateReport,
+  logIVRCall,
+  getIVRCalls,
+  getIVRCallById
 } from "../src/services/ivrService";
 import vapiAssistantConfig from "../src/config/vapiAssistantConfig.json";
 
@@ -267,6 +270,57 @@ async function runTestSuite() {
     const step4 = await getCivicReportStatus(e2eReportId, callerNumber);
     assert.strictEqual(step4.found, true);
     assert.ok(step4.safeResponse.includes(e2eReportId));
+  });
+
+  // SCENARIO 16: Log and persist citizen IVR call session
+  await runTest("SCENARIO 16: Log and persist citizen IVR call session with transcript", async () => {
+    const callRes = await logIVRCall({
+      callId: "IVR-TEST-CALL-101",
+      callerPhone: "+919876543210",
+      callerName: "Aakash Verma",
+      durationSeconds: 62,
+      language: "Hindi",
+      intent: "NEW_COMPLAINT",
+      category: "Pothole / Road Hazard",
+      address: "100ft Road, Indiranagar, Bengaluru",
+      reportId: "CP-2026-TEST-99",
+      status: "completed",
+      urgency: "high",
+      summary: "Citizen Aakash Verma reported road pothole via web helpline.",
+      transcript: [
+        { sender: "agent", text: "Namaskar. CivicPulse Sahayak mein aapka swagat hai.", timestamp: "00:02" },
+        { sender: "caller", text: "Maine Indiranagar 100ft road par pothole dekha hai.", timestamp: "00:15" },
+        { sender: "agent", text: "Aapki shikayat darj kar li gayi hai. ID: CP-2026-TEST-99.", timestamp: "00:38" }
+      ],
+      channel: "Citizen Web IVR"
+    });
+
+    assert.strictEqual(callRes.success, true);
+    assert.strictEqual(callRes.call.callId, "IVR-TEST-CALL-101");
+    assert.strictEqual(callRes.call.callerName, "Aakash Verma");
+    assert.strictEqual(callRes.call.language, "Hindi");
+    assert.strictEqual(callRes.call.transcript.length, 3);
+    assert.strictEqual(callRes.call.isReal, true);
+  });
+
+  // SCENARIO 17: Query IVR calls returns real calls prioritized
+  await runTest("SCENARIO 17: Query IVR calls returns real citizen calls with priority over fallback", async () => {
+    const { calls, isFallback, realCount } = await getIVRCalls();
+    assert.ok(calls.length > 0);
+    assert.strictEqual(isFallback, false);
+    assert.ok(realCount > 0);
+
+    const loggedCall = calls.find(c => c.callId === "IVR-TEST-CALL-101");
+    assert.ok(loggedCall, "Recently logged call should be present in IVR calls list");
+    assert.strictEqual(loggedCall?.callerPhone, "+919876543210");
+  });
+
+  // SCENARIO 18: Fetch single IVR call by ID
+  await runTest("SCENARIO 18: Fetch single IVR call by ID", async () => {
+    const call = await getIVRCallById("IVR-TEST-CALL-101");
+    assert.ok(call);
+    assert.strictEqual(call?.callId, "IVR-TEST-CALL-101");
+    assert.strictEqual(call?.reportId, "CP-2026-TEST-99");
   });
 
   console.log("\n==================================================");

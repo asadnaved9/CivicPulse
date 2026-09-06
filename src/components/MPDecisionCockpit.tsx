@@ -1153,7 +1153,7 @@ export default function MPDecisionCockpit({
                           if (res.ok && data.proposal) {
                             toast.success("Lifecycle Proposal created! Redirecting to tracker...");
                             setProposalDoc(null);
-                            navigate(`/proposal/${data.proposal.id}`);
+                            navigate(`/admin/proposals/${data.proposal.id}`);
                           } else {
                             toast.error(data.error || "Failed to create proposal record.");
                           }

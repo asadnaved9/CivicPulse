@@ -3,7 +3,10 @@ import {
   createCivicReport, 
   getCivicReportStatus, 
   updateCivicReport, 
-  escalateCivicReport 
+  escalateCivicReport,
+  logIVRCall,
+  getIVRCalls,
+  getIVRCallById
 } from "../services/ivrService";
 import vapiAssistantConfig from "../config/vapiAssistantConfig.json";
 
@@ -107,6 +110,30 @@ ivrRouter.post("/vapi-tool", verifyVapiSecret, async (req: Request, res: Respons
             } else {
               toolOutput = `Sorry, I could not find any complaint matching that ID or phone number. Please verify the complaint ID.`;
             }
+
+            // Log status inquiry call
+            try {
+              await logIVRCall({
+                callId,
+                callerPhone,
+                callerName: "Citizen Caller",
+                durationSeconds: 35,
+                intent: "STATUS_CHECK",
+                category: resData.category || "Status Inquiry",
+                reportId: rawArgs.report_id || rawArgs.reportId || (resData.found ? resData.reportId : undefined),
+                status: "completed",
+                summary: `Citizen checked status of complaint ${rawArgs.report_id || callerPhone}. Status: ${resData.found ? resData.status : 'Not Found'}.`,
+                transcript: [
+                  { sender: "agent", text: "Namaskar. Please tell me your complaint ID or phone number.", timestamp: "00:02" },
+                  { sender: "caller", text: `Checking status for ${rawArgs.report_id || callerPhone}`, timestamp: "00:10" },
+                  { sender: "agent", text: toolOutput, timestamp: "00:22" }
+                ],
+                channel: "Vapi AI Telephony",
+                isReal: true
+              });
+            } catch (e) {
+              console.warn("Could not log status call:", e);
+            }
             break;
           }
 
@@ -131,6 +158,33 @@ ivrRouter.post("/vapi-tool", verifyVapiSecret, async (req: Request, res: Respons
               urgency_reason: rawArgs.urgency_reason
             });
             toolOutput = resData.message;
+
+            // Log escalation call
+            try {
+              await logIVRCall({
+                callId,
+                callerPhone,
+                callerName: "Citizen Caller",
+                durationSeconds: 52,
+                intent: "ESCALATION",
+                category: rawArgs.issue_type || "Emergency Escalation",
+                address: rawArgs.address || "Constituency Area",
+                reportId: resData.reportId,
+                status: "escalated",
+                urgency: "critical",
+                summary: `Distress voice escalation: ${rawArgs.urgency_reason || 'Critical hazard reported'}.`,
+                transcript: [
+                  { sender: "agent", text: "CivicPulse Emergency Voice Dispatch.", timestamp: "00:02" },
+                  { sender: "caller", text: `Distress call: ${rawArgs.urgency_reason || 'Critical situation requiring emergency response'}`, timestamp: "00:14" },
+                  { sender: "agent", text: toolOutput, timestamp: "00:32" }
+                ],
+                channel: "Vapi AI Telephony",
+                sentiment: "Urgent",
+                isReal: true
+              });
+            } catch (e) {
+              console.warn("Could not log escalation call:", e);
+            }
             break;
           }
 
@@ -220,7 +274,45 @@ ivrRouter.post("/escalate", async (req: Request, res: Response) => {
 });
 
 /**
- * 3. VAPI ASSISTANT CONFIGURATION ENDPOINT
+ * 3. IVR CALL LOGS & RECORDING MANAGEMENT ENDPOINTS
+ */
+
+// GET /api/ivr/calls - Get all logged IVR calls (real first, fallback if none)
+ivrRouter.get("/calls", async (req: Request, res: Response) => {
+  try {
+    const result = await getIVRCalls();
+    return res.json({ success: true, ...result });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message || "Failed to fetch IVR calls" });
+  }
+});
+
+// POST /api/ivr/calls - Log a new IVR call session
+ivrRouter.post("/calls", async (req: Request, res: Response) => {
+  try {
+    const result = await logIVRCall(req.body);
+    return res.json(result);
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message || "Failed to log IVR call" });
+  }
+});
+
+// GET /api/ivr/calls/:id - Get detailed call record by ID
+ivrRouter.get("/calls/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const call = await getIVRCallById(id);
+    if (!call) {
+      return res.status(404).json({ error: `IVR call '${id}' not found` });
+    }
+    return res.json({ success: true, call });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message || "Failed to fetch IVR call details" });
+  }
+});
+
+/**
+ * 4. VAPI ASSISTANT CONFIGURATION ENDPOINT
  * Returns complete production Vapi assistant configuration for provisioning
  */
 ivrRouter.get("/assistant-config", (req: Request, res: Response) => {

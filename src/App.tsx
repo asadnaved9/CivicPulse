@@ -27,6 +27,7 @@ const AdminLoginPage = React.lazy(() => import('./pages/admin/AdminLoginPage'));
 const AdminDashboardPage = React.lazy(() => import('./pages/admin/AdminDashboardPage'));
 const AdminComplaintsPage = React.lazy(() => import('./pages/admin/AdminComplaintsPage'));
 const AdminSuggestionsPage = React.lazy(() => import('./pages/admin/AdminSuggestionsPage'));
+const AdminIVRCallsPage = React.lazy(() => import('./pages/admin/AdminIVRCallsPage'));
 const AdminAssetsPage = React.lazy(() => import('./pages/admin/AdminAssetsPage'));
 const AdminMapPage = React.lazy(() => import('./pages/admin/AdminMapPage'));
 const AdminRecommendationsPage = React.lazy(() => import('./pages/admin/AdminRecommendationsPage'));
@@ -86,6 +87,7 @@ function AppContent() {
             <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
             <Route path="/admin/complaints" element={<AdminComplaintsPage />} />
             <Route path="/admin/suggestions" element={<AdminSuggestionsPage />} />
+            <Route path="/admin/ivr" element={<AdminIVRCallsPage />} />
             <Route path="/admin/assets" element={<AdminAssetsPage />} />
             <Route path="/admin/map" element={<AdminMapPage />} />
             <Route path="/admin/recommendations" element={<AdminRecommendationsPage />} />
@@ -118,11 +120,11 @@ function AppContent() {
             <Route path="/" element={<HomePage />} />
             <Route path="/map" element={<MapPage />} />
             <Route path="/report" element={<ReportPage />} />
-            <Route path="/development" element={<DevelopmentPage />} />
+            {/* <Route path="/development" element={<DevelopmentPage />} /> */}
             <Route path="/issue/:id" element={<IssueDetailPage />} />
-            <Route path="/recommendations" element={<RecommendationsPage />} />
+            {/* <Route path="/recommendations" element={<RecommendationsPage />} /> */}
             <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/proposal/:id" element={<ProposalDetailPage />} />
+            {/* <Route path="/proposal/:id" element={<ProposalDetailPage />} /> */}
             <Route path="/community" element={<CommunityPage />} />
             <Route path="/ivr" element={<IVRCallPage />} />
 

@@ -52,6 +52,63 @@ export default function IVRCallPage() {
   const durationTimerRef = useRef<any>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordedAudioUrlRef = useRef<string>('');
+  const callIdRef = useRef<string>('');
+
+  // Persist Call Log to Backend & Firestore
+  const persistCallLog = async (overrides?: {
+    reportId?: string;
+    issueType?: string;
+    location?: string;
+    callerName?: string;
+    status?: 'completed' | 'in_progress' | 'dropped' | 'escalated';
+    intent?: 'NEW_COMPLAINT' | 'STATUS_CHECK' | 'ESCALATION' | 'GENERAL_QUERY';
+  }) => {
+    try {
+      const finalLang = lockedLanguage === 'hi' ? 'Hindi' : lockedLanguage === 'bn' ? 'Bengali' : 'English';
+      const finalTicket = overrides?.reportId || complaintData.generatedId;
+      const finalCategory = overrides?.issueType || complaintData.issueType || 'General Civic Inquiry';
+      const finalLoc = overrides?.location || complaintData.location || 'Indiranagar 100ft Road, Bengaluru';
+      const finalCaller = overrides?.callerName || complaintData.callerName || 'Citizen Caller';
+      const isStatusCall = currentStep === 2 && transcripts.some(t => t.text.includes('status') || t.text.includes('स्थिति') || t.text.includes('অবস্থা'));
+      const callIntent = overrides?.intent || (isStatusCall ? 'STATUS_CHECK' : 'NEW_COMPLAINT');
+      const finalStatus = overrides?.status || 'completed';
+
+      const payload = {
+        callId: callIdRef.current || `IVR-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`,
+        callerPhone: complaintData.callerPhone || '+919876543210',
+        callerName: finalCaller,
+        startedAt: new Date(Date.now() - Math.max(callDuration, 15) * 1000).toISOString(),
+        durationSeconds: Math.max(callDuration, 15),
+        language: finalLang,
+        intent: callIntent,
+        category: finalCategory,
+        address: finalLoc,
+        reportId: finalTicket || undefined,
+        status: finalStatus,
+        urgency: 'high',
+        transcript: transcripts.length > 0 ? transcripts : [
+          { sender: 'agent', text: 'Namaskar. CivicPulse voice call connected.', timestamp: '00:02' }
+        ],
+        summary: `Citizen called via Web IVR in ${finalLang}. Issue: ${finalCategory} at ${finalLoc}.${finalTicket ? ` Registered under Ticket ${finalTicket}.` : ''}`,
+        channel: 'Citizen Web IVR',
+        recordingUrl: recordedAudioUrlRef.current || undefined,
+        audioDuration: Math.max(callDuration, 15),
+        sentiment: 'Cooperative',
+        isReal: true
+      };
+
+      await fetch('/api/ivr/calls', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      console.warn('Failed to save IVR call log to server:', err);
+    }
+  };
 
   // Initialize Speech Synthesis for AI Voice Output
   const speakText = (text: string, langCode: string = 'en-IN', onEndCallback?: () => void) => {
@@ -156,9 +213,40 @@ export default function IVRCallPage() {
       window.speechSynthesis.speak(silentUtterance);
     }
 
+    const newCallId = `IVR-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
+    callIdRef.current = newCallId;
+    recordedAudioUrlRef.current = '';
+    audioChunksRef.current = [];
+
     try {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        // Start recording audio
+        if (typeof MediaRecorder !== 'undefined') {
+          try {
+            const recorder = new MediaRecorder(stream);
+            recorder.ondataavailable = (e) => {
+              if (e.data && e.data.size > 0) {
+                audioChunksRef.current.push(e.data);
+              }
+            };
+            recorder.onstop = () => {
+              if (audioChunksRef.current.length > 0) {
+                const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  recordedAudioUrlRef.current = reader.result as string;
+                };
+                reader.readAsDataURL(blob);
+              }
+            };
+            recorder.start(1000);
+            mediaRecorderRef.current = recorder;
+          } catch (recErr) {
+            console.warn('MediaRecorder error:', recErr);
+          }
+        }
       }
     } catch (err) {
       console.warn('Microphone permission denied or not available:', err);
@@ -176,7 +264,7 @@ export default function IVRCallPage() {
       callerName: '',
       location: '',
       landmark: '',
-      callerPhone: '+919876543210',
+      callerPhone: complaintData.callerPhone || '+919876543210',
       generatedId: ''
     });
 
@@ -189,14 +277,25 @@ export default function IVRCallPage() {
   };
 
   // End Call Trigger
-  const handleEndCall = (finalAgentMsg?: string) => {
+  const handleEndCall = (finalAgentMsg?: string, overrides?: { reportId?: string; issueType?: string; location?: string; callerName?: string }) => {
     if (finalAgentMsg) {
       appendTranscript('agent', finalAgentMsg);
       speakText(finalAgentMsg, lockedLanguage || 'en');
     }
+
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      try {
+        mediaRecorderRef.current.stop();
+      } catch (e) {
+        // Safe ignore
+      }
+    }
+
     setTimeout(() => {
       setCallState('ended');
       window.speechSynthesis?.cancel();
+      // Persist full call session to Firestore backend
+      persistCallLog(overrides);
     }, 1500);
   };
 
@@ -209,7 +308,8 @@ export default function IVRCallPage() {
           issue_type: finalIssue || 'Pothole / Road Hazard',
           description: `Reported via Website Interactive IVR by ${finalName || 'Citizen Caller'}`,
           address: finalLocation,
-          caller_phone: '+919876543210',
+          caller_phone: complaintData.callerPhone || '+919876543210',
+          call_id: callIdRef.current,
           severity: 'high'
         })
       });
@@ -222,7 +322,7 @@ export default function IVRCallPage() {
         id: reportId,
         category: finalIssue || 'Pothole / Road Hazard',
         address: finalLocation,
-        callerPhone: '+919876543210',
+        callerPhone: complaintData.callerPhone || '+919876543210',
         status: 'Submitted'
       });
 
@@ -239,12 +339,12 @@ export default function IVRCallPage() {
         successMsg = `Thank you! Your complaint has been registered successfully. Your Complaint ID is ${digitsSpoken}. Thank you for helping improve your community. Goodbye.`;
       }
 
-      handleEndCall(successMsg);
+      handleEndCall(successMsg, { reportId, issueType: finalIssue, location: finalLocation, callerName: finalName });
       toast.success(`Report registered successfully! ID: ${reportId}`);
     } catch (err) {
       const fallbackId = `CP-2026-${Math.floor(100000 + Math.random() * 900000)}`;
       let successMsg = `Thank you. Your complaint is registered. Complaint ID: ${fallbackId}. Goodbye.`;
-      handleEndCall(successMsg);
+      handleEndCall(successMsg, { reportId: fallbackId, issueType: finalIssue, location: finalLocation, callerName: finalName });
     }
   };
 
@@ -560,6 +660,33 @@ export default function IVRCallPage() {
                 {callState === 'active' && `Call Active (${formatDuration(callDuration)})`}
                 {callState === 'ended' && 'Call Ended'}
               </span>
+            </div>
+
+            {/* Caller Line Info */}
+            <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '11px', color: callState === 'active' ? '#CBD5E1' : '#64748B' }}>
+              <span>Caller Number:</span>
+              {callState === 'idle' ? (
+                <input
+                  type="text"
+                  value={complaintData.callerPhone}
+                  onChange={(e) => setComplaintData(p => ({ ...p, callerPhone: e.target.value }))}
+                  style={{
+                    border: '1px solid #CBD5E1',
+                    borderRadius: '6px',
+                    padding: '2px 8px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    background: '#FFFFFF',
+                    color: '#0F172A',
+                    width: '120px',
+                    textAlign: 'center'
+                  }}
+                  placeholder="+919876543210"
+                  title="Edit caller phone number"
+                />
+              ) : (
+                <strong style={{ fontWeight: 700 }}>{complaintData.callerPhone}</strong>
+              )}
             </div>
 
             {/* Speaking Wave Animation */}

@@ -1268,7 +1268,7 @@ export default function MapPage() {
               )}
 
               {/* Workflow Actions */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+              {/* <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
                 <button 
                   onClick={() => toast.success(`Generated official proposal for "${selectedHotspot.theme}"`)}
                   style={{ 
@@ -1301,7 +1301,7 @@ export default function MapPage() {
                 >
                   Open Decision Cockpit Workspace
                 </button>
-              </div>
+              </div> */}
 
             </div>
           ) : (

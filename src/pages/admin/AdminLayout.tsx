@@ -7,7 +7,7 @@ import {
   LayoutDashboard, FileText, Users, Map, BarChart2,
   Bell, Settings, LogOut, ChevronLeft, ChevronRight,
   Building2, Shield, ClipboardCheck, Wrench, Sparkles,
-  TrendingUp, Layers, ArrowLeft, Lightbulb
+  TrendingUp, Layers, ArrowLeft, Lightbulb, PhoneCall
 } from 'lucide-react';
 
 interface NavItem {
@@ -21,6 +21,7 @@ const navItems: NavItem[] = [
   { label: 'Admin Cockpit', translationKey: 'admin.nav.dashboard', path: '/admin/dashboard', icon: <LayoutDashboard size={16} /> },
   { label: 'Hazard Complaints', translationKey: 'admin.nav.complaints', path: '/admin/complaints', icon: <FileText size={16} /> },
   { label: 'Development Suggestions', translationKey: 'admin.nav.suggestions', path: '/admin/suggestions', icon: <Lightbulb size={16} /> },
+  { label: 'IVR Call Logs & Audio', translationKey: 'admin.nav.ivrCalls', path: '/admin/ivr', icon: <PhoneCall size={16} /> },
   { label: 'Asset Inventory', translationKey: 'admin.nav.assets', path: '/admin/assets', icon: <Wrench size={16} /> },
   { label: 'Ward Radar Map', translationKey: 'admin.nav.map', path: '/admin/map', icon: <Map size={16} /> },
   { label: 'Decision Cockpit', translationKey: 'admin.nav.recommendations', path: '/admin/recommendations', icon: <Sparkles size={16} /> },

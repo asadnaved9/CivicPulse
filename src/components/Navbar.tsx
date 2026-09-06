@@ -112,18 +112,18 @@ export const Navbar: React.FC = () => {
           <Link to="/" className={`navbar-link ${isActive('/') ? 'active' : ''}`}>
             {t('overview')}
           </Link>
-          <Link to="/development" className={`navbar-link ${isActive('/development') ? 'active' : ''}`}>
+          {/* <Link to="/development" className={`navbar-link ${isActive('/development') ? 'active' : ''}`}>
             {t('development')}
-          </Link>
+          </Link> */}
           <Link to="/map" className={`navbar-link ${isActive('/map') ? 'active' : ''}`}>
             {t('map')}
           </Link>
           <Link to="/community" className={`navbar-link ${isActive('/community') ? 'active' : ''}`}>
             {t('nav.community')}
           </Link>
-          <Link to="/recommendations" className={`navbar-link ${isActive('/recommendations') ? 'active' : ''}`}>
+          {/* <Link to="/recommendations" className={`navbar-link ${isActive('/recommendations') ? 'active' : ''}`}>
             {t('aiPlanning')}
-          </Link>
+          </Link> */}
           <Link to="/ivr" className={`navbar-link ${isActive('/ivr') ? 'active' : ''}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#4F46E5', fontWeight: 600 }}>
             <PhoneCall size={14} /> Voice IVR
           </Link>
@@ -349,14 +349,14 @@ export const Navbar: React.FC = () => {
           >
             {t('overview')}
           </Link>
-          <Link 
+          {/* <Link 
             to="/development" 
             className={`navbar-link ${isActive('/development') ? 'active' : ''}`}
             style={{ height: '40px', display: 'flex', alignItems: 'center' }}
             onClick={handleLinkClick}
           >
             {t('development')}
-          </Link>
+          </Link> */}
           <Link 
             to="/map" 
             className={`navbar-link ${isActive('/map') ? 'active' : ''}`}
@@ -373,14 +373,14 @@ export const Navbar: React.FC = () => {
           >
             {t('nav.community')}
           </Link>
-          <Link 
+          {/* <Link 
             to="/recommendations" 
             className={`navbar-link ${isActive('/recommendations') ? 'active' : ''}`}
             style={{ height: '40px', display: 'flex', alignItems: 'center' }}
             onClick={handleLinkClick}
           >
             {t('aiPlanning')}
-          </Link>
+          </Link> */}
 
           <Link 
             to="/settings" 
