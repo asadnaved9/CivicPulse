@@ -14,6 +14,7 @@ import {
   BookOpen, Heart, Landmark, Zap, Compass, Briefcase, Award, Trees, Globe, Sparkles, Check, ChevronRight, ChevronLeft, ShieldAlert, X
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { screenCivicPrompt } from '../utils/civicGuardrail';
 
 export default function ReportPage() {
   const navigate = useNavigate();
@@ -972,12 +973,21 @@ export default function ReportPage() {
       return;
     }
 
+    // Guardrail Check
+    const inputText = mode === 'suggestion' ? devNeedText : (description || descriptionOriginal || title);
+    if (inputText) {
+      const guard = screenCivicPrompt(inputText);
+      if (!guard.allowed) {
+        toast.error(guard.refusalMessage || "Submission blocked by safety guardrails.");
+        return;
+      }
+    }
+
     console.log("[ReportSubmit] Submission initiated for mode:", mode);
     setSubmitting(true);
     try {
-      let imageUrl = mode === 'suggestion' 
-        ? "https://picsum.photos/seed/proposal/800/600" 
-        : "https://picsum.photos/seed/reported/800/600";
+      // imageUrl starts as empty — only use placeholder if citizen truly provided no image
+      let imageUrl = '';
 
       // 1. Upload photo to Firebase Storage if provided as data URL, or use direct HTTP URL
       if (imagePreview) {
@@ -999,15 +1009,27 @@ export default function ReportPage() {
             imageUrl = await Promise.race([uploadPromise, timeoutPromise]);
             console.log("[ReportSubmit] Storage upload succeeded, imageUrl:", imageUrl);
           } catch (storageErr) {
-            console.warn("[ReportSubmit] Storage upload failed or timed out (using fallback image URL):", storageErr);
+            // Storage failed or timed out — store the data URL directly so the image is not lost
+            console.warn("[ReportSubmit] Storage upload failed or timed out, falling back to data URL:", storageErr);
+            imageUrl = imagePreview; // Store data URL directly rather than losing the image
           }
         }
       }
 
+      // Only use placeholder if citizen provided absolutely no image
+      if (!imageUrl) {
+        imageUrl = mode === 'suggestion'
+          ? "https://picsum.photos/seed/proposal/800/600"
+          : "https://picsum.photos/seed/reported/800/600";
+      }
+
       // Pre-submit triage fallback if values are missing (e.g. manually typed, skipped vision)
       let finalTitle = title;
-      let finalDescOriginal = descriptionOriginal || description;
-      let finalDescEnglish = descriptionEnglish || description;
+      // The citizen's own typed description is always the primary source of truth.
+      // descriptionOriginal / descriptionEnglish are AI-generated versions that supplement, not replace, citizen input.
+      const citizenDescription = description.trim();
+      let finalDescOriginal = citizenDescription || descriptionOriginal;
+      let finalDescEnglish = citizenDescription || descriptionEnglish;
       let finalDetectedLanguage = detectedLanguage;
       let finalCategory = category;
       let finalAiCategory = aiCategory || category;
@@ -1130,9 +1152,12 @@ export default function ReportPage() {
         const issueData = {
           type: 'CIVIC_ISSUE' as const,
           title: finalTitle,
-          description: finalDescEnglish,
+          // 'description' is always the citizen's own words — what admin sees in the complaint panel
+          description: citizenDescription || finalDescOriginal,
+          // Supplementary AI-processed fields (for search/triage) — do NOT override description
           description_original: finalDescOriginal,
           description_english: finalDescEnglish,
+          description_ai: descriptionEnglish || '',  // purely AI version, separate field
           category: finalCategory,
           aiCategory: finalAiCategory,
           severity: finalPriority,
@@ -1141,7 +1166,7 @@ export default function ReportPage() {
           lat,
           lng,
           address,
-          imageUrl,
+          imageUrl,  // actual citizen-uploaded image URL, not a placeholder
           reportedBy: user?.uid || 'anonymous',
           reporterName: profile?.displayName || 'Citizen Warden',
           upvotes: [],

@@ -285,26 +285,13 @@ const AdminComplaintsPage: React.FC = () => {
     }
 
     const issuesRef = collection(db, 'issues');
-    const nonRanchiRegex = /kolkata|kmc|cesc|bbmp|bangalore|bengaluru|salt lake|park street|koramangala|indiranagar|whitefield/i;
 
     const unsubscribe = onSnapshot(issuesRef, (snapshot) => {
       let list = snapshot.docs
-        .map(d => ({ id: d.id, ...d.data() } as Issue))
-        .filter(d => !nonRanchiRegex.test(`${d.address || ''} ${d.title || ''} ${d.description || ''}`));
+        .map(d => ({ id: d.id, ...d.data() } as Issue));
 
       if (list.length === 0) {
-        list = [dummyIssue, ...initialRanchiIssues];
-      } else {
-        // Ensure all Ranchi seeded issues are reflected
-        const existingTitles = new Set(list.map(i => (i.title || '').trim().toLowerCase()));
-        initialRanchiIssues.forEach(rIssue => {
-          if (!existingTitles.has((rIssue.title || '').trim().toLowerCase())) {
-            list.push(rIssue);
-          }
-        });
-        if (!list.some(d => d.id === 'CP-RNC-1045')) {
-          list.unshift(dummyIssue);
-        }
+        list = [...initialRanchiIssues];
       }
 
       // Sort: most recent first
@@ -767,11 +754,15 @@ const AdminComplaintsPage: React.FC = () => {
           {/* Details Scroll */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
             {selectedIssue.imageUrl && (
-              <img 
-                src={selectedIssue.imageUrl} 
-                alt="Distress location" 
-                style={{ width: '100%', height: '180px', objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }}
-              />
+              <div>
+                <span style={{ fontSize: '9px', color: 'var(--text-3)', display: 'block', textTransform: 'uppercase', fontFamily: 'var(--font-mono)', marginBottom: 4 }}>Citizen Submitted Photo</span>
+                <img 
+                  src={selectedIssue.imageUrl} 
+                  alt="Citizen submitted photo" 
+                  style={{ width: '100%', height: '180px', objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }}
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
+              </div>
             )}
 
             <div>
@@ -795,8 +786,10 @@ const AdminComplaintsPage: React.FC = () => {
             </div>
 
             <div style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '10px 12px', background: 'var(--surface-2)' }}>
-              <span style={{ fontSize: '9px', color: 'var(--text-3)', display: 'block', textTransform: 'uppercase', fontFamily: 'var(--font-mono)', marginBottom: 4 }}>{t('map.hazard.description')}</span>
-              <p style={{ fontSize: '12px', color: 'var(--text-1)', lineHeight: 1.5, margin: 0 }}>{selectedIssue.description}</p>
+              <span style={{ fontSize: '9px', color: 'var(--text-3)', display: 'block', textTransform: 'uppercase', fontFamily: 'var(--font-mono)', marginBottom: 4 }}>{t('map.hazard.description')} (Citizen&apos;s Words)</span>
+              <p style={{ fontSize: '12px', color: 'var(--text-1)', lineHeight: 1.5, margin: 0 }}>
+                {(selectedIssue as any).description_original || selectedIssue.description || 'No description provided.'}
+              </p>
             </div>
 
             {selectedIssue.status === 'blocked' && (
