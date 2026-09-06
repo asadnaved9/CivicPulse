@@ -1998,22 +1998,28 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`CivicPulse server running on http://localhost:${PORT}`);
-    
-    // Auto-seed Firestore database if empty on server start (Admin privileges bypass rules)
-    // Run asynchronously to prevent server startup hang/timeout on uncredentialed environments
-    seedFirestoreIfEmptyAdmin().catch((err) => {
-      console.error("Auto-seeding database failed on startup:", err);
+  // Only start listening if NOT running in Vercel Serverless environment
+  if (!process.env.VERCEL) {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`CivicPulse server running on http://localhost:${PORT}`);
+      
+      // Auto-seed Firestore database if empty on server start (Admin privileges bypass rules)
+      // Run asynchronously to prevent server startup hang/timeout on uncredentialed environments
+      seedFirestoreIfEmptyAdmin().catch((err) => {
+        console.error("Auto-seeding database failed on startup:", err);
+      });
+      
+      // Start background autonomous agent orchestrator
+      if (process.env.DISABLE_ORCHESTRATOR !== "true") {
+        startOrchestratorScheduler();
+      } else {
+        console.log("Background autonomous agent orchestrator disabled by environment variable.");
+      }
     });
-    
-    // Start background autonomous agent orchestrator
-    if (process.env.DISABLE_ORCHESTRATOR !== "true") {
-      startOrchestratorScheduler();
-    } else {
-      console.log("Background autonomous agent orchestrator disabled by environment variable.");
-    }
-  });
+  }
 }
 
 startServer();
+
+// Export the Express app for Vercel serverless deployment
+export default app;
