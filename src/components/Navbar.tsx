@@ -127,9 +127,7 @@ export const Navbar: React.FC = () => {
           <Link to="/ivr" className={`navbar-link ${isActive('/ivr') ? 'active' : ''}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#4F46E5', fontWeight: 600 }}>
             <PhoneCall size={14} /> Voice IVR
           </Link>
-          <Link to="/report" className={`navbar-link ${isActive('/report') ? 'active' : ''}`}>
-            {t('suggest')}
-          </Link>
+
           <Link to="/settings" className={`navbar-link ${isActive('/settings') ? 'active' : ''}`}>
             {t('settings')}
           </Link>
@@ -383,15 +381,7 @@ export const Navbar: React.FC = () => {
           >
             {t('aiPlanning')}
           </Link>
-          <Link 
-            to="/report" 
-            state={{ mode: 'problem' }}
-            className={`navbar-link ${isActive('/report') ? 'active' : ''}`}
-            style={{ height: '40px', display: 'flex', alignItems: 'center' }}
-            onClick={handleLinkClick}
-          >
-            {t('suggest')}
-          </Link>
+
           <Link 
             to="/settings" 
             className={`navbar-link ${isActive('/settings') ? 'active' : ''}`}

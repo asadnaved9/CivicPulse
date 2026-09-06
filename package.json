@@ -25,6 +25,7 @@
     "lucide-react": "^0.546.0",
     "maplibre-gl": "^5.24.0",
     "motion": "^12.23.24",
+    "ollama": "^0.6.3",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "react-hot-toast": "^2.6.0",
