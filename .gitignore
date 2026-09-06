@@ -10,3 +10,4 @@ firebase-applet-config.json
 firebase-blueprint.json
 pull.bat
 push.bat
+git_push_schedule.js

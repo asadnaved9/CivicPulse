@@ -24,4 +24,6 @@ i18n
     }
   });
 
+export type TranslationKey = keyof typeof en;
+
 export default i18n;

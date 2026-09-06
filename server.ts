@@ -14,6 +14,7 @@ import { processUSSDInput } from "./src/services/ussdEngine";
 import { processVoiceInput } from "./src/services/voiceProviders/voiceRouter";
 import { classifyOnDevice, checkEdgeHealth, classifyDeterministic } from "./src/services/edgeInference";
 import { screenCivicPrompt } from "./src/utils/civicGuardrail";
+import { searchInfrastructureWithin, resolveInfrastructureType, DEVELOPMENT_CONTEXT_RADIUS_KM } from "./src/utils/geospatialService";
 
 dotenv.config();
 
@@ -510,8 +511,238 @@ Return ONLY valid JSON.`;
   });
 });
 
+// ═══════════════════════════════════════════════════════════════
+// DEVELOPMENT NEED AI INTAKE & GEOSPATIAL INTELLIGENCE ENDPOINT
+// ═══════════════════════════════════════════════════════════════
+
+function fallbackDevelopmentNeedAnalysis(text: string, languageHint?: string) {
+  const t = text.toLowerCase();
+  let category = "General Infrastructure";
+  let subCategory = "Infrastructure Access";
+  let intent: 'REQUEST_NEW_INFRASTRUCTURE' | 'UPGRADE_EXISTING_INFRASTRUCTURE' | 'SERVICE_EXPANSION' | 'OTHER' = 'REQUEST_NEW_INFRASTRUCTURE';
+  let urgency: 'low' | 'medium' | 'high' | 'critical' = 'medium';
+
+  if (
+    t.includes("hospital") || t.includes("clinic") || t.includes("doctor") ||
+    t.includes("health") || t.includes("medical") ||
+    t.includes("स्वास्थ्य") || t.includes("अस्पताल") || t.includes("डॉक्टर") ||
+    t.includes("ক্লিনিক") || t.includes("হাসপাতাল") || t.includes("চিকিৎসা")
+  ) {
+    category = "Healthcare";
+    subCategory = (t.includes("phc") || t.includes("dispensary") || t.includes("प्राथमिक")) ? "PHC Access" : "Hospital Access";
+    urgency = "high";
+  } else if (
+    t.includes("school") || t.includes("college") || t.includes("classroom") ||
+    t.includes("education") || t.includes("teacher") ||
+    t.includes("स्कूल") || t.includes("विद्यालय") || t.includes("शिक्षा") ||
+    t.includes("বিদ্যালয়") || t.includes("স্কুল") || t.includes("শিক্ষা")
+  ) {
+    category = "Education";
+    subCategory = (t.includes("classroom") || t.includes("capacity") || t.includes("desk") || t.includes("space")) ? "School Capacity" : "School Access";
+  } else if (
+    t.includes("bus") || t.includes("transit") || t.includes("transport") ||
+    t.includes("stop") || t.includes("route") ||
+    t.includes("बस") || t.includes("परिवहन") ||
+    t.includes("বাস") || t.includes("পরিবহন")
+  ) {
+    category = "Public Transport";
+    subCategory = "Bus Stop";
+  } else if (
+    t.includes("water") || t.includes("drinking") || t.includes("supply") ||
+    t.includes("pipeline") || t.includes("borewell") ||
+    t.includes("पानी") || t.includes("जल") || t.includes("नल") ||
+    t.includes("জল") || t.includes("পানি")
+  ) {
+    category = "Water";
+    subCategory = "Water Supply";
+    urgency = "high";
+  } else if (
+    t.includes("road") || t.includes("street") || t.includes("highway") ||
+    t.includes("pathway") || t.includes("bridge") ||
+    t.includes("सड़क") || t.includes("मार्ग") ||
+    t.includes("রাস্তা") || t.includes("সেতু")
+  ) {
+    category = "Roads";
+    subCategory = "Road Connectivity";
+  } else if (
+    t.includes("light") || t.includes("electric") || t.includes("power") ||
+    t.includes("solar") || t.includes("lamp") ||
+    t.includes("बिजली") || t.includes("বাত্তি") || t.includes("বিদ্যুৎ")
+  ) {
+    category = "Electricity";
+    subCategory = "Lighting";
+  }
+
+  if (
+    t.includes("upgrade") || t.includes("expand") || t.includes("capacity") ||
+    t.includes("more classroom") || t.includes("extend") || t.includes("बढ़ाना") ||
+    t.includes("विस्तार") || t.includes("উন্নয়ন") || t.includes("বৃদ্ধি")
+  ) {
+    intent = "UPGRADE_EXISTING_INFRASTRUCTURE";
+  }
+
+  // Detect script language
+  let detectedLanguage: 'en' | 'hi' | 'bn' = 'en';
+  if (/[\u0900-\u097F]/.test(text)) {
+    detectedLanguage = 'hi';
+  } else if (/[\u0980-\u09FF]/.test(text)) {
+    detectedLanguage = 'bn';
+  } else if (languageHint === 'hi' || languageHint === 'bn') {
+    detectedLanguage = languageHint;
+  }
+
+  return {
+    category,
+    subCategory,
+    intent,
+    urgency,
+    title: `Need for ${subCategory}`,
+    description: `Citizen-reported development need for ${category} enhancement: ${text.slice(0, 160)}`,
+    detectedLanguage
+  };
+}
+
+app.post("/api/development/analyze", aiLimiter, async (req, res) => {
+  try {
+    const { text, language, lat, lng } = req.body;
+
+    // 1. Input validation
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      return res.status(400).json({ error: "Missing required text field" });
+    }
+    if (text.length > 2000) {
+      return res.status(400).json({ error: "Text exceeds maximum 2000 characters" });
+    }
+    if (typeof lat !== 'number' || typeof lng !== 'number' || !isFinite(lat) || !isFinite(lng)) {
+      return res.status(400).json({ error: "Valid numeric lat and lng are required" });
+    }
+
+    // 2. Civic Guardrail
+    const guard = screenCivicPrompt(text);
+    if (!guard.allowed) {
+      return res.status(400).json({
+        error: 'GUARDRAIL_BLOCKED',
+        code: guard.refusalCode,
+        message: guard.refusalMessage
+      });
+    }
+
+    // Deterministic fallback structure
+    const fallbackResult = fallbackDevelopmentNeedAnalysis(text, language);
+
+    // 3. AI understanding via Gemini Cloud with retry and deterministic fallback
+    let aiResult = fallbackResult;
+
+    if (ai) {
+      const prompt = `You are a sovereign civic intelligence development need analyzer for citizen infrastructure requests.
+The citizen is describing a public community need (such as a hospital, primary health centre, school, bus stop, water facility, or road connectivity).
+Analyze this text and return a JSON object with this exact structure:
+{
+  "category": "Healthcare" | "Education" | "Public Transport" | "Water" | "Roads" | "Electricity" | "Other",
+  "subCategory": string (e.g. "Hospital Access", "PHC Access", "School Capacity", "Education Access", "Bus Stop", "Public Transport", "Water Supply"),
+  "intent": "REQUEST_NEW_INFRASTRUCTURE" | "UPGRADE_EXISTING_INFRASTRUCTURE" | "SERVICE_EXPANSION" | "OTHER",
+  "urgency": "low" | "medium" | "high" | "critical",
+  "title": string (4 to 8 words English title summarizing the citizen's need),
+  "description": string (1 to 2 clear English sentences summarizing the citizen need),
+  "detectedLanguage": "en" | "hi" | "bn"
+}
+Citizen Input: "${text.replace(/"/g, "'")}"
+Language hint: "${language || 'en'}"
+Return ONLY valid JSON.`;
+
+      aiResult = await runWithRetry(
+        async (modelName) => {
+          const response = await ai!.models.generateContent({
+            model: modelName,
+            contents: prompt,
+            config: { responseMimeType: "application/json" }
+          });
+          const parsed = JSON.parse(response.text?.trim() || "{}");
+          return {
+            category: parsed.category || fallbackResult.category,
+            subCategory: parsed.subCategory || fallbackResult.subCategory,
+            intent: parsed.intent || fallbackResult.intent,
+            urgency: parsed.urgency || fallbackResult.urgency,
+            title: parsed.title || fallbackResult.title,
+            description: parsed.description || fallbackResult.description,
+            detectedLanguage: parsed.detectedLanguage || fallbackResult.detectedLanguage
+          };
+        },
+        3,
+        1500,
+        fallbackResult,
+        ['gemini-2.5-flash', 'gemini-1.5-flash']
+      );
+    }
+
+    // 4. Resolve infrastructureType strictly via deterministic TypeScript mapping
+    const resolvedInfraType = resolveInfrastructureType(aiResult.subCategory, aiResult.category);
+
+    // 5. Query deterministic geospatial intelligence engine within context radius (25km)
+    const geoContext = searchInfrastructureWithin(
+      lat,
+      lng,
+      aiResult.subCategory,
+      aiResult.category,
+      DEVELOPMENT_CONTEXT_RADIUS_KM
+    );
+
+    // 6. Return composite response
+    return res.json({
+      request: {
+        type: "DEVELOPMENT_NEED",
+        category: aiResult.category,
+        subCategory: aiResult.subCategory,
+        infrastructureType: resolvedInfraType,
+        intent: aiResult.intent,
+        urgency: aiResult.urgency,
+        title: aiResult.title,
+        description: aiResult.description,
+        detectedLanguage: aiResult.detectedLanguage
+      },
+      infrastructureContext: {
+        radiusKm: geoContext.infrastructureContextAvailable ? DEVELOPMENT_CONTEXT_RADIUS_KM : DEVELOPMENT_CONTEXT_RADIUS_KM,
+        facilityCountWithinRadius: geoContext.facilityCountWithinRadius,
+        nearestFacilityDistanceKm: geoContext.nearestFacilityDistanceKm,
+        nearestFacilityName: geoContext.nearestFacilityName,
+        nearestFacilityId: geoContext.nearestFacilityId,
+        averageFacilityDistanceKm: geoContext.averageFacilityDistanceKm,
+        infrastructureGapScore: geoContext.infrastructureGapScore,
+        accessibilityGapScore: geoContext.accessibilityGapScore,
+        infrastructureContextAvailable: geoContext.infrastructureContextAvailable
+      }
+    });
+  } catch (err: any) {
+    console.error("[DevelopmentAnalyze] Error processing intake:", err);
+    // Never return 500 without a useful payload if possible
+    const fallback = fallbackDevelopmentNeedAnalysis(req.body?.text || '');
+    const resolvedInfraType = resolveInfrastructureType(fallback.subCategory, fallback.category);
+    const geoContext = searchInfrastructureWithin(
+      req.body?.lat || 23.37,
+      req.body?.lng || 85.32,
+      fallback.subCategory,
+      fallback.category
+    );
+    return res.json({
+      request: {
+        type: "DEVELOPMENT_NEED",
+        category: fallback.category,
+        subCategory: fallback.subCategory,
+        infrastructureType: resolvedInfraType,
+        intent: fallback.intent,
+        urgency: fallback.urgency,
+        title: fallback.title,
+        description: fallback.description,
+        detectedLanguage: fallback.detectedLanguage
+      },
+      infrastructureContext: geoContext
+    });
+  }
+});
+
 // Vision Triage Endpoint (analyses uploaded hazard images or suggestions)
 app.post("/api/agents/vision", requireAuth, aiLimiter, async (req, res) => {
+
   const { image, mode = "problem" } = req.body;
   if (typeof image !== "string" || image.length < 10) {
     return res.status(400).json({ error: "Bad Request: Missing or invalid image parameter" });

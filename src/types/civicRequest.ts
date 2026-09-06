@@ -19,3 +19,26 @@ export interface CivicRequestBase {
   status: string;             // keep as string — issues and suggestions currently use different status vocabularies, don't force-unify them yet
   source?: string;            // 'web' | 'whatsapp' | 'sms' | 'voice'
 }
+
+export interface InfrastructureContext {
+  radiusKm: number;                          // always = DEVELOPMENT_CONTEXT_RADIUS_KM
+  facilityCountWithinRadius: number;          // deterministic
+  nearestFacilityDistanceKm?: number;         // deterministic
+  nearestFacilityName?: string;               // deterministic
+  nearestFacilityId?: string;                 // deterministic
+  averageFacilityDistanceKm?: number;         // deterministic
+  infrastructureGapScore: number;             // 0–100, deterministic (see formulas below)
+  accessibilityGapScore: number;              // 0–100, deterministic (see formulas below)
+  infrastructureContextAvailable: boolean;    // false when dataset returns no data at all
+}
+
+export interface DevelopmentNeedExtended extends CivicRequestBase {
+  type: 'DEVELOPMENT_NEED';
+  subCategory?: string;                       // AI-produced human label, e.g. "School Capacity"
+  infrastructureType?: string;                // deterministic mapped type, e.g. "School"
+  intent?: 'REQUEST_NEW_INFRASTRUCTURE' | 'UPGRADE_EXISTING_INFRASTRUCTURE' | 'SERVICE_EXPANSION' | 'OTHER';
+  originalText?: string;                      // raw citizen input, preserved verbatim
+  infrastructureContext?: InfrastructureContext;
+  source: 'web' | 'voice' | 'whatsapp' | 'sms';
+}
+

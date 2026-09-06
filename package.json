@@ -8,7 +8,10 @@
     "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test:e2e": "tsx scripts/testCompleteE2E.ts",
+    "test:scenario": "tsx scripts/runDemoScenario.ts",
+    "test:guardrail": "tsx scripts/testGuardrail.ts"
   },
   "dependencies": {
     "@alchemystai/sdk": "^0.11.1",

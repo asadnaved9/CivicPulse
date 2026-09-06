@@ -11,7 +11,7 @@ import { awardPoints, createNotification } from '../utils/pointsEngine';
 import { 
   Camera, MapPin, Loader, AlertTriangle, CheckCircle, 
   Lightbulb, Droplet, Trash2, HelpCircle, Mic, RefreshCw, Video, Eye,
-  BookOpen, Heart, Landmark, Zap, Compass, Briefcase, Award, Trees, Globe, Sparkles, Check, ChevronRight, ChevronLeft, ShieldAlert
+  BookOpen, Heart, Landmark, Zap, Compass, Briefcase, Award, Trees, Globe, Sparkles, Check, ChevronRight, ChevronLeft, ShieldAlert, X
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -92,6 +92,16 @@ export default function ReportPage() {
   const [voiceCleaning, setVoiceCleaning] = useState(false);
   const [showVoiceSimulation, setShowVoiceSimulation] = useState(false);
   const [customVoiceDraft, setCustomVoiceDraft] = useState('');
+
+  // Suggestion Mode (AI-Powered Development Need Intake) States
+  const [devNeedText, setDevNeedText] = useState('');
+  const [devNeedLanguage, setDevNeedLanguage] = useState<'en' | 'hi' | 'bn'>('en');
+  const [devNeedVoiceActive, setDevNeedVoiceActive] = useState(false);
+  const [devNeedAnalyzing, setDevNeedAnalyzing] = useState(false);
+  const [devNeedResult, setDevNeedResult] = useState<any | null>(null);
+  const [devNeedError, setDevNeedError] = useState<string | null>(null);
+  const [showDevVoiceModal, setShowDevVoiceModal] = useState(false);
+  const [showCustomDetailsEdit, setShowCustomDetailsEdit] = useState(false);
   
   // Location
   const [lat, setLat] = useState<number | null>(null);
@@ -108,12 +118,88 @@ export default function ReportPage() {
   const [aiTags, setAiTags] = useState<string[]>([]);
   const [estDays, setEstDays] = useState(5);
 
-  const PRESET_CHECKPOINTS = [
-    { name: "Ward Center Crossing", lat: 12.9362, lng: 77.6255, address: "80 Feet Rd, Municipal Ward 151, City Center" },
-    { name: "Metro Station Transit Hub", lat: 12.9718, lng: 77.6385, address: "100 Feet Rd, Stage 2, Municipal Ward 80" },
-    { name: "Commercial IT Corridor", lat: 12.9698, lng: 77.7499, address: "Tech Park Main Rd, Municipal Ward 84" },
-    { name: "Sector 2 Residential Ring", lat: 12.9112, lng: 77.6482, address: "Sector 2, Outer Ring Connection, Municipal Ward 174" }
+  const LANG_CODES: Record<'en' | 'hi' | 'bn', string> = {
+    en: 'en-IN',
+    hi: 'hi-IN',
+    bn: 'bn-IN'
+  };
+
+  const DEV_NEED_INSPIRATION_PRESETS = [
+    {
+      icon: '🏥',
+      title: 'Hospital & Healthcare Access',
+      text: 'Our area needs a hospital. People have to travel very far for treatment.',
+      lang: 'en' as const,
+      category: 'Healthcare'
+    },
+    {
+      icon: '📚',
+      title: 'Classroom & School Expansion',
+      text: 'Our village school doesn\'t have enough classrooms for students.',
+      lang: 'en' as const,
+      category: 'Education'
+    },
+    {
+      icon: '🚌',
+      title: 'Bus Transit Stand & Shelter',
+      text: 'Need regular public bus connectivity and a covered transit stop.',
+      lang: 'en' as const,
+      category: 'Public Transport'
+    },
+    {
+      icon: '💧',
+      title: 'Drinking Water Filtration Hub',
+      text: 'Clean drinking water supply and filtration node urgently required.',
+      lang: 'en' as const,
+      category: 'Water'
+    },
+    {
+      icon: '🏥',
+      title: 'अस्पताल की आवश्यकता (Hindi)',
+      text: 'हमारे क्षेत्र में अस्पताल नहीं है। मरीजों को इलाज के लिए बहुत दूर जाना पड़ता है।',
+      lang: 'hi' as const,
+      category: 'Healthcare'
+    },
+    {
+      icon: '🏥',
+      title: 'হাসপাতালের অভাব (Bengali)',
+      text: 'আমাদের এলাকায় কোনো হাসপাতাল নেই। চিকিৎসার জন্য অনেক দূরে যেতে হয়।',
+      lang: 'bn' as const,
+      category: 'Healthcare'
+    }
   ];
+
+  const DEV_VOICE_SIMULATOR_PROMPTS = [
+    {
+      lang: 'en' as const,
+      label: 'English: Need for Hospital Access',
+      text: 'Our area needs a hospital. People have to travel very far for treatment.'
+    },
+    {
+      lang: 'en' as const,
+      label: 'English: School Capacity Expansion',
+      text: 'Our village school doesn\'t have enough classrooms for students.'
+    },
+    {
+      lang: 'hi' as const,
+      label: 'Hindi: अस्पताल की आवश्यकता',
+      text: 'हमारे क्षेत्र में अस्पताल नहीं है। मरीजों को इलाज के लिए बहुत दूर जाना पड़ता है।'
+    },
+    {
+      lang: 'bn' as const,
+      label: 'Bengali: চিকিৎসার জন্য হাসপাতালের অভাব',
+      text: 'আমাদের এলাকায় কোনো হাসপাতাল নেই। চিকিৎসার জন্য অনেক দূরে যেতে হয়।'
+    }
+  ];
+
+  const PRESET_CHECKPOINTS = [
+    { name: "Shaheed Chowk Municipal Hub", lat: 23.3710, lng: 85.3245, address: "Shaheed Chowk, Ward 18, Ranchi" },
+    { name: "Albert Ekka Chowk Central", lat: 23.3698, lng: 85.3252, address: "Main Road, Ward 18, Ranchi" },
+    { name: "Doranda Community Center", lat: 23.3325, lng: 85.3271, address: "Doranda Market, Ward 30, Ranchi" },
+    { name: "Harmu Residential Colony", lat: 23.3540, lng: 85.3142, address: "Harmu Housing Colony, Ward 26, Ranchi" },
+    { name: "Ward Center Crossing (Bangalore)", lat: 12.9362, lng: 77.6255, address: "80 Feet Rd, Municipal Ward 151, City Center" }
+  ];
+
 
   const MOCK_SPEECH_TEMPLATES = [
     {
@@ -294,7 +380,120 @@ export default function ReportPage() {
     }
   };
 
+  // ─── Suggestion Mode: Dedicated Multilingual Voice Recognition Handler ───
+  const startDevNeedVoice = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error("Speech Recognition is not available. Opening Voice Simulator.");
+      setShowDevVoiceModal(true);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = LANG_CODES[devNeedLanguage] || 'en-IN';
+
+    recognition.onstart = () => {
+      setDevNeedVoiceActive(true);
+      toast(`Listening in ${devNeedLanguage === 'hi' ? 'Hindi' : devNeedLanguage === 'bn' ? 'Bengali' : 'English'}...`, { icon: '🎙️' });
+    };
+
+    recognition.onerror = (e: any) => {
+      console.error("Dev need speech recognition error:", e);
+      setDevNeedVoiceActive(false);
+      toast.error("Microphone access restricted. Opening Voice Simulator.");
+      setShowDevVoiceModal(true);
+    };
+
+    recognition.onend = () => {
+      setDevNeedVoiceActive(false);
+    };
+
+    recognition.onresult = (event: any) => {
+      const resultText = event.results[0][0].transcript;
+      setDevNeedText((prev) => (prev ? prev + ' ' + resultText : resultText));
+      toast.success("Voice transcript captured!");
+    };
+
+    try {
+      recognition.start();
+    } catch (err) {
+      console.error("Failed to start dev need speech recognition:", err);
+      setShowDevVoiceModal(true);
+    }
+  };
+
+  // ─── Suggestion Mode: AI Intake & 25km Geospatial Intelligence Analysis ───
+  const handleAnalyzeDevelopmentNeed = async () => {
+    if (!devNeedText || devNeedText.trim().length === 0) {
+      setDevNeedError("Please describe what infrastructure or facility your community needs.");
+      toast.error("Please describe your community's development need.");
+      return;
+    }
+    if (!lat || !lng) {
+      setDevNeedError("Please confirm your location coordinates on the map.");
+      toast.error("Please confirm your location to calculate 25km infrastructure context.");
+      return;
+    }
+
+    setDevNeedError(null);
+    setDevNeedAnalyzing(true);
+
+    try {
+      const res = await fetchWithAuth('/api/development/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: devNeedText,
+          language: devNeedLanguage,
+          lat,
+          lng
+        })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        if (errData.error === 'GUARDRAIL_BLOCKED') {
+          toast.error(`Civic Guardrail: ${errData.message || 'Topic not permitted'}`);
+          setDevNeedError(errData.message || "Request blocked by civic integrity guardrail.");
+          return;
+        }
+        throw new Error(errData.error || 'Analysis service failed');
+      }
+
+      const data = await res.json();
+      setDevNeedResult(data);
+      setTitle(data.request?.title || 'Community Development Need');
+      setDescription(data.request?.description || devNeedText);
+      setDescriptionOriginal(devNeedText);
+      setDescriptionEnglish(data.request?.description || devNeedText);
+      setCategory(data.request?.category || 'Healthcare');
+      setAiCategory(data.request?.category || 'Healthcare');
+      setDetectedLanguage(data.request?.detectedLanguage === 'hi' ? 'Hindi' : data.request?.detectedLanguage === 'bn' ? 'Bengali' : 'English');
+      const urgency = data.request?.urgency;
+      setSeverity(urgency === 'critical' ? 5 : urgency === 'high' ? 4 : urgency === 'medium' ? 3 : 2);
+
+      setCurrentStep(2);
+      toast.success("AI analyzed need and evaluated regional 25 km gap metrics!", { icon: '✨' });
+    } catch (err: any) {
+      console.error("Failed to analyze development need:", err);
+      toast.error("Network or API issue. Loaded default regional context.");
+      setCurrentStep(2);
+    } finally {
+      setDevNeedAnalyzing(false);
+    }
+  };
+
+  const getGapBadge = (score: number) => {
+    if (score >= 80) return { label: 'VERY HIGH', color: '#EF4444', bg: 'rgba(239, 68, 68, 0.15)' };
+    if (score >= 60) return { label: 'HIGH', color: '#F97316', bg: 'rgba(249, 115, 22, 0.15)' };
+    if (score >= 40) return { label: 'MEDIUM', color: '#EAB308', bg: 'rgba(234, 179, 8, 0.15)' };
+    return { label: 'LOW', color: '#10B981', bg: 'rgba(16, 185, 129, 0.15)' };
+  };
+
   // Camera Handlers
+
   const startCamera = async () => {
     setIsCameraBlocked(false);
     try {
@@ -498,11 +697,18 @@ export default function ReportPage() {
       setLng(passedLocation.lng);
       triggerReverseGeocode(passedLocation.lat, passedLocation.lng);
     } else if (!lat && !lng) {
-      setLat(12.9362);
-      setLng(77.6255);
-      setAddress("80 Feet Rd, Municipal Ward 151, City Center");
+      if (mode === 'suggestion') {
+        setLat(23.3710);
+        setLng(85.3245);
+        setAddress("Shaheed Chowk, Ward 18, Ranchi");
+      } else {
+        setLat(12.9362);
+        setLng(77.6255);
+        setAddress("80 Feet Rd, Municipal Ward 151, City Center");
+      }
     }
-  }, [passedLocation]);
+  }, [passedLocation, mode]);
+
 
   // Initialize and sync OpenFreeMap
   useEffect(() => {
@@ -757,8 +963,12 @@ export default function ReportPage() {
   // Handle Submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!imagePreview || !lat || !lng || !address) {
+    if (mode === 'problem' && (!imagePreview || !lat || !lng || !address)) {
       toast.error("Please complete the image verification and set a valid location.");
+      return;
+    }
+    if (mode === 'suggestion' && (!lat || !lng)) {
+      toast.error("Please ensure a valid location is set for this community development need.");
       return;
     }
 
@@ -768,14 +978,16 @@ export default function ReportPage() {
         ? "https://picsum.photos/seed/proposal/800/600" 
         : "https://picsum.photos/seed/reported/800/600";
 
-      // 1. Upload photo to Firebase Storage if fully configured
-      try {
-        const imageId = `${mode === 'suggestion' ? 'suggestion' : 'issue'}_${Date.now()}`;
-        const storageRef = ref(storage, `${mode === 'suggestion' ? 'suggestions' : 'issues'}/${imageId}.jpg`);
-        await uploadString(storageRef, imagePreview, 'data_url');
-        imageUrl = await getDownloadURL(storageRef);
-      } catch (storageErr) {
-        console.error("Storage upload failed (using fallback image URL):", storageErr);
+      // 1. Upload photo to Firebase Storage if provided & fully configured
+      if (imagePreview) {
+        try {
+          const imageId = `${mode === 'suggestion' ? 'suggestion' : 'issue'}_${Date.now()}`;
+          const storageRef = ref(storage, `${mode === 'suggestion' ? 'suggestions' : 'issues'}/${imageId}.jpg`);
+          await uploadString(storageRef, imagePreview, 'data_url');
+          imageUrl = await getDownloadURL(storageRef);
+        } catch (storageErr) {
+          console.error("Storage upload failed (using fallback image URL):", storageErr);
+        }
       }
 
       // Pre-submit triage fallback if values are missing (e.g. manually typed, skipped vision)
@@ -791,7 +1003,7 @@ export default function ReportPage() {
       let finalKeywords = keywords.length > 0 ? keywords : aiTags;
       let finalTheme = theme;
 
-      if (!finalDepartment) {
+      if (!finalDepartment && mode === 'problem') {
         try {
           const res = await fetchWithAuth('/api/agents/clean-voice', {
             method: 'POST',
@@ -820,28 +1032,36 @@ export default function ReportPage() {
       let docId = '';
 
       if (mode === 'suggestion') {
-        // Write proposal to 'suggestions' collection
+        // Write enriched proposal to 'suggestions' collection
         const suggestionData = {
           type: 'DEVELOPMENT_NEED' as const,
-          title: finalTitle,
-          description_original: finalDescOriginal,
-          description_english: finalDescEnglish,
-          category: finalCategory,
-          aiCategory: finalAiCategory,
+          title: finalTitle || devNeedResult?.request?.title || 'Community Development Need',
+          description: finalDescEnglish || devNeedResult?.request?.description || devNeedText,
+          description_original: devNeedText || finalDescOriginal || finalDescEnglish,
+          description_english: finalDescEnglish || devNeedResult?.request?.description || devNeedText,
+          category: devNeedResult?.request?.category || finalCategory || 'Healthcare',
+          subCategory: devNeedResult?.request?.subCategory || 'General',
+          infrastructureType: devNeedResult?.request?.infrastructureType || 'Facility',
+          intent: devNeedResult?.request?.intent || 'REQUEST_NEW_INFRASTRUCTURE',
+          urgency: devNeedResult?.request?.urgency || 'medium',
+          originalText: devNeedText || finalDescOriginal || finalDescEnglish,
+          language: devNeedResult?.request?.detectedLanguage || devNeedLanguage,
+          source: (devNeedVoiceActive ? 'voice' : 'web') as 'voice' | 'web',
+          aiCategory: devNeedResult?.request?.category || finalAiCategory,
           department: finalDepartment || "Department of Community Development",
-          confidence: finalConfidence,
+          confidence: devNeedResult ? 0.94 : (finalConfidence || 0.85),
           priority: finalPriority,
           location: {
             lat,
             lng,
-            address
+            address: address || `Coordinates (${lat.toFixed(4)}, ${lng.toFixed(4)})`
           },
           lat,
           lng,
-          address,
-          images: [imageUrl],
-          imageUrl,
-          language: finalDetectedLanguage,
+          address: address || `Coordinates (${lat.toFixed(4)}, ${lng.toFixed(4)})`,
+          infrastructureContext: devNeedResult?.infrastructureContext || null,
+          images: imagePreview ? [imageUrl] : [],
+          imageUrl: imagePreview ? imageUrl : '',
           timestamp: serverTimestamp(),
           createdAt: serverTimestamp(),
           userId: user?.uid || 'anonymous',
@@ -852,6 +1072,7 @@ export default function ReportPage() {
 
         const docRef = await addDoc(collection(db, 'suggestions'), suggestionData);
         docId = docRef.id;
+
 
         if (user?.uid) {
           await awardPoints(user.uid, 50, 'Suggested new development idea');
@@ -1006,93 +1227,190 @@ export default function ReportPage() {
             <span>+50 Citizen Warden Points Awarded!</span>
           </div>
 
-          {/* Details Summary Grid */}
-          <div style={{ width: '100%', textAlign: 'left', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: '8px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-1)', borderBottom: '1px solid var(--border)', paddingBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sparkles size={16} style={{ color: 'var(--primary)' }} />
-              AI Semantic Triage Report
-            </h3>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: '13.5px' }}>
-              <div>
-                <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>Triage Title</span>
-                <strong style={{ color: 'var(--text-1)', fontSize: '15px' }}>{submittedData?.title || title}</strong>
-              </div>
-              <div>
-                <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>Assigned Department</span>
-                <strong style={{ color: 'var(--text-1)', fontSize: '15px' }}>{submittedData?.department || department || 'Municipal Administration'}</strong>
-              </div>
-              <div>
-                <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>Primary Category</span>
-                <strong style={{ color: 'var(--text-1)', fontSize: '15px' }}>{submittedData?.category || category}</strong>
-              </div>
-              <div>
-                <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>AI Triage Priority</span>
-                <strong style={{ color: 'var(--text-1)', fontSize: '15px' }}>Rating {submittedData?.priority || submittedData?.severity || severity || 3}/5</strong>
-              </div>
-              <div>
-                <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>Detected Language</span>
-                <strong style={{ color: 'var(--text-1)', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Globe size={13} style={{ color: 'var(--primary)' }} />
-                  {submittedData?.language || detectedLanguage || 'English'}
-                </strong>
-              </div>
-              <div>
-                <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>AI Confidence Score</span>
-                <strong style={{ color: '#10B981', fontSize: '15px' }}>
-                  {submittedData?.confidence ? `${(submittedData.confidence * 100).toFixed(0)}%` : '88%'}
-                </strong>
-              </div>
-            </div>
-
-            {/* Language Translations if non-English */}
-            {submittedData?.language && submittedData.language !== 'English' && (
-              <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
-                <div>
-                  <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>Original Voice / Transcript ({submittedData.language})</span>
-                  <p style={{ margin: '4px 0 0 0', fontStyle: 'italic', color: 'var(--text-2)' }}>"{submittedData.description_original}"</p>
+            {mode === 'suggestion' || submittedData?.type === 'DEVELOPMENT_NEED' ? (
+              /* Enriched Development Need Success Summary */
+              <div style={{ width: '100%', textAlign: 'left', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: '8px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
+                  <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-1)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                    <Sparkles size={16} style={{ color: 'var(--primary)' }} />
+                    Development Demand Record
+                  </h3>
+                  <span style={{ padding: '3px 10px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', fontWeight: 700, fontSize: '11px', fontFamily: 'var(--font-mono)' }}>
+                    TYPE: DEVELOPMENT_NEED
+                  </span>
                 </div>
-                <div>
-                  <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>English Translation</span>
-                  <p style={{ margin: '4px 0 0 0', fontWeight: 500, color: 'var(--text-1)' }}>"{submittedData.description_english}"</p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontSize: '13.5px' }}>
+                  <div>
+                    <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>Need Title</span>
+                    <strong style={{ color: 'var(--text-1)', fontSize: '15px' }}>{submittedData?.title || title}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>Classification</span>
+                    <strong style={{ color: 'var(--text-1)', fontSize: '15px' }}>
+                      {submittedData?.category} → {submittedData?.subCategory || 'General Access'}
+                    </strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>Target Infrastructure Type</span>
+                    <strong style={{ color: 'var(--text-1)', fontSize: '15px' }}>{submittedData?.infrastructureType || 'Facility'}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>Intent</span>
+                    <strong style={{ color: 'var(--text-1)', fontSize: '14px' }}>
+                      {submittedData?.intent ? submittedData.intent.replace(/_/g, ' ') : 'REQUEST NEW INFRASTRUCTURE'}
+                    </strong>
+                  </div>
                 </div>
+
+                {/* 25 km Context & Gap Score Section */}
+                {submittedData?.infrastructureContext && (
+                  <div style={{ background: 'var(--surface-1)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase' }}>
+                      Regional 25 km Geospatial Context
+                    </span>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div>
+                        <span style={{ fontSize: '11px', color: 'var(--text-3)', display: 'block' }}>Infrastructure Scarcity Gap:</span>
+                        <strong style={{ color: getGapBadge(submittedData.infrastructureContext.infrastructureGapScore).color, fontSize: '14px' }}>
+                          {getGapBadge(submittedData.infrastructureContext.infrastructureGapScore).label} ({submittedData.infrastructureContext.infrastructureGapScore}/100)
+                        </strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '11px', color: 'var(--text-3)', display: 'block' }}>Accessibility Travel Gap:</span>
+                        <strong style={{ color: getGapBadge(submittedData.infrastructureContext.accessibilityGapScore).color, fontSize: '14px' }}>
+                          {getGapBadge(submittedData.infrastructureContext.accessibilityGapScore).label} ({submittedData.infrastructureContext.accessibilityGapScore}/100)
+                        </strong>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '12.5px', color: 'var(--text-2)' }}>
+                      📍 <strong>{submittedData.infrastructureContext.facilityCountWithinRadius}</strong> facilities within 25 km search boundary.
+                      {submittedData.infrastructureContext.nearestFacilityDistanceKm !== undefined ? (
+                        <span> Nearest: <strong>{submittedData.infrastructureContext.nearestFacilityDistanceKm} km</strong> ({submittedData.infrastructureContext.nearestFacilityName})</span>
+                      ) : (
+                        <span> No existing facility recorded within 25 km.</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Demand Intelligence Story Sentence */}
+                <div style={{ background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Sparkles size={18} style={{ color: '#3B82F6', flexShrink: 0 }} />
+                  <span style={{ fontSize: '13px', color: 'var(--text-1)', fontWeight: 600 }}>
+                    This request will be included in the regional development-demand analysis.
+                  </span>
+                </div>
+
+                {/* Original citizen statement */}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+                  <span style={{ color: 'var(--text-3)', fontSize: '11px', display: 'block', textTransform: 'uppercase' }}>
+                    Citizen Input ({submittedData?.language || 'en'})
+                  </span>
+                  <p style={{ margin: '4px 0 0 0', fontStyle: 'italic', color: 'var(--text-2)', fontSize: '13px' }}>
+                    "{submittedData?.originalText || submittedData?.description_original || submittedData?.description}"
+                  </p>
+                </div>
+
+                {/* Location */}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+                  <span style={{ color: 'var(--text-3)', fontSize: '11px', display: 'block', textTransform: 'uppercase', marginBottom: '4px' }}>Verified Location</span>
+                  <span style={{ color: 'var(--text-1)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <MapPin size={14} style={{ color: '#F59E0B' }} />
+                    {submittedData?.address || address} ({lat?.toFixed(4)}, {lng?.toFixed(4)})
+                  </span>
+                </div>
+              </div>
+            ) : (
+              /* Details Summary Grid for Civic Issue */
+              <div style={{ width: '100%', textAlign: 'left', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: '8px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-1)', borderBottom: '1px solid var(--border)', paddingBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Sparkles size={16} style={{ color: 'var(--primary)' }} />
+                  AI Semantic Triage Report
+                </h3>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: '13.5px' }}>
+                  <div>
+                    <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>Triage Title</span>
+                    <strong style={{ color: 'var(--text-1)', fontSize: '15px' }}>{submittedData?.title || title}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>Assigned Department</span>
+                    <strong style={{ color: 'var(--text-1)', fontSize: '15px' }}>{submittedData?.department || department || 'Municipal Administration'}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>Primary Category</span>
+                    <strong style={{ color: 'var(--text-1)', fontSize: '15px' }}>{submittedData?.category || category}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>AI Triage Priority</span>
+                    <strong style={{ color: 'var(--text-1)', fontSize: '15px' }}>Rating {submittedData?.priority || submittedData?.severity || severity || 3}/5</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>Detected Language</span>
+                    <strong style={{ color: 'var(--text-1)', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Globe size={13} style={{ color: 'var(--primary)' }} />
+                      {submittedData?.language || detectedLanguage || 'English'}
+                    </strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>AI Confidence Score</span>
+                    <strong style={{ color: '#10B981', fontSize: '15px' }}>
+                      {submittedData?.confidence ? `${(submittedData.confidence * 100).toFixed(0)}%` : '88%'}
+                    </strong>
+                  </div>
+                </div>
+
+                {/* Language Translations if non-English */}
+                {submittedData?.language && submittedData.language !== 'English' && (
+                  <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
+                    <div>
+                      <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>Original Voice / Transcript ({submittedData.language})</span>
+                      <p style={{ margin: '4px 0 0 0', fontStyle: 'italic', color: 'var(--text-2)' }}>"{submittedData.description_original}"</p>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-3)', display: 'block', fontSize: '11px', textTransform: 'uppercase' }}>English Translation</span>
+                      <p style={{ margin: '4px 0 0 0', fontWeight: 500, color: 'var(--text-1)' }}>"{submittedData.description_english}"</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Theme & Keywords Tags */}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {(submittedData?.theme || theme) && (
+                    <div>
+                      <span style={{ color: 'var(--text-3)', fontSize: '11px', display: 'block', textTransform: 'uppercase' }}>AI Core Theme</span>
+                      <span style={{ background: 'var(--primary-subtle)', color: 'var(--primary)', padding: '4px 12px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, display: 'inline-block', marginTop: '4px' }}>
+                        {submittedData?.theme || theme}
+                      </span>
+                    </div>
+                  )}
+                  {((submittedData?.aiTags && submittedData.aiTags.length > 0) || keywords.length > 0) && (
+                    <div>
+                      <span style={{ color: 'var(--text-3)', fontSize: '11px', display: 'block', textTransform: 'uppercase', marginBottom: '6px' }}>Extracted Keywords</span>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                        {(submittedData?.aiTags || keywords).map((kw: string, i: number) => (
+                          <span key={i} style={{ background: 'var(--surface-3)', color: 'var(--text-2)', padding: '3px 10px', borderRadius: '4px', fontSize: '11.5px' }}>
+                            #{kw}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Location Address */}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                  <span style={{ color: 'var(--text-3)', fontSize: '11px', display: 'block', textTransform: 'uppercase', marginBottom: '4px' }}>Verified Location Coordinates</span>
+                  <span style={{ color: 'var(--text-1)', fontSize: '13.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <MapPin size={14} style={{ color: 'var(--danger)' }} />
+                    {address} ({lat?.toFixed(5)}, {lng?.toFixed(5)})
+                  </span>
+                </div>
+
               </div>
             )}
 
-            {/* Theme & Keywords Tags */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {(submittedData?.theme || theme) && (
-                <div>
-                  <span style={{ color: 'var(--text-3)', fontSize: '11px', display: 'block', textTransform: 'uppercase' }}>AI Core Theme</span>
-                  <span style={{ background: 'var(--primary-subtle)', color: 'var(--primary)', padding: '4px 12px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, display: 'inline-block', marginTop: '4px' }}>
-                    {submittedData?.theme || theme}
-                  </span>
-                </div>
-              )}
-              {((submittedData?.aiTags && submittedData.aiTags.length > 0) || keywords.length > 0) && (
-                <div>
-                  <span style={{ color: 'var(--text-3)', fontSize: '11px', display: 'block', textTransform: 'uppercase', marginBottom: '6px' }}>Extracted Keywords</span>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                    {(submittedData?.aiTags || keywords).map((kw: string, i: number) => (
-                      <span key={i} style={{ background: 'var(--surface-3)', color: 'var(--text-2)', padding: '3px 10px', borderRadius: '4px', fontSize: '11.5px' }}>
-                        #{kw}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Location Address */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
-              <span style={{ color: 'var(--text-3)', fontSize: '11px', display: 'block', textTransform: 'uppercase', marginBottom: '4px' }}>Verified Location Coordinates</span>
-              <span style={{ color: 'var(--text-1)', fontSize: '13.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <MapPin size={14} style={{ color: 'var(--danger)' }} />
-                {address} ({lat?.toFixed(5)}, {lng?.toFixed(5)})
-              </span>
-            </div>
-
-          </div>
 
           <div style={{ display: 'flex', gap: '16px', width: '100%' }}>
             <button 
@@ -1115,10 +1433,13 @@ export default function ReportPage() {
               onClick={() => {
                 setSubmittedSuccess(false);
                 setSubmittedData(null);
+                setDevNeedResult(null);
+                setDevNeedText('');
+                setDevNeedError(null);
                 setImage(null);
                 setImagePreview(null);
                 setTitle('');
-                setCategory(mode === 'suggestion' ? 'Roads' : 'pothole');
+                setCategory(mode === 'suggestion' ? 'Healthcare' : 'pothole');
                 setSeverity(3);
                 setDescription('');
                 setDescriptionOriginal('');
@@ -1133,8 +1454,9 @@ export default function ReportPage() {
                 setCurrentStep(1);
               }}
             >
-              Propose Another
+              {mode === 'suggestion' ? 'Propose Another Need' : 'Report Another Hazard'}
             </button>
+
           </div>
 
         </div>
@@ -1211,11 +1533,14 @@ export default function ReportPage() {
 
       {/* Progressive Step Indicator Stepper */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginBottom: '40px', flexWrap: 'wrap' }}>
-        {[
-          { num: 1, name: mode === 'suggestion' ? 'Propose & Verify' : 'Upload & Verify' },
-          { num: 2, name: 'Map Pinpoint' },
-          { num: 3, name: 'AI Triage & Review' }
-        ].map((step) => {
+        {(mode === 'suggestion' ? [
+          { num: 1, name: '1. Describe Need' },
+          { num: 2, name: '2. Review & Submit' }
+        ] : [
+          { num: 1, name: '1. Upload & Verify' },
+          { num: 2, name: '2. Map Pinpoint' },
+          { num: 3, name: '3. AI Triage & Review' }
+        ]).map((step, idx, arr) => {
           const isActive = currentStep === step.num;
           const isDone = currentStep > step.num;
           return (
@@ -1225,14 +1550,20 @@ export default function ReportPage() {
                 display: 'flex', 
                 alignItems: 'center', 
                 gap: '8px',
-                cursor: (step.num < currentStep || (step.num === 2 && imagePreview)) ? 'pointer' : 'default'
+                cursor: (step.num < currentStep || (step.num === 2 && (mode === 'suggestion' || imagePreview))) ? 'pointer' : 'default'
               }}
               onClick={() => {
                 if (step.num === 1) setCurrentStep(1);
-                if (step.num === 2 && imagePreview) setCurrentStep(2);
-                if (step.num === 3 && imagePreview && lat && lng) setCurrentStep(3);
+                if (step.num === 2) {
+                  if (mode === 'suggestion' && (devNeedResult || devNeedText)) setCurrentStep(2);
+                  else if (mode === 'problem' && imagePreview) setCurrentStep(2);
+                }
+                if (step.num === 3) {
+                  if (mode === 'problem' && imagePreview && lat && lng) setCurrentStep(3);
+                }
               }}
             >
+
               <div 
                 style={{
                   width: '28px',
@@ -1262,7 +1593,7 @@ export default function ReportPage() {
               >
                 {step.name}
               </span>
-              {step.num < 3 && <div style={{ width: '20px', height: '1px', background: 'var(--border)' }} />}
+              {idx < arr.length - 1 && <div style={{ width: '20px', height: '1px', background: 'var(--border)' }} />}
             </div>
           );
         })}
@@ -1270,19 +1601,257 @@ export default function ReportPage() {
 
       <form onSubmit={handleSubmit}>
         
-        {/* ================= STEP 1: MEDIA UPLOAD & VISION ================= */}
+        {/* ================= STEP 1: MEDIA UPLOAD & VISION / SUGGESTION INTAKE ================= */}
         {currentStep === 1 && (
-          <div style={{ maxWidth: '700px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Camera size={18} style={{ color: 'var(--text-1)' }} />
-                Upload Photographic Proof & Run AI Triage
-              </h3>
-              <p style={{ color: 'var(--text-2)', fontSize: '13px', margin: 0 }}>
-                {mode === 'suggestion' 
-                  ? 'Provide a photograph depicting the site, local neighborhood context, or current facilities to propose a community development project.'
-                  : 'Capture or upload a clear, high-resolution photo of the public physical hazard. AI will verify that it constitutes valid public infrastructure.'}
-              </p>
+          mode === 'suggestion' ? (
+            <div style={{ maxWidth: '750px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div className="card" style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                  <div>
+                    <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--primary)', fontWeight: 700 }}>
+                      AI Sovereign Intake · Natural Language Need
+                    </span>
+                    <h2 style={{ fontSize: '20px', fontWeight: 700, margin: '4px 0 0 0', color: 'var(--text-1)' }}>
+                      What Does Your Area Need?
+                    </h2>
+                  </div>
+
+                  {/* Language Selector Pills */}
+                  <div style={{ display: 'flex', gap: '4px', background: 'var(--surface-2)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                    {[
+                      { id: 'en', label: 'English' },
+                      { id: 'hi', label: 'हिन्दी' },
+                      { id: 'bn', label: 'বাংলা' }
+                    ].map((lang) => (
+                      <button
+                        key={lang.id}
+                        type="button"
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          border: 'none',
+                          fontSize: '12px',
+                          fontWeight: devNeedLanguage === lang.id ? 700 : 500,
+                          cursor: 'pointer',
+                          background: devNeedLanguage === lang.id ? 'var(--primary)' : 'transparent',
+                          color: devNeedLanguage === lang.id ? 'var(--bg)' : 'var(--text-2)',
+                          transition: 'all 0.2s'
+                        }}
+                        onClick={() => setDevNeedLanguage(lang.id as any)}
+                      >
+                        {lang.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <p style={{ color: 'var(--text-2)', fontSize: '13.5px', margin: 0, lineHeight: 1.5 }}>
+                  Citizens understand community gaps best. Describe in your own words what infrastructure, health clinic, school, transport route, or water utility is missing. AI will classify your intent and evaluate local facilities within 25 km.
+                </p>
+
+                {/* Natural Language Input Box */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <textarea
+                    className="form-textarea"
+                    rows={4}
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      fontSize: '14.5px',
+                      borderRadius: '8px',
+                      border: devNeedError ? '2px solid var(--danger)' : '1px solid var(--border)',
+                      background: 'var(--surface-1)',
+                      color: 'var(--text-1)',
+                      resize: 'vertical',
+                      boxSizing: 'border-box'
+                    }}
+                    placeholder={
+                      devNeedLanguage === 'hi'
+                        ? 'अपने क्षेत्र की आवश्यकता बताएं (उदा. हमारे क्षेत्र में अस्पताल नहीं है। मरीजों को इलाज के लिए बहुत दूर जाना पड़ता है...)'
+                        : devNeedLanguage === 'bn'
+                        ? 'আপনার এলাকার প্রয়োজনীয় অবকাঠামো লিখুন (যেমন: আমাদের এলাকায় কোনো হাসপাতাল নেই। চিকিৎসার জন্য অনেক দূরে যেতে হয়...)'
+                        : 'Describe what infrastructure your community is missing (e.g. Our area needs a hospital. People have to travel very far for treatment...)'
+                    }
+                    value={devNeedText}
+                    onChange={(e) => {
+                      setDevNeedText(e.target.value);
+                      if (devNeedError) setDevNeedError(null);
+                    }}
+                  />
+
+                  {/* Voice Input and Simulator Action Row */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <button
+                        type="button"
+                        className={`btn ${devNeedVoiceActive ? 'btn-danger' : 'btn-secondary'}`}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '8px 14px',
+                          fontSize: '12.5px',
+                          fontWeight: 600
+                        }}
+                        onClick={startDevNeedVoice}
+                      >
+                        <Mic size={15} />
+                        {devNeedVoiceActive ? 'Listening...' : `Record Voice (${devNeedLanguage === 'hi' ? 'हिन्दी' : devNeedLanguage === 'bn' ? 'বাংলা' : 'English'})`}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--text-3)' }}
+                        onClick={() => setShowDevVoiceModal(true)}
+                        title="Open Multilingual Speech Simulator for environments without microphone permissions"
+                      >
+                        Voice Simulator
+                      </button>
+                    </div>
+
+                    <span style={{ fontSize: '12px', color: 'var(--text-3)' }}>
+                      {devNeedText.length}/2000 chars
+                    </span>
+                  </div>
+                </div>
+
+                {/* Quick Inspiration Presets */}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                  <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '10px' }}>
+                    Quick Inspiration (Click to Populate)
+                  </span>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
+                    {DEV_NEED_INSPIRATION_PRESETS.map((preset, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        className="btn btn-secondary text-left"
+                        style={{
+                          padding: '10px 12px',
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '8px',
+                          fontSize: '12px',
+                          lineHeight: 1.3,
+                          justifyContent: 'flex-start',
+                          background: 'var(--surface-2)'
+                        }}
+                        onClick={() => {
+                          setDevNeedText(preset.text);
+                          setDevNeedLanguage(preset.lang);
+                          if (devNeedError) setDevNeedError(null);
+                        }}
+                      >
+                        <span style={{ fontSize: '16px' }}>{preset.icon}</span>
+                        <div>
+                          <strong style={{ display: 'block', color: 'var(--text-1)' }}>{preset.title}</strong>
+                          <span style={{ color: 'var(--text-3)', fontSize: '11px' }}>{preset.category}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Location Context */}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Target Community Location (25 km Context Center)
+                    </span>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      style={{ padding: '4px 10px', fontSize: '11px' }}
+                      onClick={useMyLocation}
+                      disabled={geocoding}
+                    >
+                      <MapPin size={12} />
+                      {geocoding ? "Detecting GPS..." : "Detect GPS"}
+                    </button>
+                  </div>
+
+                  <div style={{ background: 'var(--surface-2)', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <MapPin size={18} style={{ color: '#F59E0B', flexShrink: 0 }} />
+                      <div>
+                        <strong style={{ fontSize: '13.5px', color: 'var(--text-1)', display: 'block' }}>
+                          {address || 'Selecting Municipal Location...'}
+                        </strong>
+                        <span style={{ fontSize: '11.5px', color: 'var(--text-3)' }}>
+                          Coordinates: {lat ? lat.toFixed(4) : '--'}, {lng ? lng.toFixed(4) : '--'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Preset Location Selector */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-3)', alignSelf: 'center', marginRight: '4px' }}>
+                      Demo Wards:
+                    </span>
+                    {PRESET_CHECKPOINTS.slice(0, 4).map((cp, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        className="btn btn-secondary"
+                        style={{ padding: '4px 8px', fontSize: '11px' }}
+                        onClick={() => {
+                          setLat(cp.lat);
+                          setLng(cp.lng);
+                          setAddress(cp.address);
+                          toast.success(`Location set to ${cp.name}`);
+                        }}
+                      >
+                        📍 {cp.name.split(' ')[0]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Validation Error Notice */}
+                {devNeedError && (
+                  <div style={{ padding: '12px 16px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--danger)', borderRadius: '8px', color: 'var(--danger)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <AlertTriangle size={16} />
+                    <span>{devNeedError}</span>
+                  </div>
+                )}
+
+                {/* Action Button */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '8px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    style={{ padding: '14px 28px', fontSize: '15px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}
+                    disabled={devNeedAnalyzing || !devNeedText.trim()}
+                    onClick={handleAnalyzeDevelopmentNeed}
+                  >
+                    {devNeedAnalyzing ? (
+                      <>
+                        <Loader size={16} className="shimmer" style={{ animation: 'spin 1s linear infinite' }} />
+                        Analyzing Need & Querying 25km Context...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={16} />
+                        Analyze Need with AI & Context →
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ maxWidth: '700px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Camera size={18} style={{ color: 'var(--text-1)' }} />
+                  Upload Photographic Proof & Run AI Triage
+                </h3>
+                <p style={{ color: 'var(--text-2)', fontSize: '13px', margin: 0 }}>
+                  Capture or upload a clear, high-resolution photo of the public physical hazard. AI will verify that it constitutes valid public infrastructure.
+                </p>
+
 
               {/* Drag Drop Area */}
               <div 
@@ -1512,11 +2081,239 @@ export default function ReportPage() {
               </button>
             </div>
           </div>
+          )
         )}
 
-        {/* ================= STEP 2: LOCATION & GPS ================= */}
+        {/* ================= STEP 2: LOCATION & GPS / STORY REVIEW ================= */}
         {currentStep === 2 && (
-          <div style={{ maxWidth: '750px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          mode === 'suggestion' ? (
+            <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div className="card" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                {/* Review Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', borderBottom: '1px solid var(--border)', paddingBottom: '16px' }}>
+                  <div>
+                    <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--primary)', fontWeight: 700 }}>
+                      Intake Complete · Community Story & Context Review
+                    </span>
+                    <h2 style={{ fontSize: '22px', fontWeight: 800, margin: '6px 0 0 0', color: 'var(--text-1)' }}>
+                      We Understood Your Community Need
+                    </h2>
+                  </div>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    <span style={{ padding: '5px 12px', borderRadius: '16px', background: 'rgba(245, 158, 11, 0.15)', color: '#F59E0B', fontWeight: 700, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {devNeedResult?.request?.category || category} → {devNeedResult?.request?.subCategory || 'Access'}
+                    </span>
+                    <span style={{ padding: '5px 12px', borderRadius: '16px', background: 'var(--surface-3)', color: 'var(--text-1)', fontWeight: 600, fontSize: '12px' }}>
+                      {devNeedResult?.request?.intent ? devNeedResult.request.intent.replace(/_/g, ' ') : 'REQUEST NEW INFRASTRUCTURE'}
+                    </span>
+                    <span style={{ padding: '5px 12px', borderRadius: '16px', background: 'var(--surface-3)', color: 'var(--text-2)', fontWeight: 600, fontSize: '12px' }}>
+                      Urgency: {(devNeedResult?.request?.urgency || 'MEDIUM').toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Narrative Summary Box */}
+                <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-3)', textTransform: 'uppercase', fontWeight: 700 }}>
+                      Synthesized Proposal Title
+                    </span>
+                    <span style={{ fontSize: '11.5px', color: '#10B981', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                      TYPE: DEVELOPMENT_NEED
+                    </span>
+                  </div>
+                  <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-1)', margin: '0 0 10px 0' }}>
+                    {title || devNeedResult?.request?.title || 'Community Development Need'}
+                  </h3>
+                  <p style={{ fontSize: '14.5px', color: 'var(--text-1)', lineHeight: 1.5, margin: 0, fontStyle: 'italic' }}>
+                    "{description || devNeedResult?.request?.description || devNeedText}"
+                  </p>
+
+                  {devNeedResult?.request?.detectedLanguage && devNeedResult.request.detectedLanguage !== 'en' && (
+                    <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed var(--border)', fontSize: '12.5px', color: 'var(--text-2)' }}>
+                      <strong>Original Citizen Statement ({devNeedResult.request.detectedLanguage}):</strong> "{devNeedText}"
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '14px', fontSize: '13px', color: 'var(--text-2)' }}>
+                    <MapPin size={15} style={{ color: '#F59E0B' }} />
+                    <span>{address || `Location: (${lat?.toFixed(4)}, ${lng?.toFixed(4)})`}</span>
+                  </div>
+                </div>
+
+                {/* 25 km Context & Evidence Section */}
+                <div style={{ border: '1px solid var(--border)', borderRadius: '10px', padding: '20px', background: 'var(--surface-1)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+                    <h3 style={{ fontSize: '15px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Compass size={18} style={{ color: 'var(--primary)' }} />
+                      What We Found Nearby (25 km Infrastructure Context Radius)
+                    </h3>
+                    <span style={{ fontSize: '11px', color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>
+                      Search boundary = 25 km
+                    </span>
+                  </div>
+
+                  {devNeedResult?.infrastructureContext?.infrastructureContextAvailable === false ? (
+                    <div style={{ padding: '14px 16px', borderRadius: '8px', background: 'rgba(234, 179, 8, 0.1)', border: '1px solid #EAB308', color: '#EAB308', fontSize: '13px' }}>
+                      ⚠️ Infrastructure context is unavailable for this area. Your request will still be recorded.
+                    </div>
+                  ) : (
+                    <>
+                      {/* Metric Stat Cards */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+                        <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--text-3)', textTransform: 'uppercase' }}>Nearby Facilities (≤25km)</div>
+                          <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-1)', marginTop: '4px' }}>
+                            {devNeedResult?.infrastructureContext?.facilityCountWithinRadius ?? 0}
+                          </div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-3)', marginTop: '2px' }}>
+                            {devNeedResult?.request?.infrastructureType || 'Relevant'} within radius
+                          </div>
+                        </div>
+
+                        <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--text-3)', textTransform: 'uppercase' }}>Nearest Facility</div>
+                          <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-1)', marginTop: '4px' }}>
+                            {devNeedResult?.infrastructureContext?.nearestFacilityDistanceKm !== undefined ? `${devNeedResult.infrastructureContext.nearestFacilityDistanceKm} km` : 'None in 25km'}
+                          </div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-3)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {devNeedResult?.infrastructureContext?.nearestFacilityName || 'No recorded facility'}
+                          </div>
+                        </div>
+
+                        <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--text-3)', textTransform: 'uppercase' }}>Infrastructure Gap</div>
+                          <div style={{ marginTop: '6px' }}>
+                            {(() => {
+                              const badge = getGapBadge(devNeedResult?.infrastructureContext?.infrastructureGapScore ?? 100);
+                              return (
+                                <span style={{ background: badge.bg, color: badge.color, padding: '4px 8px', borderRadius: '4px', fontSize: '11.5px', fontWeight: 700 }}>
+                                  {badge.label} ({devNeedResult?.infrastructureContext?.infrastructureGapScore ?? 100}/100)
+                                </span>
+                              );
+                            })()}
+                          </div>
+                        </div>
+
+                        <div style={{ background: 'var(--surface-2)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--text-3)', textTransform: 'uppercase' }}>Accessibility Gap</div>
+                          <div style={{ marginTop: '6px' }}>
+                            {(() => {
+                              const badge = getGapBadge(devNeedResult?.infrastructureContext?.accessibilityGapScore ?? 100);
+                              return (
+                                <span style={{ background: badge.bg, color: badge.color, padding: '4px 8px', borderRadius: '4px', fontSize: '11.5px', fontWeight: 700 }}>
+                                  {badge.label} ({devNeedResult?.infrastructureContext?.accessibilityGapScore ?? 100}/100)
+                                </span>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Demand Intelligence Story Sentence */}
+                      <div style={{ background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <Sparkles size={18} style={{ color: '#3B82F6', flexShrink: 0 }} />
+                        <span style={{ fontSize: '13px', color: 'var(--text-1)', fontWeight: 600 }}>
+                          This request will be included in the regional development-demand analysis.
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Optional Customization Drawer */}
+                <div>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ fontSize: '12px', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    onClick={() => setShowCustomDetailsEdit(!showCustomDetailsEdit)}
+                  >
+                    <span>{showCustomDetailsEdit ? '▼' : '▶'}</span>
+                    {showCustomDetailsEdit ? "Hide Advanced Customization" : "⚙️ Optional: Tweak Proposal Title, Category, or Upload Photo"}
+                  </button>
+
+                  {showCustomDetailsEdit && (
+                    <div style={{ marginTop: '12px', padding: '16px', background: 'var(--surface-2)', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div>
+                        <label style={{ fontSize: '11.5px', fontWeight: 600, display: 'block', marginBottom: '4px', textTransform: 'uppercase', color: 'var(--text-2)' }}>Proposal Title</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '11.5px', fontWeight: 600, display: 'block', marginBottom: '4px', textTransform: 'uppercase', color: 'var(--text-2)' }}>Description Summary</label>
+                        <textarea
+                          className="form-textarea"
+                          rows={2}
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '11.5px', fontWeight: 600, display: 'block', marginBottom: '4px', textTransform: 'uppercase', color: 'var(--text-2)' }}>Optional Site Photo</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => setImagePreview(reader.result as string);
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                        {imagePreview && (
+                          <div style={{ marginTop: '8px' }}>
+                            <img src={imagePreview} alt="Preview" style={{ maxHeight: '90px', borderRadius: '4px', border: '1px solid var(--border)' }} />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Navigation and Submit Buttons */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', marginTop: '12px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    onClick={() => setCurrentStep(1)}
+                  >
+                    <ChevronLeft size={16} />
+                    Edit Description
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    style={{ flex: 1, padding: '12px 24px', fontSize: '14.5px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                    disabled={submitting || !lat || !lng}
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader size={16} className="shimmer" style={{ animation: 'spin 1s linear infinite' }} />
+                        Registering Need on Demand Ledger...
+                      </>
+                    ) : (
+                      <>
+                        <Check size={16} />
+                        Submit Development Request ✓
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ maxWidth: '750px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
             <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <MapPin size={18} style={{ color: 'var(--text-1)' }} />
@@ -1624,6 +2421,7 @@ export default function ReportPage() {
               </button>
             </div>
           </div>
+          )
         )}
 
         {/* ================= STEP 3: DETAILS & MULTILINGUAL AI TRIAGE ================= */}
@@ -1885,7 +2683,7 @@ export default function ReportPage() {
                   justifyContent: 'center', 
                   gap: '8px'
                 }}
-                disabled={submitting || !imagePreview || !lat || !lng || !address || !title || !description}
+                disabled={submitting || (mode === 'problem' && !imagePreview) || !lat || !lng || !address || !title || !description}
               >
                 {submitting ? (
                   <>
@@ -1906,6 +2704,101 @@ export default function ReportPage() {
         )}
 
       </form>
+
+      {/* Dev Need Multilingual Speech Simulator Modal */}
+      {showDevVoiceModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.65)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px'
+        }}>
+          <div className="card" style={{
+            maxWidth: '560px',
+            width: '100%',
+            padding: '24px',
+            borderRadius: '12px',
+            background: 'var(--surface-1)',
+            border: '1px solid var(--border)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Mic size={20} style={{ color: 'var(--primary)' }} />
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>
+                  Multilingual Voice Simulator
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ padding: '4px 8px', minHeight: 'auto' }}
+                onClick={() => setShowDevVoiceModal(false)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-2)', lineHeight: 1.4 }}>
+              Simulate speech recognition in environments without live microphone hardware (e.g. testing sandboxes, remote VMs, or headless browsers). Click any multilingual voice sample to populate:
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {DEV_VOICE_SIMULATOR_PROMPTS.map((prompt, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className="btn btn-secondary text-left"
+                  style={{
+                    padding: '12px 14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    gap: '4px',
+                    background: 'var(--surface-2)',
+                    textAlign: 'left'
+                  }}
+                  onClick={() => {
+                    setDevNeedText(prompt.text);
+                    setDevNeedLanguage(prompt.lang);
+                    setShowDevVoiceModal(false);
+                    if (devNeedError) setDevNeedError(null);
+                    toast.success(`Voice sample loaded (${prompt.lang.toUpperCase()})!`);
+                  }}
+                >
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase' }}>
+                    {prompt.label}
+                  </span>
+                  <span style={{ fontSize: '13px', color: 'var(--text-1)', fontStyle: 'italic' }}>
+                    "{prompt.text}"
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ padding: '8px 16px', fontSize: '13px' }}
+                onClick={() => setShowDevVoiceModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
