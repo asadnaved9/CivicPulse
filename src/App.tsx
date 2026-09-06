@@ -26,6 +26,7 @@ const AdminLayout = React.lazy(() => import('./pages/admin/AdminLayout'));
 const AdminLoginPage = React.lazy(() => import('./pages/admin/AdminLoginPage'));
 const AdminDashboardPage = React.lazy(() => import('./pages/admin/AdminDashboardPage'));
 const AdminComplaintsPage = React.lazy(() => import('./pages/admin/AdminComplaintsPage'));
+const AdminSuggestionsPage = React.lazy(() => import('./pages/admin/AdminSuggestionsPage'));
 const AdminAssetsPage = React.lazy(() => import('./pages/admin/AdminAssetsPage'));
 const AdminMapPage = React.lazy(() => import('./pages/admin/AdminMapPage'));
 const AdminRecommendationsPage = React.lazy(() => import('./pages/admin/AdminRecommendationsPage'));
@@ -84,6 +85,7 @@ function AppContent() {
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
             <Route path="/admin/complaints" element={<AdminComplaintsPage />} />
+            <Route path="/admin/suggestions" element={<AdminSuggestionsPage />} />
             <Route path="/admin/assets" element={<AdminAssetsPage />} />
             <Route path="/admin/map" element={<AdminMapPage />} />
             <Route path="/admin/recommendations" element={<AdminRecommendationsPage />} />
